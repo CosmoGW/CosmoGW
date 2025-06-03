@@ -43,21 +43,21 @@ alp_ref = 2    # reference smoothness of broken power-law transition
 
 def smoothed_bPL(k, A=1, a=a_ref, b=b_ref, kpeak=1., alp=alp_ref, norm=True,
                  Omega=False, alpha2=False, piecewise=False):
-    
+
     """
     Function that returns the value of the smoothed broken power law (bPL) model
     for a spectrum of the form:
-    
+
         zeta(K) = A x (b + abs(a))^(1/alp) K^a/[ b + c K^(alp(a + b)) ]^(1/alp),
-        
+
     where K = k/kpeak, c = 1 if a = 0 or c = abs(a) otherwise. This spectrum is defined
     such that kpeak is the correct position of the peak and its maximum amplitude is given
     by A.
-    
+
     If norm is set to False, then the non-normalized spectrum is used:
 
         zeta (K) = A x K^a/(1 + K^(alp(a + b)))^(1/alp)
-    
+
     The function is only correctly defined when b > 0 and a + b >= 0
 
     Introduced in RPCNS22, equations 6 and 8
@@ -83,11 +83,11 @@ def smoothed_bPL(k, A=1, a=a_ref, b=b_ref, kpeak=1., alp=alp_ref, norm=True,
     Returns:
         spectrum array
     """
-    
+
     if b < max(0, -a):
         print('b has to be larger than 0 and -a')
         return 0*k**0
-    
+
     c = abs(a)
     if a == 0: c = 1
     if alpha2: alp = alp/(a + b)
@@ -110,22 +110,22 @@ def smoothed_bPL(k, A=1, a=a_ref, b=b_ref, kpeak=1., alp=alp_ref, norm=True,
     return spec
 
 def complete_beta(a, b):
-    
+
     '''
     Function that computes the complete beta function, only converges for
     positive arguments.
-    
+
     B(a, b; x \to \infty) = \int_0^x u^(a - 1) (1 - u)^(b - 1) du
-    
+
     Arguments:
         a, b -- arguments a, b of the complete beta function
-    
+
     Returns:
         B -- value of the complete beta function
     '''
-    
+
     import math as m
-    
+
     if a > 0 and b > 0: B = m.gamma(a)*m.gamma(b)/m.gamma(a + b)
     else:
         print('arguments of beta function need to be positive')
@@ -138,14 +138,14 @@ def calIab_n_alpha(a=a_ref, b=b_ref, alp=alp_ref, n=0, norm=True):
     '''
     Function that computes the normalization factor that enters in the
     calculation of Iabn
-    
+
     Arguments:
         a, b -- slopes of the smoothed_bPL function
         alp -- smoothness parameter of the smoothed_bPL function
         n -- n-moment of the integral
         norm -- option to normalize the spectrum such that its peak is located at
                 kpeak and its maximum value is 1
-    
+
     Returns:
         calI -- normalization parameter that appears in the integral
     '''
@@ -155,7 +155,7 @@ def calIab_n_alpha(a=a_ref, b=b_ref, alp=alp_ref, n=0, norm=True):
 
     c = abs(a)
     if a == 0: c = 1
-    
+
     calI = alp2
     if norm: calI = calI*((b + abs(a))/b)**(1/alp)/(c/b)**a_beta
 
@@ -163,30 +163,30 @@ def calIab_n_alpha(a=a_ref, b=b_ref, alp=alp_ref, n=0, norm=True):
 
 def Iabn(a=a_ref, b=b_ref, alp=alp_ref, n=0, norm=True, alpha2=False,
          piecewise=False):
-    
+
     '''
     Function that computes the moment n of the smoothed dbPL spectra:
-    
+
     \int K^n zeta(K) dK
 
     Reference is RPMC24, appendix A
 
     Arguments:
-        
+
         a -- slope of the spectrum at low wave numbers, k^a
         b -- slope of the spectrum at high wave numbers, k^(-b)
         alp -- smoothness of the transition from one power law to the other
         n -- moment of the integration
-        
+
     Returns: value of the n-th moment
     '''
-    
+
     if a + n + 1 <= 0:
 
         print('a + n has to be larger than -1 for the integral',
               'to converge')
         return 0
-    
+
     if b - n - 1 <= 0:
 
         print('b + n has to be larger than 1 for the integral',
@@ -194,7 +194,7 @@ def Iabn(a=a_ref, b=b_ref, alp=alp_ref, n=0, norm=True, alpha2=False,
         return 0
 
     if piecewise:
-        
+
         return (a + b)/(a + n + 1)/(b - n - 1)
 
     if alpha2: alp = alp/(a + b)
@@ -246,17 +246,17 @@ def calC(a=a_ref, b=b_ref, alp=alp_ref, tp='vort', norm=True, alpha2=False,
     Function that computes the parameter {\cal C} that allows to
     compute the TT-projected stress spectrum by taking the convolution of the
     smoothed bPL spectra over \kk and \kk - \pp.
-    
+
     It gives the spectrum of the stress of Gaussian vortical non-helical fields
     as
-    
+
     P_\Pi (0) = 2 \pi^2 EM*^2 {\cal C} / k*
 
     References are RPCNS22, equation 22, for vortical and RPPC23, equation 46,
     for compressional fields. Detailed reference is RPMC24, appendix A
 
     Arguments:
-        
+
         a -- slope of the spectrum at low wave numbers, k^a
         b -- slope of the spectrum at high wave numbers, k^(-b)
         alp -- smoothness of the transition from one power law to the other
@@ -278,7 +278,7 @@ def calC(a=a_ref, b=b_ref, alp=alp_ref, tp='vort', norm=True, alpha2=False,
         print('tp has to be vortical (vort), compressional (comp),',
               'mixed (mix) or helical (hel)')
         pref = 0.
-    
+
     return pref*Iabn(a=a*2, b=b*2, alp=alp/2, n=-2, norm=norm,
                      alpha2=alpha2, piecewise=piecewise)
 
@@ -289,13 +289,13 @@ def smoothed_double_bPL(k, kpeak1, kpeak2, A=1, a=a_ref, b=1, c=b_ref, alp1=alp_
     """
     Function that returns the value of the smoothed double broken power law (double_bPL) model
     for a spectrum of the form:
-    
+
         zeta(K) = K^a/(1 + (K/K1)^[(a - b)*alp1])^(1/alp1)/(1 + (K/K2)^[(c + b)*alp2])^(1/alp2)
-        
+
     where K = k/kref, K1 and K2 are the two position peaks, a is the low-k slope, c is the intermediate
     slope, and -c is the high-k slope. alp1 and alp2 are the smoothness parameters for each spectral
     transition.
-    
+
     Reference is RPPC23, equation 50. Also used in RPNCBS23, equation 7
 
     Arguments:
@@ -326,27 +326,27 @@ def smoothed_double_bPL(k, kpeak1, kpeak2, A=1, a=a_ref, b=1, c=b_ref, alp1=alp_
 ############################### NOT PUBLIC ON GITHUB ##############################
 
 def Iabn_inc(x, alp=2, a=4, b=5/3, n=0):
-    
+
     import scipy.special as spe
-    
+
     xstar = a/b*x**(alp*(a + b))
     xprime = xstar/(1 + xstar)
     a_beta = (a + n + 1)/alp/(a + b)
     b_beta = (b - n - 1)/alp/(a + b)
     comp_beta = complete_beta(a_beta, b_beta)
-    
+
     beta = spe.betainc(a_beta, b_beta, xprime)*comp_beta
-    
+
     return beta
 
 def corr_int_low(k, a=4):
-    
+
     """
     Function that computes the integral of K^a from 0 to kmin, to be included
     in numerical integration of more complicated spectra that have this asymptotic
     behavior when K -> 0.
     """
-    
+
     # a has to be larger than -1 for the integral to converge
     if a > -1: return k**(a + 1)/(a + 1)
     else:
@@ -359,7 +359,7 @@ def get_D1_D2(a, b, alp, D1, D2, fact):
     D1 = 0.
     D2 = 1.
     fact = 1.
-    
+
     if a*b > 0:
         D1 = a/b
         D2 = a/b
@@ -566,7 +566,7 @@ def Omega_additional_sbpl(kpeak=1., Epeak=1., k0=1, kf=100,
 ## obsolete (to be moved to GW_models)
 def ET_correlator_compr(k, EK, Np=3000, Nk=60, plot=False,
                         extend=False, largek=3, smallk=-3):
-    
+
     p = np.logspace(np.log10(k[0]), np.log10(k[-1]), Np)
     kp = np.logspace(np.log10(k[0]), np.log10(k[-1]), Nk)
     if extend:
@@ -575,13 +575,13 @@ def ET_correlator_compr(k, EK, Np=3000, Nk=60, plot=False,
         kp = np.append(kp, np.logspace(np.log10(k[0]), np.log10(k[-1]),
                        4*Nk))
         kp = np.append(kp, np.logspace(np.log10(k[-1]), largek, Nk))
-        
+
     Nz = 500
     z = np.linspace(-1, 1, Nz)
     kij, pij, zij = np.meshgrid(kp, p, z, indexing='ij')
     ptilde2 = pij**2 + kij**2 - 2*kij*pij*zij
     ptilde = np.sqrt(ptilde2)
-    
+
     EK_p = np.interp(p, k, EK)
     if plot:
         plt.plot(p, EK_p)
@@ -603,7 +603,7 @@ def ET_correlator_compr(k, EK, Np=3000, Nk=60, plot=False,
 ## obsolete (to be moved to GW_models)
 def ET_correlator_vort(k, EK, Np=3000, Nk=60, plot=False,
                         extend=False, largek=3, smallk=-3):
-    
+
     p = np.logspace(np.log10(k[0]), np.log10(k[-1]), Np)
     kp = np.logspace(np.log10(k[0]), np.log10(k[-1]), Nk)
     if extend:
@@ -612,13 +612,13 @@ def ET_correlator_vort(k, EK, Np=3000, Nk=60, plot=False,
         kp = np.append(kp, np.logspace(np.log10(k[0]), np.log10(k[-1]),
                        4*Nk))
         kp = np.append(kp, np.logspace(np.log10(k[-1]), largek, Nk))
-        
+
     Nz = 500
     z = np.linspace(-1, 1, Nz)
     kij, pij, zij = np.meshgrid(kp, p, z, indexing='ij')
     ptilde2 = pij**2 + kij**2 - 2*kij*pij*zij
     ptilde = np.sqrt(ptilde2)
-    
+
     EK_p = np.interp(p, k, EK)
     if plot:
         plt.plot(p, EK_p)
@@ -641,7 +641,7 @@ def ET_correlator_vort(k, EK, Np=3000, Nk=60, plot=False,
 ## obsolete (to be moved to GW_models)
 def ET_correlator_vort_hel(k, EK, Np=3000, Nk=60, plot=False, eps=1,
                            extend=False, largek=3, smallk=-3):
-    
+
     p = np.logspace(np.log10(k[0]), np.log10(k[-1]), Np)
     kp = np.logspace(np.log10(k[0]), np.log10(k[-1]), Nk)
     if extend:
@@ -650,13 +650,13 @@ def ET_correlator_vort_hel(k, EK, Np=3000, Nk=60, plot=False, eps=1,
         kp = np.append(kp, np.logspace(np.log10(k[0]), np.log10(k[-1]),
                        4*Nk))
         kp = np.append(kp, np.logspace(np.log10(k[-1]), largek, Nk))
-        
+
     Nz = 500
     z = np.linspace(-1, 1, Nz)
     kij, pij, zij = np.meshgrid(kp, p, z, indexing='ij')
     ptilde2 = pij**2 + kij**2 - 2*kij*pij*zij
     ptilde = np.sqrt(ptilde2)
-    
+
     HK_p = 2*eps*np.interp(p, k, EK)/p
     if plot:
         plt.plot(p, HK_p)
@@ -671,7 +671,7 @@ def ET_correlator_vort_hel(k, EK, Np=3000, Nk=60, plot=False, eps=1,
     kij, HK_pij = np.meshgrid(kp, HK_p, indexing='ij')
     kij, pij = np.meshgrid(kp, p, indexing='ij')
     p_pi = np.trapz(Pi_1*HK_pij*pij, p, axis=1)
-    
+
     # prefactor to compensate for amplitude such that Pi_2 (0) = 1
 
     return kp, p_pi
@@ -680,27 +680,27 @@ def ET_correlator_vort_hel(k, EK, Np=3000, Nk=60, plot=False, eps=1,
 ##### assumption for the UETC
 
 def incoherent_time_integral(t, k, p, ptilde, cs=1, m=1, n=1, tini=1):
-    
+
     import scipy.special as spe
 
     pp = n*k + cs*(m*ptilde + p)
     si_t, ci_t = spe.sici(pp*t)
     si_tini, ci_tini = spe.sici(pp*tini)
-    
+
     # correct the values when the argument is zero to avoid infinities
     # in the cosine integral by giving them their logarithmic values
     # that appear when we take the differences between two times.
-    
+
     inds_pp0 = np.where(pp == 0)
     ci_t[inds_pp0] = np.log(t)
     ci_tini[inds_pp0] = np.log(tini)
-    
+
     return si_t, ci_t, si_tini, ci_tini
 
 def incoherent_time_integral_flat(t, k, p, ptilde, cs=1, m=1, n=1, tini=1):
 
     pp = n*k + cs*(m*ptilde + p)
-    
+
     return 2*(1 - np.cos(pp*(t - tini)))/pp**2
 
 def effective_ET_correlator_stat(k, EK, tfin, Np=3000, Nk=60, plot=False, flat=False,
@@ -727,9 +727,9 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=3000, Nk=60, plot=False, flat=F
         PiM -- spectrum of the magnetic stress
         kp -- final array of wave numbers
     """
-    
+
     import scipy.special as spe
-    
+
     cs = np.sqrt(cs2)
 
     p = np.logspace(np.log10(k[0]), np.log10(k[-1]), Np)
@@ -746,7 +746,7 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=3000, Nk=60, plot=False, flat=F
     kij, pij, zij = np.meshgrid(kp, p, z, indexing='ij')
     ptilde2 = pij**2 + kij**2 - 2*kij*pij*zij
     ptilde = np.sqrt(ptilde2)
-    
+
     EK_p = np.interp(p, k, EK)
     if plot:
         plt.plot(p, EK_p)
@@ -757,7 +757,7 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=3000, Nk=60, plot=False, flat=F
     ptilde[np.where(ptilde == 0)] = 1e-50
 
     GG_p = kij**0 - 1
-    
+
     for m in [1, -1]:
         for n in [1, -1]:
             if flat:
@@ -768,12 +768,12 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=3000, Nk=60, plot=False, flat=F
                         incoherent_time_integral(tfin, kij, pij, ptilde,
                                                  m=m, n=n, tini=tini, cs=cs)
                 GG_p += (Ci_A - Ci_A_tini)**2 + (Si_A - Si_A_tini)**2
-    
+
     Pi_1 = .25*np.trapz(EK_ptilde/ptilde**4*(1 - zij**2)**2*GG_p, z, axis=2)
     kij, EK_pij = np.meshgrid(kp, EK_p, indexing='ij')
     kij, pij = np.meshgrid(kp, p, indexing='ij')
     Pi_2 = np.trapz(Pi_1*pij**2*EK_pij, p, axis=1)
-    
+
     return kp, np.pi**2*Pi_2
 
 ## function to compute GW spectrum time growth using Hindmarsh & Hijazi approximation
@@ -781,7 +781,7 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=3000, Nk=60, plot=False, flat=F
 
 def stationary_OmGW(k, EK, Np=3000, Nk=60, plot=False, cs2=1/3,
                     extend=False, largek=3, smallk=-3):
-    
+
     cs = np.sqrt(cs2)
     #p = np.logspace(np.log10(k[0]), np.log10(k[-1]), Np)
     kp = np.logspace(np.log10(k[0]), np.log10(k[-1]), Nk)
@@ -792,23 +792,23 @@ def stationary_OmGW(k, EK, Np=3000, Nk=60, plot=False, cs2=1/3,
                        4*Nk))
         kp = np.append(kp, np.logspace(np.log10(k[-1]), largek, Nk))
         print(kp)
-    
+
 #    pij = np.zeros(len(k), len(p))
     p_inf = kp*(1 - cs)/2/cs
     p_sup = kp*(1 + cs)/2/cs
-    
+
     PiM = np.zeros(len(kp))
-       
+
     for i in range(0, len(kp)):
         p = np.logspace(np.log10(p_inf[i]), np.log10(p_sup[i]), Np)
         ptilde = kp[i]/cs - p
         z = -kp[i]*(1 - cs2)/2/p/cs2 + 1/cs
-        
+
         EK_p = np.interp(p, k, EK)
         EK_ptilde = np.interp(ptilde, k, EK)
-        
+
         Pi1 = (1 - z**2)**2*p/ptilde**3*EK_p*EK_ptilde
-    
+
         PiM[i] = .25*np.pi**2*np.trapz(Pi1, p)
 
     return kp, PiM
@@ -819,23 +819,23 @@ def stationary_OmGW(k, EK, Np=3000, Nk=60, plot=False, cs2=1/3,
 def Epi_effective_0_stat(k, EK, tfin, Np=3000, Nk=60, plot=False,
                          extend=False, largek=3, smallk=-3,
                          tini=1, cs2=1/3):
-    
+
     import scipy.special as spe
-    
+
     p = np.logspace(np.log10(k[0]), np.log10(k[-1]), Np)
     EK_p = np.interp(p, k, EK)
-    
+
     cs = np.sqrt(cs2)
-    
+
     si_t, ci_t = spe.sici(2*cs*p*tfin)
     si_tini, ci_tini = spe.sici(2*cs*p*tini)
 
     GG_p = p**0*np.log(tfin/tini)**2
     GG_p += (ci_t - ci_tini)**2
     GG_p += (si_t - si_tini)**2
-    
+
     Pi1 = np.trapz(GG_p*EK_p**2/p**2, p)
-    
+
     return .5*Pi1*16/15*np.pi**2
 
 #### old function of stress spectrum for vortical nonhelical fields
