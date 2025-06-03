@@ -1,0 +1,31 @@
+[tool.black]
+line_length = 80
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cosmoGW"
+version = "0.0.7"
+authors = [
+  { name="Alberto Roper Pol", email="alberto.roperpol@unige.ch" },
+]
+description='code for cosmological gravitational wave backgrounds'
+readme='README.md'
+dependencies = [
+  "matplotlib",
+  "numpy",
+  "importlib",
+  "pandas",
+  "astropy"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+]
+requires-python = ">=3.8"
+
+[project.urls]
+Homepage = "https://github.com/MHDcosmoGW/cosmoGW"
