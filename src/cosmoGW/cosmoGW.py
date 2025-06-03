@@ -3,12 +3,13 @@ cosmoGW.py is a Python routine that contains functions relevant for
 cosmological stochastic gravitational wave backgrounds (SGWB).
 
 Adapted from the original cosmoGW in GW_turbulence
-(https://github.com/AlbertoRoper/GW_turbulence)
+(https://github.com/AlbertoRoper/GW_turbulence),
+created in Dec. 2021
 
 Currently part of the cosmoGW code:
 
-https://github.com/MHDcosmoGW/cosmoGW/
-https://github.com/MHDcosmoGW/cosmoGW/blob/development/src/cosmoGW/cosmoGW.py
+https://github.com/cosmoGW/cosmoGW/
+https://github.com/cosmoGW/cosmoGW/blob/development/src/cosmoGW/cosmoGW.py
 
 Author: Alberto Roper Pol
 Created: 01/12/2021 (GW_turbulence)

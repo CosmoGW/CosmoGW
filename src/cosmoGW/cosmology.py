@@ -3,12 +3,13 @@ cosmology.py is a Python routine that contains functions relevant
 for cosmological calculations, including a solver of Friedmann equations.
 
 Adapted from the original cosmology in GW_turbulence
-(https://github.com/AlbertoRoper/GW_turbulence)
+(https://github.com/AlbertoRoper/GW_turbulence),
+created in Nov. 2022
 
 Currently part of the cosmoGW code:
 
-https://github.com/MHDcosmoGW/cosmoGW/
-https://github.com/MHDcosmoGW/cosmoGW/blob/development/src/cosmoGW/cosmology.py
+https://github.com/cosmoGW/cosmoGW/
+https://github.com/cosmoGW/cosmoGW/blob/development/src/cosmoGW/cosmology.py
 
 Author: Alberto Roper Pol
 Created: 27/11/2022 (GW_turbulence)
@@ -41,7 +42,7 @@ Cosmological parameters," Astron.Astrophys. 641 (2020) A6,
 Astron.Astrophys. 652 (2021) C4 (erratum),
 arXiv:1807.06209.
 
-Rasanen - Notes on Cosmology by Syksy Räsänen
+Rasanen - Lecture notes on Cosmology by Syksy Räsänen
 (https://www.mv.helsinki.fi/home/syrasane/cosmo/)
 
 """
@@ -64,7 +65,7 @@ T0K = 2.72548*u.K
 H0_ref = 100*u.km/u.s/u.Mpc
 H0_ref = H0_ref.to(u.Hz)
 OmL0_ref = 0.6841
-OmM0_ref = 1 - OmL0_ref
+OmM0_ref = 1. - OmL0_ref
 h0_ref = 0.6732
 
 ######################### Values at present time #########################
@@ -334,6 +335,7 @@ def thermal_g(dir0='', T=Tref, s=0, file=True, Neff=Neff_ref):
             T = T.to(u.GeV)    # values of T from file are in GeV
             g = np.interp(T.value, np.sort(Ts), np.sort(gs))
             T = check_temperature_MeV(T, func='thermal_g')
+            # check if T is a single value or an array
             if not isinstance(T.value, (list, tuple, np.ndarray)):
                 if T.value < 0.1:
                     if s == 0: g = g0
@@ -376,18 +378,23 @@ def thermal_g(dir0='', T=Tref, s=0, file=True, Neff=Neff_ref):
 ############################### FRIEDMANN EQUATIONS ###############################
 
 """
-The code has been developed and used for the results of He:2022qcs (appendix A).
-Friedmann solver included in June 2022, a tutorial is available under cosmology/cosmology.ipynb
+The code has been developed and used for the results of
+He:2022qcs (see appendix A).
+
+Friedmann solver included to GW_turbulence in June 2022,
+adapted and added to cosmoGW for v 1.1.0 release in March 2025.
+
 """
 
-def RD_dofs(dir0='', Neff=Neff_ref):
+def RD_dofs(dir0='', Neff=Neff_ref, scalef=False):
 
     """
     Function that computes the degrees of freedom (relativistic and adiabatic)
     during the RD era.
 
     Arguments:
-        dir0 -- directory where the file of dof is stored ('/cosmology/' directory by default)
+        dir0 -- directory where the file of dof is stored
+                ('resources/cosmology/' directory by default)'
         Neff -- effective number of neutrino species (default is 3)
 
     Returns:
@@ -398,9 +405,11 @@ def RD_dofs(dir0='', Neff=Neff_ref):
     Calls functions 'values_0' and 'thermal_g'; see references therein.
     """
 
-    #### compute the relativistic degrees of freedom as a function of T during the RD epoch
-    #### from a stored file using the function thermal_g
+    #### compute the relativistic degrees of freedom as a function
+    #### of T during the RD epoch from a stored file using the function
+    #### thermal_g
 
+    # array of temperatures during RD era
     T = np.logspace(-4, 8, 1000)*u.MeV
     gS = thermal_g(T=T, s=1, file=True, dir0=dir0)
     gs = thermal_g(T=T, s=0, file=True, dir0=dir0)
@@ -409,29 +418,29 @@ def RD_dofs(dir0='', Neff=Neff_ref):
 
     #### the numerical gs and gS have final (smaller) values of 3.363 and 3.909,
     #### which are not necessary the same as g0 and gS0, especially if we set Neff
-    #### different than 3, so we interpolate the last values to correct for this.
-    if gs[0] < g0:
-        inds = np.where(gs < max(gs[0], g0))[0]
-        gs[:inds[-1]+1] = g0
-    else:
-        inds = np.where((gs - gs[0] < 1e-1))[0]
-        indd = 10
-        vals = np.linspace(g0, gs[inds[-1]], indd)
-        gs[:inds[-1]] = g0
-        gs[inds[-1]-indd:inds[-1]] = vals
+    # #### different than 3, so we interpolate the last values to correct for this.
+    # if gs[0] < g0:
+    #     inds = np.where(gs < max(gs[0], g0))[0]
+    #     gs[:inds[-1]+1] = g0
+    # else:
+    #     inds = np.where((gs - gs[0] < 1e-1))[0]
+    #     indd = 10
+    #     vals = np.linspace(g0, gs[inds[-1]], indd)
+    #     gs[:inds[-1]] = g0
+    #     gs[inds[-1]-indd:inds[-1]] = vals
 
-    if gS[0] < g0s:
-        inds = np.where((gS < max(gS[0], g0s)))[0]
-        gS[:inds[-1]+1] = g0s
-    else:
-        inds = np.where(gS - gS[0] < 1e-1)[0]
-        indd = 10
-        vals = np.linspace(g0s, gS[inds[-1]], indd)
-        gS[:inds[-1]] = g0s
-        gS[inds[-1]-indd:inds[-1]] = vals
+    # if gS[0] < g0s:
+    #     inds = np.where((gS < max(gS[0], g0s)))[0]
+    #     gS[:inds[-1]+1] = g0s
+    # else:
+    #     inds = np.where(gS - gS[0] < 1e-1)[0]
+    #     indd = 10
+    #     vals = np.linspace(g0s, gS[inds[-1]], indd)
+    #     gS[:inds[-1]] = g0s
+    #     gS[inds[-1]-indd:inds[-1]] = vals
 
-    ### convert temperature and degrees of freedom into an array of scale factors using
-    ### adiabatic expansion of the universe
+    ### convert temperature and degrees of freedom into an array
+    ### of scale factors using adiabatic expansion of the universe
     as_T = (T0.to(u.MeV)/T)*(g0s/gs)**(1/3)
 
     return T, as_T, gs, gS
