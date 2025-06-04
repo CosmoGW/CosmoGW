@@ -57,7 +57,7 @@ The main routines of cosmoGW are stored under src/cosmoGW:
   [interferometry.ipynb](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/interferometry/interferometry.ipynb)) energy density and polarization, including the space-based network
   LISA-Taiji to detect polarization.
 * [**modified_grav.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/modified_grav.py): functions relevant for GW production in the context of general theories of
-  modified gravity.
+  modified gravity. Coming soon!
 * [**pta.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/pta.py): functions used in the analysis of observations by pulsar timing array (PTA) collaborations:
   NANOGrav, PPTA, EPTA, and IPTA.
 * [**reading.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/reading.py): functions to read the output files of a specific set of runs (project)
