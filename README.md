@@ -47,9 +47,9 @@ The main routines of cosmoGW are stored under src/cosmoGW:
   files being read in some Pencil Code simulations (see tutorial [cosmology_PC.ipnyb](cosmology/cosmology_PC.ipynb)).
 * [**cosmoMF.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/cosmoMF.py): functions relevant for cosmological magnetic fields like bounds from different experiments,
   observations or projected sensitivities, and expectations from theory, among others. Coming soon!
-* [**GW_analytical.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/GW_analytical.py)
+* [**GW_analytical.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/GW_analytical.py): contains analytical calculations and useful mathematical functions
 * [**GW_models.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/GW_analytical.py): models to describe the GW background produced from magnetic and velocity field perturbations in the primordial plasma, e.g., induced by a first-order phase transition. It includes models to describe the GW background from MHD turbulence and from compressional motion.
-* [**GW_templates.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/GW_templates.py)
+* [**GW_templates.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/GW_templates.py): contains templates to describ the GW background from different sources
 * [**hydro_bubbles.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/GW_models.py): functions to compute fluid perturbations induced by the expansion of
   bubbles in first-order phase transitions
 * [**interferometry.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/interferometry.py): functions to compute the response and sensitivity functions of interferometer
