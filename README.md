@@ -62,8 +62,6 @@ The main routines of cosmoGW are stored under src/cosmoGW:
   NANOGrav, PPTA, EPTA, and IPTA.
 * [**reading.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/reading.py): functions to read the output files of a specific set of runs (project)
   of the Pencil Code.
-* [**run.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/run.py): contains the class **run**, used to store all the variables computed in the Pencil Code and in
-  cosmoGW from the Pencil Code solitions. It includes functions to initialize and postprocess the results of a set of runs.
 * [**spectra.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/spectra.py): contains description for specific spectral templates, postprocessing routines for
   numerical spectra, and other mathematical routines.
 
