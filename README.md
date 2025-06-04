@@ -15,7 +15,7 @@ code previously used for calculations of GWs produced by MHD turbulence.
 
 * Author: Alberto Roper Pol (alberto.roperpol@unige.ch)
 * Created: 01/12/2021 (GW_turbulence)
-* Updated: 13/03/2025 (release cosmoGW 1.1.0)  
+* Updated: 13/03/2025 
 
 The project includes state-of-the-art GW models developed by the community, postprocessing calculations,
 numerical computations, plotting routines, and detector sensitivities.
