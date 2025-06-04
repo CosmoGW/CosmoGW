@@ -1,4 +1,4 @@
-# CosmoGW v 1.1.0
+# CosmoGW v 1.0 (coming soon)
 
 CosmoGW is a python library that can be installed using pip from the
 project stored in [pypi](https://pypi.org/project/cosmoGW)
