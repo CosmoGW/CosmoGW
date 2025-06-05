@@ -62,16 +62,16 @@ cols_ref = ['black', 'darkblue', 'blue', 'darkgreen', 'green',
             'purple', 'darkred', 'red', 'darkorange', 'orange', 'violet']
 
 def Chapman_Jouget(alp):
-    
+
     '''
     Chapman-Jouget is the wall velocity at which the relative speed
     behind the wall becomes that of the spped of sound.
     It corresponds to the limiting case separating detonations
     and supersonic deflagrations.
-    
+
     Reference: Eq. 39 of Espinosa:2010hh
     Note that Eq. B19 of Hindmarsh:2019phv has a typo
-    
+
     Arguments:
         alp -- alpha at the + side of the wall (alpha_pl)
     '''
@@ -91,7 +91,7 @@ def type_nucleation(vw, alp, cs2=cs2_ref):
         alp -- strenght of the phase transition at the + side
                  of the wall (alpha_pl)
         cs2 -- square of the speed of sound (default 1/3)
-        
+
     Returns:
         ty -- type of solution ('def', 'hyb', 'det')
     '''
@@ -125,13 +125,13 @@ and RoperPol:2025a (appendix A)
 '''
 
 def Lor_mu(v, vw):
-    
+
     '''
     Lorentz transform of the velocity v in the reference frame of the wall
     (with speed vw)
-    
+
     mu(vw, v) = (vw - v)/(1 - vw*v)
-    
+
     Reference: Eq. B12 of Hindmarsh:2019phv
     '''
 
@@ -140,12 +140,12 @@ def Lor_mu(v, vw):
 ### hydrodynamic shocks with no vacuum energy
 
 def v_shock(xi):
-    
+
     '''
     Function that computes the shock velocity at the - side of the
     shock. Computed from the v_+ v_- = 1/3 condition.
     '''
-    
+
     vsh = (3*xi**2 - 1)/2/xi
 
     return vsh
@@ -164,7 +164,7 @@ def w_shock(xi):
 #### differential equation for the velocity radial profile
 
 def xi_o_v(xi, v, cs2=cs2_ref):
- 
+
     '''
     Function that characterizes the 1d hydro equation under radial
     symmetry.
@@ -173,7 +173,7 @@ def xi_o_v(xi, v, cs2=cs2_ref):
     equation in compute_xi_from_v using RK4.
 
     Reference: Eq. 27 of Espinosa:2010hh
-        
+
     Arguments:
         xi -- self-similar r/t
         v -- 1d velocity profile
@@ -238,13 +238,13 @@ def compute_xi_from_v(v, xi0, cs2=cs2_ref, shock=False):
     return xi, sh, indsh
 
 def compute_int_w(xi, v, cs2=cs2_ref):
-    
+
     '''
     Function that computes the integrand for the integration of dw/dxi
     (enthalpy) equation, as a function of the solution v(xi).
 
     Reference: Eq. (29) of Espinosa:2010hh
-    
+
      Arguments:
         xi -- self-similar r/t
         v -- 1d velocity profile
@@ -259,13 +259,13 @@ def compute_w(v, xi, cs2=cs2_ref):
     '''
     Function that computes the enthalpy from the solution of the
     velocity profile.
-    
+
      Arguments:
         xi -- self-similar r/t
         v -- 1d velocity profile
         cs2 -- square of the speed of sound (default 1/3)
     '''
-    
+
     w = np.zeros(len(v)) + 1
     ss = 0
     for i in range(0, len(v) - 1):
@@ -281,15 +281,15 @@ def compute_w(v, xi, cs2=cs2_ref):
 ############# MATCHING CONDITIONS ACROSS DISCONTINUITIES ##############
 
 def vp_tilde_from_vm_tilde(vw, alpha, plus=True, sg='plus'):
-    
+
     '''
     Function that computes the + (symmetric phase) or - (broken phase)
     velocity, defined in the wall reference frame, across the wall,
     as a function of the value of the velocity at the opposite side of
     the wall (via the matching conditions).
-    
+
     Reference: Eqs. B6 and B7 of Hindmarsh:2019phv
-    
+
     Arguments:
         vw -- velocity imposed at one of the sides of the wall.
                 It usually is the wall velocity but becomes cs for
@@ -301,55 +301,55 @@ def vp_tilde_from_vm_tilde(vw, alpha, plus=True, sg='plus'):
                 (default is True)
         sg -- option to compute v+ from v- = vw if sg == 'plus' or to compute
               v- from v+ = vw if sg == 'minus' (default is 'plus')
-              
+
     Returns:
         vp_vm -- v+ or v- from the value at the other side of the bubble wall
     '''
-    
+
     if sg == 'plus':
-        
+
         a1 = 1/3/vw + vw
         a2 = np.sqrt((1/3/vw - vw)**2 + 4*alpha**2 + 8/3*alpha)
         aa = .5/(1 + alpha)
-        
+
     else:
-        
+
         a1 = (1 + alpha)*vw + (1 - 3*alpha)/3/vw
         a2 = np.sqrt(((1 + alpha)*vw + (1 - 3*alpha)/3/vw)**2 - 4/3)
         aa = 1/2
-        
+
     if plus: a = a1 + a2
     else: a = a1 - a2
-    
+
     vp_vm = aa*a
-    
+
     return vp_vm
 
 def vplus_vminus(alpha, vw=1., ty='det', cs2=cs2_ref):
-    
+
     '''
     Function that returns v_+ and v_- (in the wall frame)
     for the different type of solutions
     (deflagrations, detonations and hybrids).
-    
+
     This allows to give the boundary conditions corresponding to each
     of the solutions.
 
     Reference: Appendix A of RoperPol:2025a
-    
+
     Arguments:
         alpha -- value of alpha at the + side of the wall
         vw -- wall velocity
         cs2 -- speed of sound squared (default is 1/3)
         ty -- type of solution
-        
+
     Returns:
         vplus, vminus -- + and - velocities expressed in the wall
                             reference of frame
     '''
 
     cs = np.sqrt(cs2)
-    
+
     if not isinstance(ty, (list, tuple, np.ndarray)):
 
         if ty == 'det':
@@ -361,7 +361,7 @@ def vplus_vminus(alpha, vw=1., ty='det', cs2=cs2_ref):
         if ty == 'hyb':
             vminus = cs
             vplus = vp_tilde_from_vm_tilde(cs, alpha, plus=False, sg='plus')
-   
+
     else:
 
         vplus = np.zeros(len(vw))
@@ -383,24 +383,24 @@ def vplus_vminus(alpha, vw=1., ty='det', cs2=cs2_ref):
 
 ######## function that computes the detonation part of the solutions ########
 def det_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, zero_v=-4):
-    
+
     '''
     Function that computes a detonation solution with boundary condition
     v0 at xi0
-    
+
     Arguments:
         v0 -- value of v0 at the boundary
         xi0 -- position of the boundary
         cs2 -- speed of sound squared (default is 1/3)
         Nxi -- number of discretization points in xi
         zero_v -- reference zero velocity (default 1e-4)
-        
+
     Returns:
         xis -- array of xi
         vs -- array of 1d velocities
         ws -- array of 1d enthalpies
     '''
-    
+
     # compute solution from initial condition v = v0 at xi = vw
     # until v reduces to 4 orders of magntiude below value v minus
     cs = np.sqrt(cs2)
@@ -417,7 +417,7 @@ def det_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, zero_v=-4):
         xis = xis[inds_sort]
         vs = vs[inds_sort]
         ws = ws[inds_sort]
-        
+
     else:
 
         xis = np.zeros((len(xi0), Nxi))
@@ -430,7 +430,7 @@ def det_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, zero_v=-4):
             xis[i, :], _, _ = compute_xi_from_v(vs[i, :], xi0[i], cs2=cs2,
                                                 shock=False)
             ws[i, :] = compute_w(vs[i, :], xis[i, :], cs2=cs2)
-            
+
             inds_sort = np.argsort(xis[i, :])
             xis[i, :] = xis[i, inds_sort]
             vs[i, :] = vs[i, inds_sort]
@@ -440,11 +440,11 @@ def det_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, zero_v=-4):
 
 ####### function that computes the deflagration part of the solutions #######
 def def_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, shock=True, zero_v=-4):
-    
+
     '''
     Function that computes a deflagration solution with boundary condition
     v0 at xi0
-    
+
     Arguments:
         v0 -- value of v0 at the boundary
         xi0 -- position of the boundary
@@ -467,7 +467,7 @@ def def_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, shock=True, zero_v=-4):
     xi_sh = cs
     sh = False
     v_sh = 0
-    
+
     if shock:
         xiss, sh, indsh = compute_xi_from_v(vs, xi0, cs2=cs2, shock=True)
         xi_sh = xiss[indsh]
@@ -482,20 +482,20 @@ def def_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, shock=True, zero_v=-4):
     else:
         xis, sh, indsh = compute_xi_from_v(vs, xi0, cs2=cs2, shock=False)
         xi_sh = xis[indsh]
-    
-    ws = compute_w(vs, xis, cs2=cs2)    
+
+    ws = compute_w(vs, xis, cs2=cs2)
     w_sh = w_shock(xi_sh)
     ws = ws*w_sh/ws[-1]
-    
+
     return xis, vs, ws, xi_sh, sh
 
 def compute_def(vw=vw_def, alpha=alpha_def, cs2=cs2_ref, Nxi=Nxi_ref,
                 shock=True):
-    
+
     '''
     Function that computes the solutions for a subsonic deflagration
     1d profile given vw and alpha, using def_sol
-    
+
     Arguments:
         vw -- wall velocity (default is 0.5)
         alpha -- strength of the phase transition (default is 0.263)
@@ -513,14 +513,14 @@ def compute_def(vw=vw_def, alpha=alpha_def, cs2=cs2_ref, Nxi=Nxi_ref,
         w_pl, w_m -- plus and minus values of the enthalpies
                         across the bubble
     '''
-    
+
     ## relative velocity at + is computed from \tilde v- = \xi_w
     vrels, _ = vplus_vminus(alpha, vw=vw, ty='def')
     # Lorentz boosted v plus
     vpl = Lor_mu(vrels, vw)
-    
+
     xis, vs, ws, xi_sh, sh = def_sol(vpl, vw, cs2=cs2, Nxi=Nxi, shock=shock)
-    
+
     # values at both sides of the bubble wall
     w_pl = ws[0]
     w_m = w_pl*vrels/(1 - vrels**2)/vw*(1 - vw**2)
@@ -529,11 +529,11 @@ def compute_def(vw=vw_def, alpha=alpha_def, cs2=cs2_ref, Nxi=Nxi_ref,
 
 def compute_hyb(vw=vw_hyb, alpha=alpha_hyb, cs2=cs2_ref,Nxi=Nxi_ref,
                 shock=True):
-    
+
     '''
     Function that computes the solutions for a supersonic deflagration
     1d profile given vw and alpha, using det_sol and def_sol
-    
+
     Arguments:
         vw -- wall velocity (default is 0.7)
         alpha -- strength of the phase transition (default is 0.052)
@@ -550,25 +550,25 @@ def compute_hyb(vw=vw_hyb, alpha=alpha_hyb, cs2=cs2_ref,Nxi=Nxi_ref,
                         True if a shock forms
         w_pl, w_m -- plus and minus values of the enthalpies
     '''
-    
+
     cs = np.sqrt(cs2)
-    
+
     ## relative velocity at + is computed from \tilde v- = cs
     vrels, _ = vplus_vminus(alpha, cs2=cs2, ty='hyb')
     vpl = Lor_mu(vrels, vw)
     vm = Lor_mu(cs, vw)
-    
+
     # compute deflagration solution
     xis, vs, ws, xi_sh, sh = def_sol(vpl, vw, cs2=cs2,
                                      Nxi=int(Nxi/2), shock=shock)
-    
+
     # compute detonation solution
     xis2, vs2, ws2 = det_sol(vm, vw, cs2=cs2, Nxi=int(Nxi/2))
     # ratio of w+ over w- across the bubble wall
     w_pl = ws[0]
     w_m = w_pl*vrels/(1 - vrels**2)*(1 - cs2)/cs
     ws2 *= w_m
-    
+
     xis = np.append(xis2, xis)
     vs = np.append(vs2, vs)
     ws = np.append(ws2, ws)
@@ -580,7 +580,7 @@ def compute_det(vw=vw_det, alpha=alpha_det, cs2=cs2_ref, Nxi=Nxi_ref):
     '''
     Function that computes the solutions for a detonation 1d profile
     given vw and alpha, using det_sol
-    
+
     Arguments:
         vw -- wall velocity (default is 0.77)
         alpha -- strength of the phase transition (default is 0.091)
@@ -594,17 +594,17 @@ def compute_det(vw=vw_det, alpha=alpha_det, cs2=cs2_ref, Nxi=Nxi_ref):
         w_pl, w_m -- plus and minus values of the enthalpies
                         across the bubble
     '''
-    
+
     ## relative velocity at - is computed from \tilde v+ = \xi_w
     _, vrels = vplus_vminus(alpha, vw=vw, ty='det')
     # Lorentz boosted v minus
     vm = Lor_mu(vrels, vw)
     w_m = vw/(1 - vw**2)/vrels*(1 - vrels**2)
     w_pl = 1
-    
+
     xis, vs, ws = det_sol(vm, vw, cs2=cs2, Nxi=Nxi)
     ws *= w_m
-    
+
     # no shock is formed in detonations, so xi_sh is set to vw
     # and sh to False
     xi_sh = vw
@@ -614,12 +614,12 @@ def compute_det(vw=vw_det, alpha=alpha_det, cs2=cs2_ref, Nxi=Nxi_ref):
 
 def compute_alphan(vw=vw_def, alpha_obj=alpha_def, tol=tol_ref, cs2=cs2_ref,
                    quiet=False, max_it=it_ref, meth=1, Nxi=Nxi_ref, ty='def'):
-    
+
     '''
     Function that computes the value of \alpha_+ corresponding to alpha.
     It requires to compute the 1d profile of w and then iteratively look for
     the value of alpha_+ that gives the correct alpha.
-    
+
     Arguments:
         vw -- wall velocity
         alpha_obj -- value of alpha defined at the nucleation temperature that
@@ -631,7 +631,7 @@ def compute_alphan(vw=vw_def, alpha_obj=alpha_def, tol=tol_ref, cs2=cs2_ref,
         meth -- method on the Newton-Raphson update (2 options)
         Nxi -- number of points in xi discretization (default is 1000)
         ty -- type of solution (options are def or hyb)
-        
+
     Returns:
         xis0, vvs0, wws0 -- arrays of xi, velocity and enthalpy of the converged
                                solutions
@@ -649,7 +649,7 @@ def compute_alphan(vw=vw_def, alpha_obj=alpha_def, tol=tol_ref, cs2=cs2_ref,
     conv = False
 
     while not conv and j < max_it:
-        
+
         j += 1
 
         if ty == 'hyb':
@@ -659,9 +659,9 @@ def compute_alphan(vw=vw_def, alpha_obj=alpha_def, tol=tol_ref, cs2=cs2_ref,
         if ty == 'def':
             xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m = \
                 compute_def(vw=vw, alpha=alp_plus, cs2=cs2, Nxi=Nxi, shock=True)
-                
+
         alpha_n = alp_plus*w_pl
-        
+
         if abs(alpha_n - alpha_obj)/alpha_obj < tol: conv = True
 
         else:
@@ -675,7 +675,7 @@ def compute_alphan(vw=vw_def, alpha_obj=alpha_def, tol=tol_ref, cs2=cs2_ref,
 
     print(j, 'iterations for vw=', vw,' and alpha= ',alpha_obj)
     print('alpha:', alpha_n, ', alpha_+:', alp_plus)
-        
+
     return xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, alpha_n, alp_plus, conv
 
 def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
@@ -688,7 +688,7 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
     '''
     Function that computes the velocity and enthalpy profiles for a given
     alpha (at nucleation T, not alpha+) and a range of wall velocities.
-    
+
     Arguments:
         alpha -- nucleation T alpha
         vws -- range of wall velocities
@@ -731,21 +731,21 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
     shocks = np.zeros(len(vws))
     xi_shocks = np.zeros(len(vws))
     wms = np.zeros(len(vws))
-    
+
     if plot_v == 'both' and plot:
         plt.figure(1)
         plt.figure(2)
-    
+
     if len(cols) == 0: cols = cols_ref
 
     for i in range(0, len(vws)):
-        
+
         # determine type of solution
         ty = type_nucleation(vws[i], alpha, cs2=cs2)
-        
+
         j = i%11
         if ty == 'def':
-            
+
             ## iteratively compute the real alpha_+ leading to alpha
             if alphan:
                 xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, alpha_n, alp_plus, conv[i] = \
@@ -758,10 +758,10 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
                 xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m = \
                         compute_def(vw=vws[i], alpha=alpha, cs2=cs2, Nxi=Nxi, shock=True)
                 alphas_n[i] = alpha*w_pl
-            
+
             inds = np.where((xis >= vws[i])*(xis <= xi_sh))[0]
             inds2 = np.where(xis < vws[i])[0]
-            wws[i, inds2] = w_m            
+            wws[i, inds2] = w_m
 
         elif ty == 'hyb':
 
@@ -785,7 +785,7 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
             wws[i, inds2] = wws0[0]
 
         else:
-            
+
             xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m = \
                     compute_det(vw=vws[i], alpha=alpha, cs2=cs2,
                                 Nxi=Nxi)
@@ -794,7 +794,7 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
             inds2 = np.where(xis < cs)[0]
             wws[i, inds2] = wws0[0]
             alphas_n[i] = alpha
-        
+
         vvs[i, inds] = np.interp(xis[inds], xis0, vvs0)
         wws[i, inds] = np.interp(xis[inds], xis0, wws0)
         shocks[i] = sh
@@ -826,7 +826,7 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
                 plt.plot(xis, vvs[i, :], color=cols[j], ls=ls, alpha=alp, label=str_lg)
                 plt.figure(2)
                 plt.plot(xis, wws[i, :], color=cols[j], ls=ls, alpha=alp, label=str_lg)
-                
+
         if save and alphan:
 
             # option to save the results on files (one file for each alpha and wall velocity)
@@ -860,14 +860,14 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
             else: plt.ylabel(r'$ w(\xi)$')
         l = [1]
         if plot_v == 'both': l = [1, 2]
-        for j in l: 
+        for j in l:
             plt.figure(j)
             plt.xlim(0, 1)
             plt.vlines(cs, -5, 30, color='black', ls='dashed', lw=1)
             plt.vlines(vCJ, -5, 30, color='black', ls='dashed', lw=1)
             plt.xlabel(r'$\xi$')
             if legs: plt.legend(fontsize=fs_lg)
-        
+
     if eff:
         return xis, vvs, wws, alphas_n, conv, shocks, xi_shocks, wms, kappas, omegas
     else:
@@ -923,7 +923,7 @@ def kappas_Esp(vw, alp, cs2=cs2):
     kapC = np.sqrt(alp)/(0.135 + np.sqrt(0.98 + alp))
     v_cj = Chapman_Jouget(alp)
 
-    # kappa at vw -> 1    
+    # kappa at vw -> 1
     kapD = alp/(0.73 + 0.083*np.sqrt(alp) + alp)
     kappa_def = cs**(11/5)*kapA*kapB/((cs**(11/5) - vw**(11/5))*kapB + vw*cs**(6/5)*kapA)
     kappa_det = (v_cj - 1)**3*(v_cj/vw)**(5/2)*kapC*kapD
@@ -959,13 +959,13 @@ def kappas_Esp(vw, alp, cs2=cs2):
     return kap
 
 ######################### COMPUTING DIAGNOSTIC PROFILES #########################
-    
+
 def w_to_lam(xis, ws, vw, alpha_n):
-    
+
     inds = np.where(xis < vw)[0]
     lam = 3/4*(ws - 1)
     lam[inds] -= 3/4*alpha_n
-    
+
     return lam
 
 ########## COMPUTING FUNCTIONS RELEVANT FOR VELOCITY SPECTRAL DENSITY ##########
@@ -976,9 +976,9 @@ Other used references are: Hindmarsh:2016lnk, Hindmarsh:2019phv, RoperPol:2023dz
 '''
 
 #### f' and l functions
-    
+
 def fp_z(xi, vs, z, ls=[], multi=True, quiet=False, lz=False, gpz=False):
-    
+
     '''
     Function that computes the functions f'(z) and l(z) that appears in the Fourier
     transform of the velocity and enthalpy perturbations fields of an expanding bubble.
@@ -1008,7 +1008,7 @@ def fp_z(xi, vs, z, ls=[], multi=True, quiet=False, lz=False, gpz=False):
             if lz:
                 l_ij, z_ij = np.meshgrid(ls[i, 1:], z, indexing='ij')
                 lzs[i, :] = 4*np.pi*np.trapz(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
-                
+
             if not quiet: print('vw ', i + 1, '/', Nvws, ' computed')
 
     else:
@@ -1023,3 +1023,17 @@ def fp_z(xi, vs, z, ls=[], multi=True, quiet=False, lz=False, gpz=False):
         return fpzs, lzs
     else:
         return fpzs
+
+def Rstar_beta(vw=1., cs2=cs2_ref, corr=True):
+
+    """
+    Function that computes the ratio of the mean-bubble separation Rstar
+    to the inverse nucleation rate parameter beta.
+    """
+
+    Rbeta = (8*np.pi)**(1/3)*vws
+    if corr:
+        cs = np.sqrt(cs2)
+        Rbeta = Rbeta*np.maximum(1., cs/vws)
+
+    return Rbeta
