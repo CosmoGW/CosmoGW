@@ -43,7 +43,6 @@ import matplotlib.pyplot as plt
 import cosmoGW.plot_sets as plot_sets
 
 # reference values
-cs2_ref = 1/3        # speed of sound squared
 a_ref   = 4          # Batchelor spectrum k^4
 b_ref   = 5/3        # Kolmogorov spectrum k^(-5/3)
 alp_ref = 2          # reference smoothness of broken power-law transition
