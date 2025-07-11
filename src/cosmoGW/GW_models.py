@@ -31,12 +31,16 @@ JCAP 12 (2019) 062, arXiv:1909.10040
 RoperPol:2025b - A. Roper Pol, A. Midiri, M. Salomé, C. Caprini,
 "Modeling the gravitational wave spectrum from slowly decaying sources in the
 early Universe: constant-in-time and coherent-decay models," in preparation
+
+RoperPol:2025a - A. Roper Pol, S. Procacci, A. S. Midiri,
+C. Caprini, "Irrotational fluid perturbations from first-order phase
+transitions," in preparation
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
-import cosmoGW.plot_sets as plot_sets
 import cosmoGW.hydro_bubbles as hb
+import cosmoGW.GW_analytical as an
 
 # reference values
 cs2_ref    = 1/3    # speed of sound squared
@@ -47,83 +51,172 @@ Np_ref     = 3000   # reference number of wave number discretization
                     # for convolution calculations
 NTT_ref    = 5000   # reference number of lifetimes discretization
 
-def EPi_correlators_ptilde(kp, p, k, EK, eps=1., eps_spec=False, Nptilde=100,
-                           quiet=True, proj=True, q=.5, q_spec=False, tp='all'):
+################ COMPUTING THE SPECTRUM OF THE STRESSES  ###############
+######################## FOR DIFFERENT SOURCES #########################
+
+def Integ(p, tildep, z, k=0., tp='vort', hel=False):
 
     '''
-    Routine to compute the spectrum of the projected (anisotropic) stresses
-    from the two-point correlator of the source (e.g. kinetic spectrum) under
-    the assumption of Gaussianity.
-
-    It computes the vortical and compressional components of the stress.
-
-    It returns EPi/k^2
-
-    References are:
-    a) RoperPol:2022iel, equations 11 and 20, for vortical
-    b) RoperPol:2023dzg, equation 45, for compressional
-    c) RoperPol:2025b for generic fields
+    Integrand of the integral over p and z (or tilde p) that is
+    used to compute the anisotropic stresses in EPi_correlators_ptilde
     '''
 
-    kij, pij = np.meshgrid(kp, p, indexing='ij')
-    K_pP = (kij + pij)
-    K_mP = abs(kij - pij)
-    K_mP[np.where(K_mP == 0)] = 1e-30
+    Integ = 0
+    if hel:
+        if tp == 'vort': Integ = 1./p/tildep**4*(1 + z**2)*(k - p*z)
+        if tp == 'comp': Integ = 2./p/tildep**4*(1 - z**2)*(k - p*z)
+    else:
+        if tp == 'vort': Integ = .5/p/tildep**3*(1 + z**2)* \
+                                     (2 - p**2/tildep**2*(1 - z**2))
+        if tp == 'comp': Integ = 2.*p/tildep**5*(1 - z**2)**2
+        if tp == 'mix':  Integ = 2.*p/tildep**5*(1 - z**4)
+        if tp == 'hel':  Integ = .5/p/tildep**4*z*(k - p*z)
 
-    ptilde = np.zeros((Nptilde, len(kp), len(p)))
-    kij = np.zeros((Nptilde, len(kp), len(p)))
-    pij = np.zeros((Nptilde, len(kp), len(p)))
+    return Integ
 
-    for i in range(0, len(kp)):
-        for j in range(0, len(p)):
-            ptilde[:, i, j] = np.logspace(np.log10(K_mP[i, j]),
-                                          np.log10(K_pP[i, j]), Nptilde)
-            kij[:, i, :] = kp[i]
-            pij[:, :, j] = p[j]
+def EPi_correlators_ptilde(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
+                           tp='all', zeta=False, hel=False, norm=True,
+                           model='dbpl', kk=[], EK_p=[]):
 
-    ptilde[np.where(ptilde == 0)] = 1e-50
-    z = (pij**2 + kij**2 - ptilde**2)/(2*kij*pij)
+    '''
+    Routine to compute the spectrum of the projected (anisotropic) or
+    unprojected stresses from the two-point correlator of the source
+    (e.g. velocity, magnetic or scalar fields) under the assumption that
+    the source is Gaussian.
 
-    EK_ptilde = np.interp(ptilde, k, EK)
-    if eps_spec: HK_ptilde = np.interp(ptilde, k, 2*eps*EK)/ptilde
-    else: HK_ptilde = EK_ptilde*2*eps/ptilde
+    It computes the vortical, compressional, helical and mixed components
+    of the stresses, as well as the compressional and vortical components
+    of the helical stresses.
 
-    kij, pij = np.meshgrid(kp, p, indexing='ij')
-    EK_p = np.interp(pij, k, EK)
-    if eps_spec: HK_p = np.interp(pij, k, 2*EK*eps)/pij
-    else: HK_p = 2*EK_p*eps/pij
+    Main reference is RoperPol:2025a, see also eqs 11 and 20 of
+    RoperPol:2022iel for the vortical component and eq. 45 of
+    RoperPol:2023dzg for the compressional component
 
-    if tp == 'vort' or tp == 'all':
+    Arguments:
+        k     -- array of wave numbers
+        a     -- slope of the spectrum at low wave numbers, k^a
+        b     -- slope of the spectrum at high wave numbers, k^(-b)
+        alp   -- smoothness of the transition from one power law to the other
+        tp    -- type of sourcing field: 'vort', 'comp', 'hel' or 'mix' available
+        zeta  -- option to integrate the convolution over z in (-1, 1)
+                default option integrates over ptilde in (|p - k|, p + k)
+        hel   -- option to compute the helical stresses
+        norm  -- option to normalize the spectrum such that its peak is located at
+                 kpeak and its maximum value is A
+        model -- select the model to be used for the spectrum of the source,
+                 current options are 'dbpl' for the smoothed double broken power
+                 law model defined in GW_analytical module or 'input' to give
+                 a numerical input
+        kk, EK_p -- if input is chosen, then numerical array of wave numbers and
+                    spectrum of the source need to be provided
 
-        if proj:
-            JJ_vort = .5*np.trapz(EK_ptilde/ptilde**3*(1 + z**2)* \
-                      (2*ptilde**2 + pij**2*(z**2 - 1))/kij/pij,
-                                  ptilde, axis=0)
-        else:
-            JJ_vort = .5*np.trapz(EK_ptilde/ptilde**3*(6*ptilde**2 \
-                      + kij**2*(z**2 - 1))/kij/pij,
-                                  ptilde, axis=0)
+    Returns
+        pi -- spectrum of the anisotropic stresses of the chosen component
+              or of all of them if tp = 'all' is chosen
+    '''
 
-        zetaPi_vort = np.trapz(EK_p*JJ_vort, p, axis=1)
+    from scipy import integrate
 
-    if tp == 'comp' or tp == 'all':
+    # define zeta_P times zeta_Ptilde function in funcs based on
+    # the inpute model
 
-        if proj:
-            JJ_comp = 2*np.trapz(EK_ptilde/ptilde**3*(1 - z**2)**2* \
-                      pij/kij, ptilde, axis=0)
-        else:
-            JJ_comp = 2*np.trapz(EK_ptilde/ptilde**3*(2*ptilde**2 + \
-                      kij**2*(z**2 - 1))/kij/pij,
-                                 ptilde, axis=0)
-        zetaPi_comp = np.trapz(EK_p*JJ_comp, p, axis=1)
+    if model == 'dbpl':
+
+        A    = (a + b)**(1/alp)
+        alp2 = alp*(a + b)
+        if norm: c = a; d = b
+        else: c = 1.; d = 1.; A = 1.
+
+
+        # functions following a smoothed broken power law
+        def funcs(p, tildep):
+            zeta_P      = A*p**a/(d + c*p**alp2)**(1/alp)
+            zeta_Ptilde = A*tildep**a/(d + c*tildep**alp2)**(1/alp)
+            return zeta_P*zeta_Ptilde
+
+    elif model == 'input':
+
+        if len(kk) == 0 or len(EK_p) == 0:
+            print('For using input model provide kk and EK')
+            return 0.
+
+        # functions interpolate the input numerical data
+        def funcs(p, tildep):
+            zeta_P      = np.interp(p, kk, EK_p)
+            zeta_Ptilde = np.interp(p, kk, EK_p)
+            return zeta_P*zeta_Ptilde
+
+    else:
+        print('A model needs to be selected: dpbl or input')
+        return 0.
+
+    ## compute all components (vort, comp, mix, hel)
 
     if tp == 'all':
-        return zetaPi_vort, zetaPi_comp
+        if hel: tps = ['vort', 'comp']
+        else:   tps = ['vort', 'comp', 'mix', 'hel']
+        pis = np.zeros((len(tps), len(k)))
+        for j in range(0, len(tps)):
+            # integrate over p and z
+            if zeta:
 
-    elif tp == 'vort':
-        return zetaPi_vort
-    elif tp == 'comp':
-        return zetaPi_comp
+                def f(p, z, kp):
+                    tildep = np.sqrt(p**2 + kp**2 - 2*p*kp*z)
+                    return funcs(p, tildep)*Integ(p, tildep, z, k=kp,
+                                                  tp=tps[j], hel=hel)
+
+                for i in range(0, len(k)):
+                    kp = k[i]
+                    pis[j, i], _ = \
+                        integrate.nquad(f, [[0, np.inf], [-1., 1.]], args=(kp,))
+
+            # integrate over p and ptilde
+            else:
+                for i in range(0, len(k)):
+                    kp = k[i]
+
+                    def f(p, tildep):
+                        z = (p**2 + kp**2 - tildep**2)/2/p/kp
+                        return funcs(p, tildep)*Integ(p, tildep, z, k=kp,
+                                     tp=tps[j], hel=hel)*tildep/p/kp
+
+                    def bounds_p():       return [0, np.inf]
+                    def bounds_tildep(p): return [abs(kp - p), kp + p]
+
+                    pis[j, i], _ = integrate.nquad(f, [bounds_tildep, bounds_p])
+
+        return pis
+
+    ## compute the chosen component in tp
+    else:
+        pi = np.zeros(len(k))
+
+        # integrate over p and z
+        if zeta:
+            def f(p, z, kp):
+                tildep = np.sqrt(p**2 + kp**2 - 2*p*kp*z)
+                return funcs(p, tildep)*Integ(p, tildep, z, k=kp,
+                             tp=tp, hel=hel)
+            for i in range(0, len(k)):
+                kp = k[i]
+                pi[i], _ = \
+                    integrate.nquad(f, [[0, np.inf], [-1., 1.]], args=(kp,))
+
+        # integrate over p and ptilde
+        else:
+            for i in range(0, len(k)):
+                kp = k[i]
+                def f(p, tildep):
+                    z = (p**2 + kp**2 - tildep**2)/2/p/kp
+                    return funcs(p, tildep)*Integ(p, tildep, z, k=kp,
+                                 tp=tp, hel=hel)*tildep/p/kp
+
+                def bounds_p(): return [0, np.inf]
+                def bounds_tildep(p): return [abs(kp - p), kp + p]
+
+                pi[i], _ = integrate.nquad(f, [bounds_tildep, bounds_p])
+
+        return pi
 
 ############### SOUND-SHELL MODEL FOR SOUND WAVES IN PTs ###############
 
@@ -310,7 +403,8 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
 
     Omm = np.zeros((l + 1, len(kp)))
     for i in range(0, l):
-        Pi_1 = np.trapz(EK_ptilde/ptilde**4*(1 - zij**2)**2*Delta_mn[i, :, :, :], z, axis=2)
+        Pi_1 = np.trapz(EK_ptilde/ptilde**4*(1 - zij**2)**2*Delta_mn[i, :, :, :],
+                        z, axis=2)
         kij, EK_pij = np.meshgrid(kp, EK_p, indexing='ij')
         kij, pij = np.meshgrid(kp, p, indexing='ij')
         Omm[i, :] = np.trapz(Pi_1*pij**2*EK_pij, p, axis=1)
@@ -358,38 +452,3 @@ def compute_Delta_mn(t, k, p, ptilde, cs2=cs2_ref, m=1, n=1, tini=1.,
         Delta_mn = 2*(1 - np.cos(pp*(t - tini)))/pp**2
 
     return Delta_mn
-
-############ Computation of the vorticity production in a radiation-dominated universe ############
-
-def Evort_conv(kp, p, k, E, Nz=100, ampl=False, cs=1.):
-
-    '''
-    Calculation of the spectrum of the vorticity rate of growth.
-
-    Input Ps is the power spectrum per logarithmic interval of k
-    '''
-
-    z = np.linspace(-1, 1, Nz)
-    kij, pij, zij = np.meshgrid(kp, p, z, indexing='ij')
-
-    ptilde = np.sqrt(kij**2 + pij**2 - 2*pij*kij*z)
-    # avoid division by zero
-    ptilde[np.where(ptilde < 1e-30)] = 1e-30
-
-    E_ptilde = np.interp(ptilde, k, E)
-
-    II = E_ptilde*(1 - zij**2)*(2*pij*zij - kij)/ptilde**4*pij**2
-    I = np.trapz(II, z, axis=2)
-
-    kij, pij = np.meshgrid(kp, p, indexing='ij')
-    E_p = np.interp(pij, k, E)
-
-    I = kp**4*np.trapz(I*E_p, p)*cs**4
-
-    if ampl:
-
-        CC = 4/3/np.pi*np.trapz(E**2, k)
-
-        return I, CC
-
-    else: return I
