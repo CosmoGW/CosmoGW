@@ -51,6 +51,19 @@ Np_ref     = 3000   # reference number of wave number discretization
                     # for convolution calculations
 NTT_ref    = 5000   # reference number of lifetimes discretization
 
+'''
+    RoperPol:2022iel/RoperPol:2023dzg and RoperPol:2025b/RoperPol:2025b
+    consider spectral functions defined such that the average squared
+    field corresponds to
+
+    <v^2> ~ 2 E* k* int zeta(K) dK,     in RoperPol:2022iel
+    <v^2> ~ 2 E*    int zeta(K) dlnK,   in RoperPol:2025b
+
+    The first convention can be chosen in the following functions if
+    dlogK is set to False, while the second one is assumed when dlogK
+    is True
+'''
+
 ################ COMPUTING THE SPECTRUM OF THE STRESSES  ###############
 ######################## FOR DIFFERENT SOURCES #########################
 
@@ -76,7 +89,7 @@ def Integ(p, tildep, z, k=0., tp='vort', hel=False):
 
 def EPi_correlators_ptilde(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
                            tp='all', zeta=False, hel=False, norm=True,
-                           model='dbpl', kk=[], EK_p=[]):
+                           dlogk=True, model='dbpl', kk=[], EK_p=[]):
 
     '''
     Routine to compute the spectrum of the projected (anisotropic) or
@@ -127,7 +140,6 @@ def EPi_correlators_ptilde(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
         if norm: c = a; d = b
         else: c = 1.; d = 1.; A = 1.
 
-
         # functions following a smoothed broken power law
         def funcs(p, tildep):
             zeta_P      = A*p**a/(d + c*p**alp2)**(1/alp)
@@ -162,8 +174,10 @@ def EPi_correlators_ptilde(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
 
                 def f(p, z, kp):
                     tildep = np.sqrt(p**2 + kp**2 - 2*p*kp*z)
-                    return funcs(p, tildep)*Integ(p, tildep, z, k=kp,
-                                                  tp=tps[j], hel=hel)
+                    II     = funcs(p, tildep)*Integ(p, tildep, z, k=kp,
+                                                    tp=tps[j], hel=hel)
+                    if not dlogk: II *= p*tildep
+                    return II
 
                 for i in range(0, len(k)):
                     kp = k[i]
@@ -172,13 +186,16 @@ def EPi_correlators_ptilde(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
 
             # integrate over p and ptilde
             else:
+
                 for i in range(0, len(k)):
                     kp = k[i]
 
                     def f(p, tildep):
-                        z = (p**2 + kp**2 - tildep**2)/2/p/kp
-                        return funcs(p, tildep)*Integ(p, tildep, z, k=kp,
-                                     tp=tps[j], hel=hel)*tildep/p/kp
+                        z  = (p**2 + kp**2 - tildep**2)/2/p/kp
+                        II = funcs(p, tildep)*Integ(p, tildep, z, k=kp,
+                                   tp=tps[j], hel=hel)*tildep/p/kp
+                        if not dlogk: II *= p*tildep
+                        return II
 
                     def bounds_p():       return [0, np.inf]
                     def bounds_tildep(p): return [abs(kp - p), kp + p]
@@ -189,14 +206,19 @@ def EPi_correlators_ptilde(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
 
     ## compute the chosen component in tp
     else:
+
         pi = np.zeros(len(k))
 
         # integrate over p and z
         if zeta:
+
             def f(p, z, kp):
                 tildep = np.sqrt(p**2 + kp**2 - 2*p*kp*z)
-                return funcs(p, tildep)*Integ(p, tildep, z, k=kp,
-                             tp=tp, hel=hel)
+                II     = funcs(p, tildep)*Integ(p, tildep, z, k=kp,
+                               tp=tp, hel=hel)
+                if not dlogk: II *= p*tildep
+                return II
+
             for i in range(0, len(k)):
                 kp = k[i]
                 pi[i], _ = \
@@ -207,9 +229,11 @@ def EPi_correlators_ptilde(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
             for i in range(0, len(k)):
                 kp = k[i]
                 def f(p, tildep):
-                    z = (p**2 + kp**2 - tildep**2)/2/p/kp
-                    return funcs(p, tildep)*Integ(p, tildep, z, k=kp,
-                                 tp=tp, hel=hel)*tildep/p/kp
+                    z  = (p**2 + kp**2 - tildep**2)/2/p/kp
+                    II = funcs(p, tildep)*Integ(p, tildep, z, k=kp,
+                               tp=tp, hel=hel)*tildep/p/kp
+                    if not dlogk: II *= p*tildep
+                    return II
 
                 def bounds_p(): return [0, np.inf]
                 def bounds_tildep(p): return [abs(kp - p), kp + p]
@@ -218,16 +242,16 @@ def EPi_correlators_ptilde(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
 
         return pi
 
-############### SOUND-SHELL MODEL FOR SOUND WAVES IN PTs ###############
+################ SOUND-SHELL MODEL FOR SOUND WAVES IN PTs ################
 
 '''
 Kinetic spectra computed for the sound-shell model from f' and l functions.
 f' and l functions need to be previously computed from the self-similar
-fluid perturbations induced by expanding bubbles (see hydro_bubbles.py)
+fluid perturbations induced by expanding bubbles using hydro_bubbles module
 '''
 
 def compute_kin_spec_ssm(z, vws, fp, l, sp='sum', type_n='exp', cs2=cs2_ref,
-                         corr=True, min_qbeta=-4, max_qbeta=5, Nqbeta=Nk_ref,
+                         corr=False, min_qbeta=-4, max_qbeta=5, Nqbeta=Nk_ref,
                          min_TT=-1, max_TT=3, NTT=NTT_ref, corr=False,
                          dens=True, normbeta=True):
 
@@ -260,20 +284,22 @@ def compute_kin_spec_ssm(z, vws, fp, l, sp='sum', type_n='exp', cs2=cs2_ref,
 
     if sp == 'sum':    A2 = .25*(cs2*l**2 + fp**2)
     if sp == 'only_f': A2 = .5*fp**2
+    if sp == 'only_l': A2 = .5*cs2*l**2
     if sp == 'diff':   A2 = .25*(fp**2 - cs2*l**2)
     if sp == 'cross':  A2 = -.5*fp*np.sqrt(cs2)*l
 
     qbeta = np.logspace(min_qbeta, max_qbeta, Nqbeta)
-    TT = np.logspace(min_TT, max_TT, NTT)
+    TT    = np.logspace(min_TT, max_TT, NTT)
+    Pv    = np.zeros((len(vws), len(qbeta)))
+
     q_ij, TT_ij = np.meshgrid(qbeta, TT, indexing='ij')
-    Pv = np.zeros((len(vws), len(qbeta)))
+    if type_n == 'exp': nu_T = np.exp(-TT_ij)
+    if type_n == 'sim': nu_T = .5*np.exp(-TT_ij**3/6)*TT_ij**2
 
     funcT = np.zeros((len(vws), len(qbeta), len(TT)))
+
     for i in range(0, len(vws)):
-        if type_n == 'exp':
-            funcT[i, :, :] = np.exp(-TT_ij)*TT_ij**6*np.interp(TT_ij*q_ij, z, A2[i, :])
-        if type_n == 'sim':
-            funcT[i, :, :] = .5*np.exp(-TT_ij**3/6)*TT_ij**8*np.interp(TT_ij*q_ij, z, A2[i, :])
+        funcT[i, :, :] = nu_T*TT_ij**6*np.interp(TT_ij*q_ij, z, A2[i, :])
         Pv[i, :] = np.trapz(funcT[i, :, :], TT, axis=1)
 
     if dens == False:
@@ -289,7 +315,8 @@ def compute_kin_spec_ssm(z, vws, fp, l, sp='sum', type_n='exp', cs2=cs2_ref,
 
     return qbeta, Pv
 
-def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False, cs2=cs2_ref):
+def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
+                  cs2=cs2_ref):
 
     '''
     Function to compute GW spectrum using the approximation
@@ -299,7 +326,9 @@ def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False, cs2=cs2_ref):
 
     The resulting GW spectrum is
 
-     Omega_GW (k) = (3pi)/(8cs) x (k/kst)^2 x (K/KK)^2 x TGW x Omm(k)
+     Omega_GW (k) = (3pi)/(8cs) x (k/kst)^2 x (cal E/cal A)^2 x TGW x Omm(k)
+
+     where cal E = half <v^2> = half vrms^2 and cal A = int zeta(K) d ln k
 
     Reference: Appendix B of RoperPol:2023dzg; see eq.(B3)
     '''
@@ -337,10 +366,7 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
     assuming Gaussianity, and under the assumption of stationary UETC (e.g.,
     sound waves under the sound-shell model).
 
-    august/2024 (alberto): slightly modified from previous version now to
-    compute the combination Delta0 C zeta_GW
-
-    Reference: RoperPol:2023dzg, eq. 90
+    Reference: RoperPol:2023dzg, eq. 93
 
     Arguments:
         k -- array of wave numbers
