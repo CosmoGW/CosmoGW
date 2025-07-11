@@ -42,8 +42,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 ### Reference slopes
-a_ref = 5      # Batchelor spectrum k^5
-b_ref = 2/3    # Kolmogorov spectrum k^(-2/3)
+a_ref   = 5    # Batchelor spectrum k^5
+b_ref   = 2/3  # Kolmogorov spectrum k^(-2/3)
 alp_ref = 2    # reference smoothness of broken power-law transition
 
 ####### ANALYTICAL FUNCTIONS USED FOR A SMOOTHED BROKEN POWER LAW #######
@@ -110,21 +110,21 @@ def smoothed_bPL(k, A=1., a=a_ref, b=b_ref, kpeak=1., alp=alp_ref, norm=True,
 
     Arguments:
 
-        k -- array of wave numbers
-        A -- amplitude of the spectrum
-        a -- slope of the spectrum at low wave numbers, k^a
-        b -- slope of the spectrum at high wave numbers, k^(-b)
-        kpeak -- spectral peak, i.e., position of the break from k^a to k^(-b)
-        alp -- smoothness of the transition from one power law to the other
-        norm -- option to normalize the spectrum such that its peak is located at
+        k      -- array of wave numbers
+        A      -- amplitude of the spectrum
+        a      -- slope of the spectrum at low wave numbers, k^a
+        b      -- slope of the spectrum at high wave numbers, k^(-b)
+        kpeak  -- spectral peak, i.e., position of the break from k^a to k^(-b)
+        alp    -- smoothness of the transition from one power law to the other
+        norm   -- option to normalize the spectrum such that its peak is located at
                 kpeak and its maximum value is A
-        Omega -- option to use the integrated energy density as the input A
+        Omega  -- option to use the integrated energy density as the input A
         alpha2 -- option to use the alternative convention, such that the spectrum
                   takes the form: zeta(K) ~ K^a/( b + c K^alp )^((a + b)/alp)
         piecewise -- option to return a piecewise broken power law:
                      zeta(K) = K^a for K < 1, and K^(-b) for K > 1
                      corresponding to the alpha -> infinity limit
-        dlogk -- option to consider the spectral function per unit of k
+        dlogk  -- option to consider the spectral function per unit of k
                  or unit of logarithm of k (see comment above)
 
     Returns:
@@ -188,8 +188,8 @@ def calIab_n_alpha(a=a_ref, b=b_ref, alp=alp_ref, n=0, norm=True):
 
     Arguments:
         a, b -- slopes of the smoothed_bPL function
-        alp -- smoothness parameter of the smoothed_bPL function
-        n -- n-moment of the integral
+        alp  -- smoothness parameter of the smoothed_bPL function
+        n    -- n-moment of the integral
         norm -- option to normalize the spectrum such that its peak is located at
                 kpeak and its maximum value is 1
 
@@ -223,10 +223,10 @@ def Iabn(a=a_ref, b=b_ref, alp=alp_ref, n=0, norm=True, alpha2=False,
 
     Arguments:
 
-        a -- slope of the spectrum at low wave numbers, k^a
-        b -- slope of the spectrum at high wave numbers, k^(-b)
+        a   -- slope of the spectrum at low wave numbers, k^a
+        b   -- slope of the spectrum at high wave numbers, k^(-b)
         alp -- smoothness of the transition from one power law to the other
-        n -- moment of the integration
+        n   -- moment of the integration
 
     Returns: value of the n-th moment
     '''
@@ -314,12 +314,12 @@ def zetam(a=a_ref, b=b_ref, alp=alp_ref, m=-1, norm=True, alpha2=False,
     Main reference is RoperPol:2025b, appendix A
 
     Arguments:
-        a -- slope of the spectrum at low wave numbers, k^a
-        b -- slope of the spectrum at high wave numbers, k^(-b)
-        kpeak -- spectral peak, i.e., position of the break from k^a to k^(-b)
-        alp -- smoothness of the transition from one power law to the other
-        m -- power of K^m used to compute new function K^m zeta(K)
-        norm -- option to normalize the spectrum such that its peak is located at
+        a      -- slope of the spectrum at low wave numbers, k^a
+        b      -- slope of the spectrum at high wave numbers, k^(-b)
+        kpeak  -- spectral peak, i.e., position of the break from k^a to k^(-b)
+        alp    -- smoothness of the transition from one power law to the other
+        m      -- power of K^m used to compute new function K^m zeta(K)
+        norm   -- option to normalize the spectrum such that its peak is located at
                         kpeak and its maximum value is A
         alpha2 -- option to use the alternative convention, such that the spectrum
                           takes the form: zeta(K) ~ K^a/( b + c K^alp )^((a + b)/alp)
@@ -390,9 +390,13 @@ def calC(a=a_ref, b=b_ref, alp=alp_ref, tp='vort', norm=True, alpha2=False,
         b -- slope of the spectrum at high wave numbers, k^(-b)
         alp -- smoothness of the transition from one power law to the other
         tp -- type of sourcing field: 'vort' or 'comp' available
-        norm --
-        alpha2 --
-        piecewise --
+        norm -- option to normalize the spectrum such that its peak is located at
+                        kpeak and its maximum value is A
+        alpha2 -- option to use the alternative convention, such that the spectrum
+                          takes the form: zeta(K) ~ K^a/( b + c K^alp )^((a + b)/alp)
+        piecewise -- option to return a piecewise broken power law:
+                             zeta(K) = K^a for K < 1, and K^(-b) for K > 1
+                             corresponding to the alpha -> infinity limit
     '''
 
     pref = 1.
