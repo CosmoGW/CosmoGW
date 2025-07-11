@@ -9,7 +9,7 @@ created in Nov. 2022
 Currently part of the cosmoGW code:
 
 https://github.com/cosmoGW/cosmoGW/
-https://github.com/cosmoGW/cosmoGW/blob/development/src/cosmoGW/cosmology.py
+https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/cosmology.py
 
 Author: Alberto Roper Pol
 Created: 27/11/2022 (GW_turbulence)
@@ -257,18 +257,6 @@ def check_Hubble_Hz(H, func=''):
 
     return H
 
-def check_temperature_MeV(T, func=''):
-
-    try:
-        T = T.to(u.MeV)
-    except:
-        print('The input temperature in ', func,
-              ' needs to be given in energy units using astropy.units \n'
-              ' setting T to default value T =', Tref)
-        T = Tref.to(u.MeV)
-
-    return T
-
 def rho_critical(H=H0_ref):
 
     """
@@ -415,29 +403,6 @@ def RD_dofs(dir0='', Neff=Neff_ref, scalef=False):
     gs = thermal_g(T=T, s=0, file=True, dir0=dir0)
 
     g0, g0s, T0, _ = values_0(neut=True, Neff=Neff)
-
-    #### the numerical gs and gS have final (smaller) values of 3.363 and 3.909,
-    #### which are not necessary the same as g0 and gS0, especially if we set Neff
-    # #### different than 3, so we interpolate the last values to correct for this.
-    # if gs[0] < g0:
-    #     inds = np.where(gs < max(gs[0], g0))[0]
-    #     gs[:inds[-1]+1] = g0
-    # else:
-    #     inds = np.where((gs - gs[0] < 1e-1))[0]
-    #     indd = 10
-    #     vals = np.linspace(g0, gs[inds[-1]], indd)
-    #     gs[:inds[-1]] = g0
-    #     gs[inds[-1]-indd:inds[-1]] = vals
-
-    # if gS[0] < g0s:
-    #     inds = np.where((gS < max(gS[0], g0s)))[0]
-    #     gS[:inds[-1]+1] = g0s
-    # else:
-    #     inds = np.where(gS - gS[0] < 1e-1)[0]
-    #     indd = 10
-    #     vals = np.linspace(g0s, gS[inds[-1]], indd)
-    #     gS[:inds[-1]] = g0s
-    #     gS[inds[-1]-indd:inds[-1]] = vals
 
     ### convert temperature and degrees of freedom into an array
     ### of scale factors using adiabatic expansion of the universe
@@ -626,7 +591,8 @@ def friedmann(a, dir0='', a0=1, h0=h0_ref, OmL0=OmL0_ref, dofs=True, Neff=Neff_r
 
     return w, ad, add, ap, app
 
-def friedmann_solver(a, dir0='', a0=1., h0=h0_ref, OmL0=OmL0_ref, dofs=True, Neff=Neff_ref,
+def friedmann_solver(a, dir0='', a0=1., h0=h0_ref, OmL0=OmL0_ref,
+                     dofs=True, Neff=Neff_ref,
                      return_all=False, save=True, nm_fl=''):
 
     """
@@ -665,8 +631,8 @@ def friedmann_solver(a, dir0='', a0=1., h0=h0_ref, OmL0=OmL0_ref, dofs=True, Nef
         print('minimum a given is ', a[0])
         print('note that the solver assumes that a[0] corresponds to',
               'times t = eta = 0, so make sure to use an array of a with',
-              'small enough values (a[0] ~ 1e-20)')
-    difft[0] = 0
+              'small enough values (a[0] ~ 1e-20)')
+    difft[0]   = 0
     diffeta[0] = 0
 
     print('Entering Friedmann solver')
@@ -741,7 +707,7 @@ def normalized_variables(a, eta, ap_a, app_a, dir0='', T=Tref, h0=h0_ref):
 
     Reference: He:2022qcs, appendix A.
 
-    The normalization follows that from RPBKKM20.
+    The normalization follows that from RoperPol:2018sap.
     """
 
     g = thermal_g(T=T, s=0, dir0=dir0)
@@ -771,18 +737,19 @@ def normalized_variables(a, eta, ap_a, app_a, dir0='', T=Tref, h0=h0_ref):
     w = 1/3*(1 - app_a_n*2/HH_n**2)
 
     # compute aEQ, aL, and a_acc
-    inds = np.argsort(w)
-    aEQ_n = np.interp(1/6, w[inds], a_n[inds])
-    aL_n = np.interp(-.5, w[inds], a_n[inds])
-    a_acc_n = np.interp(-1/3, w[inds], a_n[inds])
-    eta_n_EQ = np.interp(aEQ_n, a_n, eta_n)
-    eta_n_L = np.interp(aL_n, a_n, eta_n)
+    inds      = np.argsort(w)
+    aEQ_n     = np.interp(1/6, w[inds], a_n[inds])
+    aL_n      = np.interp(-.5, w[inds], a_n[inds])
+    a_acc_n   = np.interp(-1/3, w[inds], a_n[inds])
+    eta_n_EQ  = np.interp(aEQ_n, a_n, eta_n)
+    eta_n_L   = np.interp(aL_n, a_n, eta_n)
     eta_n_acc = np.interp(a_acc_n, a_n, eta_n)
 
     return a_n, eta_n, HH_n, app_a_n, Omega, w, eta_n_0, aEQ_n, \
            aL_n, a_acc_n, eta_n_EQ, eta_n_L, eta_n_acc
 
-def ratio_app_a_n_factor(a, dir0='', a0=1, h0=h0_ref, OmL0=OmL0_ref, dofs=True, Neff=Neff_ref):
+def ratio_app_a_n_factor(a, dir0='', a0=1, h0=h0_ref, OmL0=OmL0_ref,
+                         dofs=True, Neff=Neff_ref):
 
     """
     Function that computes the ratio of a''/a (normalized) to conformal Hubble rate H (normalized)
@@ -847,24 +814,24 @@ def norm_variables_cut(eta_n, HH_n, a_n, Omega, Omega_mat, eta_n_0, dir0='',
     H0 = h0*H0_ref
 
     # relativistic and adiabatic dofs
-    g = thermal_g(T=T, s=0, dir0=dir0)
+    g  = thermal_g(T=T, s=0, dir0=dir0)
     gS = thermal_g(T=T, s=1, dir0=dir0)
     # scale factor and Hubble rate
     ast = as_a0_rat(T=T, g=gS)
-    Hs = Hs_val(T=T, g=g)
+    Hs  = Hs_val(T=T, g=g)
 
     # indices
-    inds = np.where(eta_n > 1)[0]
+    inds  = np.where(eta_n > 1)[0]
     inds2 = np.where(eta_n[inds] < eta_n_0)[0]
 
     eta_nn = cut_var(eta_n, 1, eta_n_0, inds, inds2)
-    HH_n0 = np.interp(1, eta_n, HH_n.value)
-    HH_nn = cut_var(HH_n.value, HH_n0, H0/Hs/ast, inds, inds2)
-    a_nn = cut_var(a_n, 1, 1/ast, inds, inds2)
+    HH_n0  = np.interp(1, eta_n, HH_n.value)
+    HH_nn  = cut_var(HH_n.value, HH_n0, H0/Hs/ast, inds, inds2)
+    a_nn   = cut_var(a_n, 1, 1/ast, inds, inds2)
     Omega_nn = cut_var(Omega, (Hs/H0)**2, 1, inds, inds2)
     Omega_mat_nn = cut_var(Omega_mat, OmM0*ast**(-3), OmM0, inds, inds2)
     Omega_rad_nn = Omega_nn - Omega_mat_nn - (1 - OmM0)
-    w_nn = (1/3*Omega_rad_nn - (1 - OmM0))/Omega_nn
+    w_nn   = (1/3*Omega_rad_nn - (1 - OmM0))/Omega_nn
     app_nn = .5*HH_nn**2*(1 - 3*w_nn)
 
     return eta_nn, HH_nn, a_nn, Omega_nn, Omega_mat_nn, app_nn, w_nn

@@ -9,7 +9,7 @@ created in Dec. 2021
 Currently part of the cosmoGW code:
 
 https://github.com/cosmoGW/cosmoGW/
-https://github.com/cosmoGW/cosmoGW/blob/development/src/cosmoGW/cosmoGW.py
+https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/cosmoGW.py
 
 Author: Alberto Roper Pol
 Created: 01/12/2021 (GW_turbulence)
@@ -37,7 +37,6 @@ Pulsar Timing Array frequency band," Phys. Rev. D 105, 123502 (2022),
 arXiv:2201.05630.
 """
 
-import astropy.constants as const
 import astropy.units as u
 import numpy as np
 import cosmoGW.cosmology as co
@@ -240,8 +239,6 @@ def shift_onlyOmGW_today(OmGW, g=gref, gS=0., d=1, h0=1., Neff=Neff_ref):
     as_f = co.as_fact(Neff=Neff)/u.MeV
     # if gS is not specified, it is assumed to be equal to g*
     if gS==0: gS = g
-    #_, _, _, H0 = co.values_0(h0=h0)
-    # H0 = co.H0_ref
     OmGW_f = Hs_f**2/co.H0_ref**2/h0**2*as_f**4*g/gS**(4./3.)
     if d==1: OmGW0 = OmGW*OmGW_f
     if d==-1: OmGW0 = OmGW/OmGW_f
@@ -249,7 +246,7 @@ def shift_onlyOmGW_today(OmGW, g=gref, gS=0., d=1, h0=1., Neff=Neff_ref):
     return OmGW0
 
 def shift_frequency_today(k, g=gref, gS=0., T=Tref, d=1, kk=True,
-    Neff=Neff_ref):
+                          Neff=Neff_ref):
 
     """
     Function that transforms the normalized wave number at the time of
@@ -289,7 +286,7 @@ def shift_frequency_today(k, g=gref, gS=0., T=Tref, d=1, kk=True,
     return f
 
 def shift_OmGW_today(k, OmGW, g=gref, gS=0., T=Tref, d=1, h0=1.,
-    kk=True, Neff=Neff_ref):
+                     kk=True, Neff=Neff_ref):
 
     """
     Function that shifts the GW energy density spectrum from the time of
