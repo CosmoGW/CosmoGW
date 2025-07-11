@@ -53,11 +53,11 @@ alp_ref = 2    # reference smoothness of broken power-law transition
     RoperPol:2022iel and RoperPol:2025b consider a spectral function
     defined such that the average squared field corresponds to
 
-    <v^2> ~ int zeta(K) dK,      in RoperPol:2022iel
-    <v^2> ~ int zeta(K) dlnK,    in RoperPol:2025b
+    <v^2> ~ 2 E* k* int zeta(K) dK,     in RoperPol:2022iel
+    <v^2> ~ 2 E*    int zeta(K) dlnK,   in RoperPol:2025b
 
     The first convention can be chosen in the following functions if
-    dlogK is set to False, while the second one is assumed when dloK
+    dlogK is set to False, while the second one is assumed when dlogK
     is True
 
 '''
@@ -300,7 +300,7 @@ def calB(a=a_ref, b=b_ref, alp=alp_ref, n=1, norm=True, alpha2=False,
     return calB
 
 def zetam(a=a_ref, b=b_ref, alp=alp_ref, m=-1, norm=True, alpha2=False,
-         piecewise=False):
+          piecewise=False):
 
     '''
     Function that computes the amplitude at the peak of the function
@@ -340,7 +340,7 @@ def zetam(a=a_ref, b=b_ref, alp=alp_ref, m=-1, norm=True, alpha2=False,
     return zetam
 
 def Kstarm(a=a_ref, b=b_ref, alp=alp_ref, m=-1, norm=True, alpha2=False,
-         piecewise=False):
+           piecewise=False):
 
     '''
     Function that computes the location of the peak of the function K^m zeta(K)
@@ -359,7 +359,7 @@ def Kstarm(a=a_ref, b=b_ref, alp=alp_ref, m=-1, norm=True, alpha2=False,
     return Kstarm
 
 def calC(a=a_ref, b=b_ref, alp=alp_ref, tp='vort', norm=True, alpha2=False,
-         piecewise=False):
+         piecewise=False, dlogk=True):
 
     '''
     Function that computes the parameter calC that allows to
@@ -389,7 +389,7 @@ def calC(a=a_ref, b=b_ref, alp=alp_ref, tp='vort', norm=True, alpha2=False,
         a -- slope of the spectrum at low wave numbers, k^a
         b -- slope of the spectrum at high wave numbers, k^(-b)
         alp -- smoothness of the transition from one power law to the other
-        tp -- type of sourcing field: 'vort' or 'comp' available
+        tp -- type of sourcing field: 'vort', 'comp', 'hel' or 'mix' available
         norm -- option to normalize the spectrum such that its peak is located at
                         kpeak and its maximum value is A
         alpha2 -- option to use the alternative convention, such that the spectrum
