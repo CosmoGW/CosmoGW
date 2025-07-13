@@ -5,7 +5,7 @@ semi-analytical models of cosmological GW backgrounds.
 Currently part of the cosmoGW code:
 
 https://github.com/cosmoGW/cosmoGW/
-https://github.com/cosmoGW/cosmoGW/blob/development/src/cosmoGW/GW_models.py
+https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_models.py
 
 Author: Alberto Roper Pol
 Created: 29/08/2024
@@ -20,9 +20,13 @@ RoperPol:2022iel - A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,
 Pulsar Timing Array frequency band," Phys. Rev. D 105, 123502 (2022),
 arXiv:2201.05630
 
+RoperPol:2023bqa - A. Roper Pol, A. Neronov, C. Caprini, T. Boyer,
+D. Semikoz, "LISA and γ-ray telescopes as multi-messenger probes of a
+first-order cosmological phase transition," arXiv:2307.10744 (2023)
+
 RoperPol:2023dzg - A. Roper Pol, S. Procacci, C. Caprini,
 "Characterization of the gravitational wave spectrum from sound waves within
-the sound shell model," Phys. Rev. D 109, 063531 (2024), arXiv:2308.12943.
+the sound shell model," Phys. Rev. D 109, 063531 (2024), arXiv:2308.12943
 
 Hindmarsh:2019phv - M. Hindmarsh, M. Hijazi, "Gravitational waves from first order
 cosmological phase transitions in the Sound Shell Model,"
@@ -43,13 +47,21 @@ import cosmoGW.hydro_bubbles as hb
 import cosmoGW.GW_analytical as an
 
 # reference values
-cs2_ref    = 1/3    # speed of sound squared
-Nk_ref     = 1000   # reference number of wave number discretization
-Nkconv_ref = 1000   # reference number of wave number discretization
-                    # for convolution calculations
-Np_ref     = 3000   # reference number of wave number discretization
-                    # for convolution calculations
-NTT_ref    = 5000   # reference number of lifetimes discretization
+cs2_ref    = hb.cs2_ref  # speed of sound squared
+Oms_ref    = 0.1         # reference source amplitude
+                         # (fraction to total energy)
+lf_ref     = 0.01        # reference length scale of the source
+                         # (normalized by the Hubble radius)
+N_turb     = 2           # ratio between the effective time duration of
+                         # the source and the eddy turnover time,
+                         # based on the simulations of RoperPol:2022iel,
+                         # used in RoperPol:2023bqa
+Nk_ref     = 1000        # reference number of wave number discretization
+Nkconv_ref = 1000        # reference number of wave number discretization
+                         # for convolution calculations
+Np_ref     = 3000        # reference number of wave number discretization
+                         # for convolution calculations
+NTT_ref    = 5000        # reference number of lifetimes discretization
 
 '''
     RoperPol:2022iel/RoperPol:2023dzg and RoperPol:2025b/RoperPol:2025b
@@ -71,7 +83,7 @@ def Integ(p, tildep, z, k=0., tp='vort', hel=False):
 
     '''
     Integrand of the integral over p and z (or tilde p) that is
-    used to compute the anisotropic stresses in EPi_correlators_ptilde
+    used to compute the anisotropic stresses in EPi_correlators
     '''
 
     Integ = 0
@@ -87,9 +99,9 @@ def Integ(p, tildep, z, k=0., tp='vort', hel=False):
 
     return Integ
 
-def EPi_correlators_ptilde(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
-                           tp='all', zeta=False, hel=False, norm=True,
-                           dlogk=True, model='dbpl', kk=[], EK_p=[]):
+def EPi_correlators(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
+                    tp='all', zeta=False, hel=False, norm=True,
+                    dlogk=True, model='dbpl', kk=[], EK_p=[]):
 
     '''
     Routine to compute the spectrum of the projected (anisotropic) or
@@ -242,6 +254,97 @@ def EPi_correlators_ptilde(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
 
         return pi
 
+###########  FUNCTIONS FOR THE CONSTANT-IN-TIME MODEL ###########
+
+def TGW_func(s, N=N_turb, Oms=Oms_ref, lf=lf_ref, cs2=cs2_ref,
+             tdecay='eddy', multi=False):
+
+    """
+    Function that computes the logarithmic term obtained as
+    the envelope of the GW template in the constant-in-time (cit)
+    assumption for the unequal time correlator of the turbulent
+    stresses.
+
+    It is obtained from integrating the Green's function in the
+    constant-in-time model, validated in RoperPol:2022iel
+    and described for other sources in RoperPol:2025b
+
+    The function TGW_func determines two regimes, frequencies below
+    and above an inverse duration,
+
+        fbr = 1/dtfin,
+
+    as used in RoperPol:2023bqa, EPTA:2023xxk, Caprini:2024hue.
+    However, the original reference RoperPol:2022iel used
+
+        kbr = fbr/(2pi) = 1/dtfinm,
+
+    such that dtfinm = dtfin/(2pi), and relates dtfin to
+    the decay time (considered the eddy turnover time) as
+
+        dtfinm = N tdecay = N/(vA k*) = N R*/(2pi vA)
+
+    Hence, we will consider
+
+        fbr   = 1/dtfin = 1/(2pi dtfinm) = vA/(N R*)
+        dtfin = N R*/vA
+
+    Main references are:
+
+    - RoperPol:2022iel, equation 24
+    - RoperPol:2023bqa, equation 15
+    - EPTA:2023xxk,     equation 21
+    - Caprini:2024hue,  equation 2.17
+    - RoperPol:2025b
+
+    Arguments:
+        s      -- array of frequencies, normalized by the
+                 characteristic scale, s = f R*
+        N      -- relation between eddy turnover time and effective
+                 source duration
+        Oms    -- energy density of the source (i.e., 1/2 vrms^2)
+        lf     -- characteristic scale of the turbulence as a
+                 fraction of the Hubble radius, R* H*
+        cs2    -- square of the speed of sound (default is 1/3)
+        tdecay -- determines the finite duration in the cit model
+                  (default is to use eddy turnover time)
+        multi  -- option to use arrays for Oms and lf if multi is set to True
+
+    Returns:
+        TGW   -- logarithmic function that characterizes the spectral shape
+    """
+
+    # characteristic velocity (for example, Alfven velocity or vrms)
+    # see eq. 12 of RoperPol:2023bqa
+    vA    = np.sqrt(2*Oms/(1 + cs2))
+
+    # effective duration of the source dtfin/R* is N units of
+    # the decay time (see comment above for different choices
+    # in the literature)
+    dtfin = N/vA
+
+    if multi:
+
+        s_ij, lf_ij, Oms_ij = np.meshgrid(s, lf, Oms, indexing='ij')
+        TGW1 = np.log(1 + lf_ij/2/np.pi/s_ij)**2
+
+        lf_ij, dtfin_ij = np.meshgrid(lf, dtfin, indexing='ij')
+        TGW0 = np.log(1 + dtfin_ij*lf_ij/2/np.pi)**2
+
+        TGW = np.zeros((len(s), len(lf), len(Oms)))
+        for i in range(0, len(dtfin)):
+            TGW[s <  1/dtfin[i], :, i] = TGW0[:, i]
+            TGW[s >= 1/dtfin[i], :, i] = TGW1[s >= 1/dtfin[i], :, i]
+    else:
+
+        TGW = np.zeros(len(s))
+        TGW[s <  1/dtfin] = \
+            np.log(1 + lf*dtfin/2/np.pi)**2*s[(s < 1/dtfin)]**0
+        TGW[s >= 1/dtfin] = \
+            np.log(1 + lf/2/np.pi/s[np.where(s >= 1/dtfin)])**2
+
+    return TGW
+
 ################ SOUND-SHELL MODEL FOR SOUND WAVES IN PTs ################
 
 '''
@@ -250,8 +353,8 @@ f' and l functions need to be previously computed from the self-similar
 fluid perturbations induced by expanding bubbles using hydro_bubbles module
 '''
 
-def compute_kin_spec_ssm(z, vws, fp, l, sp='sum', type_n='exp', cs2=cs2_ref,
-                         corr=False, min_qbeta=-4, max_qbeta=5, Nqbeta=Nk_ref,
+def compute_kin_spec_ssm(z, vws, fp, l=[], sp='sum', type_n='exp', cs2=cs2_ref,
+                         min_qbeta=-4, max_qbeta=5, Nqbeta=Nk_ref,
                          min_TT=-1, max_TT=3, NTT=NTT_ref, corr=False,
                          dens=True, normbeta=True):
 
@@ -260,20 +363,21 @@ def compute_kin_spec_ssm(z, vws, fp, l, sp='sum', type_n='exp', cs2=cs2_ref,
     exponential or simultaneous nucleation.
 
     Reference: Equations (32)--(37) of RoperPol:2023dzg
+    Main reference is RoperPol:2025a
 
     Arguments:
-        z -- array of values of z
-        vws -- array of wall velocities
-        fp -- function f'(z) computed from the hydro_bubble module using fp_z
-        l -- function lambda(z) computed from the hydro_bubble module using fp_z
-              (using lz = True)
-        sp -- type of function computed for the kinetic spectrum description
+        z      -- array of values of z
+        vws    -- array of wall velocities
+        fp     -- function f'(z) computed from the hydro_bubble module using fp_z
+        l      -- function lambda(z) computed from the hydro_bubble module using fp_z
+                  (using lz = True)
+        sp     -- type of function computed for the kinetic spectrum description
         type_n -- type of nucleation hystory (default is exponential 'exp',
                   another option is simultaneous 'sym')
-        cs2 -- square of the speed of sound (default 1/3)
-        corr -- option to 'correct' Rstar beta with max(vw, cs) (default is False)
-        dens -- option to return power spectral density (if True, default), or kinetic
-                spectrum (if False)
+        cs2    -- square of the speed of sound (default 1/3)
+        corr   -- option to 'correct' Rstar beta with max(vw, cs) (default is False)
+        dens   -- option to return power spectral density (if True, default), or kinetic
+                  spectrum (if False)
         normbeta -- normalization of k with beta (default is True).
                     If normbeta is False, k is normalized with Rstar
 
@@ -300,12 +404,12 @@ def compute_kin_spec_ssm(z, vws, fp, l, sp='sum', type_n='exp', cs2=cs2_ref,
 
     for i in range(0, len(vws)):
         funcT[i, :, :] = nu_T*TT_ij**6*np.interp(TT_ij*q_ij, z, A2[i, :])
-        Pv[i, :] = np.trapz(funcT[i, :, :], TT, axis=1)
+        Pv[i, :]       = np.trapz(funcT[i, :, :], TT, axis=1)
 
     if dens == False:
-        Rstar_beta = hb.Rstar_beta(vw=vws[i], cs2=cs2, corr=corr)
+        Rstar_beta   = hb.Rstar_beta(vw=vws[i], cs2=cs2, corr=corr)
         for i in range(0, len(vws)):
-            pref = qbeta[i, :]**2/Rstar_beta[i]**4/(2*np.pi**2)
+            pref     = qbeta[i, :]**2/Rstar_beta[i]**4/(2*np.pi**2)
             Pv[i, :] *= pref
 
     if normbeta == False:
@@ -326,15 +430,16 @@ def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
 
     The resulting GW spectrum is
 
-     Omega_GW (k) = (3pi)/(8cs) x (k/kst)^2 x (cal E/cal A)^2 x TGW x Omm(k)
+     Omega_GW (k) = (3pi)/(8cs) x (k/kst)^2 x (Oms/cal A)^2 x TGW x Omm(k)
 
-     where cal E = half <v^2> = half vrms^2 and cal A = int zeta(K) d ln k
+     where Oms = .5 <v^2> = .5 vrms^2 and cal A = int zeta(K) d ln k
+     (using the normalization of RoperPol:2025a for zeta)
 
     Reference: Appendix B of RoperPol:2023dzg; see eq.(B3)
     '''
 
-    cs = np.sqrt(cs2)
-    kp = np.logspace(np.log10(k[0]), np.log10(k[-1]), Nk)
+    cs    = np.sqrt(cs2)
+    kp    = np.logspace(np.log10(k[0]), np.log10(k[-1]), Nk)
 
     p_inf = kp*(1 - cs)/2/cs
     p_sup = kp*(1 + cs)/2/cs
@@ -342,14 +447,14 @@ def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
     Omm = np.zeros(len(kp))
     for i in range(0, len(kp)):
 
-        p = np.logspace(np.log10(p_inf[i]), np.log10(p_sup[i]), Np)
+        p      = np.logspace(np.log10(p_inf[i]), np.log10(p_sup[i]), Np)
         ptilde = kp[i]/cs - p
-        z = -kp[i]*(1 - cs2)/2/p/cs2 + 1/cs
+        z      = -kp[i]*(1 - cs2)/2/p/cs2 + 1/cs
 
-        EK_p = np.interp(p, k, EK)
+        EK_p      = np.interp(p, k, EK)
         EK_ptilde = np.interp(ptilde, k, EK)
 
-        Omm1 = (1 - z**2)**2*p/ptilde**3*EK_p*EK_ptilde
+        Omm1   = (1 - z**2)**2*p/ptilde**3*EK_p*EK_ptilde
         Omm[i] = np.trapz(Omm1, p)
 
     return kp, Omm
@@ -369,13 +474,13 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
     Reference: RoperPol:2023dzg, eq. 93
 
     Arguments:
-        k -- array of wave numbers
-        EK -- array of values of the kinetic spectrum
-        Np -- number of discretizations in the wave number p to be numerically
+        k      -- array of wave numbers
+        EK     -- array of values of the kinetic spectrum
+        Np     -- number of discretizations in the wave number p to be numerically
               integrated
-        Nk -- number of discretizations of k to be used for the computation of
+        Nk     -- number of discretizations of k to be used for the computation of
               the final spectrum
-        plot -- option to plot the interpolated magnetic spectrum for debugging
+        plot   -- option to plot the interpolated magnetic spectrum for debugging
                 purposes (default False)
         extend -- option to extend the array of wave numbers of the resulting
                   Pi spectrum compared to that of the given magnetic spectrum
@@ -383,10 +488,10 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
 
     Returns:
         Omm -- GW spectrum normalized (zeta_GW)
-        kp -- final array of wave numbers
+        kp  -- final array of wave numbers
     """
 
-    p = np.logspace(np.log10(k[0]), np.log10(k[-1]), Np)
+    p  = np.logspace(np.log10(k[0]), np.log10(k[-1]), Np)
     kp = np.logspace(np.log10(k[0]), np.log10(k[-1]), Nk)
     if extend:
         Nk = int(Nk/6)
@@ -396,10 +501,10 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
         kp = np.append(kp, np.logspace(np.log10(k[-1]), largek, Nk))
 
     Nz = 500
-    z = np.linspace(-1, 1, Nz)
+    z  = np.linspace(-1, 1, Nz)
     kij, pij, zij = np.meshgrid(kp, p, z, indexing='ij')
     ptilde2 = pij**2 + kij**2 - 2*kij*pij*zij
-    ptilde = np.sqrt(ptilde2)
+    ptilde  = np.sqrt(ptilde2)
 
     EK_p = np.interp(p, k, EK)
     if plot:
@@ -413,8 +518,8 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
     Delta_mn = kij**0 - 1
 
     if terms == 'all':
-        inds_m = [-1, 1]
-        inds_n = [-1, 1]
+        inds_m   = [-1, 1]
+        inds_n   = [-1, 1]
         Delta_mn = np.zeros((4, len(kp), len(p), len(z)))
     tot_inds = 0
     l = 0
@@ -432,8 +537,8 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
         Pi_1 = np.trapz(EK_ptilde/ptilde**4*(1 - zij**2)**2*Delta_mn[i, :, :, :],
                         z, axis=2)
         kij, EK_pij = np.meshgrid(kp, EK_p, indexing='ij')
-        kij, pij = np.meshgrid(kp, p, indexing='ij')
-        Omm[i, :] = np.trapz(Pi_1*pij**2*EK_pij, p, axis=1)
+        kij, pij    = np.meshgrid(kp, p, indexing='ij')
+        Omm[i, :]   = np.trapz(Pi_1*pij**2*EK_pij, p, axis=1)
 
     return kp, Omm
 
@@ -448,13 +553,15 @@ def compute_Delta_mn(t, k, p, ptilde, cs2=cs2_ref, m=1, n=1, tini=1.,
     Reference: RoperPol:2023dzg, eqs.56-59
 
     Arguments:
-        t -- time
-        k -- wave number k
-        p -- wave number p to be integrated over
+        t      -- time
+        k      -- wave number k
+        p      -- wave number p to be integrated over
         ptilde -- second wave number tilde p to be integrated over
+        cs2    -- square of the speed of sound (default is 1/3)
+        m, n   -- indices of the Deltamn function
+        tini   -- initial time of GW production in units of 1/Hubble
         expansion -- option to include the effect of the expansion of the Universe
-                     (default True)
-        cs2 -- square of the speed of sound (default is 1/3)
+                     during radiation domination (default True)
     '''
 
     cs = np.sqrt(cs2)
@@ -464,7 +571,7 @@ def compute_Delta_mn(t, k, p, ptilde, cs2=cs2_ref, m=1, n=1, tini=1.,
     if expansion:
 
         import scipy.special as spe
-        si_t, ci_t = spe.sici(pp*t)
+        si_t, ci_t       = spe.sici(pp*t)
         si_tini, ci_tini = spe.sici(pp*tini)
 
         # compute Delta Ci^2 and Delta Si^2
