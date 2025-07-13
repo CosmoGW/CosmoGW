@@ -50,7 +50,7 @@ Rasanen - Lecture notes on Cosmology by Syksy Räsänen
 import astropy.constants as const
 import astropy.units as u
 import pandas as pd
-import numpy as np
+import numpy  as np
 import importlib
 
 #import cosmoGW.spectra as sp
