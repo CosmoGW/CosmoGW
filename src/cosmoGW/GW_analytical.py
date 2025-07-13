@@ -49,7 +49,6 @@ alp_ref = 2    # reference smoothness of broken power-law transition
 ####### ANALYTICAL FUNCTIONS USED FOR A SMOOTHED BROKEN POWER LAW #######
 
 '''
-
     RoperPol:2022iel and RoperPol:2025b consider a spectral function
     defined such that the average squared field corresponds to
 
@@ -59,7 +58,6 @@ alp_ref = 2    # reference smoothness of broken power-law transition
     The first convention can be chosen in the following functions if
     dlogK is set to False, while the second one is assumed when dlogK
     is True
-
 '''
 
 def check_slopes(a, b, dlogk=True):
@@ -257,7 +255,7 @@ def Iabn(a=a_ref, b=b_ref, alp=alp_ref, n=0, norm=True, alpha2=False,
     return comp_beta*calI
 
 def calA(a=a_ref, b=b_ref, alp=alp_ref, norm=True, alpha2=False,
-         piecewise=False, dlogk=dlogk):
+         piecewise=False, dlogk=True):
 
     '''
     Function that computes the parameter calA = Iab,0 that relates the
