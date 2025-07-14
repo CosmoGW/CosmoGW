@@ -6,14 +6,15 @@ produced from first-order phase transitions.
 Currently part of the cosmoGW code:
 
 https://github.com/cosmoGW/cosmoGW/
-https://github.com/cosmoGW/cosmoGW/blob/development/src/cosmoGW/hydro_bubbles.py
+https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/hydro_bubbles.py
 
 Author: Alberto Roper Pol
 Created: 01/02/2023
 Updated: 03/06/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
+
 Other contributors: Antonino Midiri, Simona Procacci
 
-Main reference is:
+Main references are:
 
 Appendix A of RoperPol:2025a - A. Roper Pol, S. Procacci, A. S. Midiri,
 C. Caprini, "Irrotational fluid perturbations from first-order phase
@@ -38,14 +39,19 @@ RoperPol:2023dzg - A. Roper Pol, S. Procacci, C. Caprini,
 the sound shell model," Phys. Rev. D 109, 063531 (2024), arXiv:2308.12943.
 """
 
-import numpy as np
+import numpy  as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 # reference values
-cs2_ref = 1/3        # speed of sound squared
-Nxi_ref = 10000      # reference discretization in xi
-tol_ref = 1e-5       # reference tolerance on shooting algorithm
-it_ref  = 30         # reference number of iterations
+cs2_ref   = 1/3        # speed of sound squared
+Nxi_ref   = 10000      # reference discretization in xi
+Nxi2_ref  = 10         # reference discretization in xi out
+                       # of the profiles
+Nvws_ref  = 20         # reference discretization in vwall
+tol_ref   = 1e-5       # reference tolerance on shooting algorithm
+it_ref    = 30         # reference number of iterations
+
 # reference values for a deflagration
 vw_def    = 0.5
 alpha_def = 0.263
@@ -55,7 +61,6 @@ alpha_hyb = 0.052
 # reference values for a detonation
 vw_det    = 0.77
 alpha_det = 0.091
-
 
 # reference set of colors
 cols_ref = ['black', 'darkblue', 'blue', 'darkgreen', 'green',
@@ -74,9 +79,11 @@ def Chapman_Jouget(alp):
 
     Arguments:
         alp -- alpha at the + side of the wall (alpha_pl)
+    Returns:
+        vcJ -- Chapman-Jouget speed
     '''
 
-    return 1/np.sqrt(3)/(1 + alp)*(1 + np.sqrt(alp*(2 + 3*alp)))
+    return 1./np.sqrt(3)/(1 + alp)*(1 + np.sqrt(alp*(2 + 3*alp)))
 
 def type_nucleation(vw, alp, cs2=cs2_ref):
 
@@ -97,19 +104,19 @@ def type_nucleation(vw, alp, cs2=cs2_ref):
     '''
 
     v_cj = Chapman_Jouget(alp)
-    cs = np.sqrt(cs2)
+    cs   = np.sqrt(cs2)
 
     # check if vw is a list or a single value
     if not isinstance(vw, (list, tuple, np.ndarray)):
 
-        if vw < cs: ty = 'def'
+        if vw < cs:     ty = 'def'
         elif vw < v_cj: ty = 'hyb'
-        else: ty = 'det'
+        else:           ty = 'det'
 
     else:
 
         ty = np.array(['hyb']*len(vw))
-        ty[np.where(vw < cs)] = 'def'
+        ty[np.where(vw < cs)]   = 'def'
         ty[np.where(vw > v_cj)] = 'det'
 
     return ty
@@ -175,12 +182,12 @@ def xi_o_v(xi, v, cs2=cs2_ref):
     Reference: Eq. 27 of Espinosa:2010hh
 
     Arguments:
-        xi -- self-similar r/t
-        v -- 1d velocity profile
+        xi  -- self-similar r/t
+        v   -- 1d velocity profile
         cs2 -- square of the speed of sound (default 1/3)
 
     Returns:
-        f -- value of f(xi, v) = dxi/dv
+        f   -- value of f(xi, v) = dxi/dv
     '''
 
     gamma2 = 1/(1 - v**2)
@@ -199,16 +206,16 @@ def compute_xi_from_v(v, xi0, cs2=cs2_ref, shock=False):
     is more practical.
 
     Arguments:
-        v -- velocity array
-        xi0 -- position where boundary condition is known (it has to correspond
-               to the first value in the velocity array)
-        cs2 -- square of the speed of sound (default 1/3)
+        v     -- velocity array
+        xi0   -- position where boundary condition is known (it has to correspond
+                 to the first value in the velocity array)
+        cs2   -- square of the speed of sound (default 1/3)
         shock -- option to stop the integration when a shock is found
                  (as happens in deflagrations)
 
     Returns:
-        xi -- self-similar array
-        sh -- boolean determining if a shock is formed
+        xi    -- self-similar array
+        sh    -- boolean determining if a shock is formed
         indsh -- index determining the position of the shock
                  (-1 if no shock)
     '''
@@ -246,8 +253,8 @@ def compute_int_w(xi, v, cs2=cs2_ref):
     Reference: Eq. (29) of Espinosa:2010hh
 
      Arguments:
-        xi -- self-similar r/t
-        v -- 1d velocity profile
+        xi  -- self-similar r/t
+        v   -- 1d velocity profile
         cs2 -- square of the speed of sound (default 1/3)
 
     '''
@@ -261,8 +268,8 @@ def compute_w(v, xi, cs2=cs2_ref):
     velocity profile.
 
      Arguments:
-        xi -- self-similar r/t
-        v -- 1d velocity profile
+        xi  -- self-similar r/t
+        v   -- 1d velocity profile
         cs2 -- square of the speed of sound (default 1/3)
     '''
 
@@ -291,16 +298,16 @@ def vp_tilde_from_vm_tilde(vw, alpha, plus=True, sg='plus'):
     Reference: Eqs. B6 and B7 of Hindmarsh:2019phv
 
     Arguments:
-        vw -- velocity imposed at one of the sides of the wall.
-                It usually is the wall velocity but becomes cs for
-                hybrids
+        vw    -- velocity imposed at one of the sides of the wall.
+                 It usually is the wall velocity but becomes cs for
+                 hybrids
         alpha -- phase transition strength at the symmetric phase
                  (can be different than that at the nucleation temperature)
-        plus -- option to consider positive (True) or negative (False)
-                branch of the equation found from the matching conditions
-                (default is True)
-        sg -- option to compute v+ from v- = vw if sg == 'plus' or to compute
-              v- from v+ = vw if sg == 'minus' (default is 'plus')
+        plus  -- option to consider positive (True) or negative (False)
+                 branch of the equation found from the matching conditions
+                 (default is True)
+        sg    -- option to compute v+ from v- = vw if sg == 'plus' or to compute
+                 v- from v+ = vw if sg == 'minus' (default is 'plus')
 
     Returns:
         vp_vm -- v+ or v- from the value at the other side of the bubble wall
@@ -339,9 +346,9 @@ def vplus_vminus(alpha, vw=1., ty='det', cs2=cs2_ref):
 
     Arguments:
         alpha -- value of alpha at the + side of the wall
-        vw -- wall velocity
-        cs2 -- speed of sound squared (default is 1/3)
-        ty -- type of solution
+        vw    -- wall velocity
+        cs2   -- speed of sound squared (default is 1/3)
+        ty    -- type of solution
 
     Returns:
         vplus, vminus -- + and - velocities expressed in the wall
@@ -364,18 +371,18 @@ def vplus_vminus(alpha, vw=1., ty='det', cs2=cs2_ref):
 
     else:
 
-        vplus = np.zeros(len(vw))
-        vminus = np.zeros(len(vw))
+        vplus    = np.zeros(len(vw))
+        vminus   = np.zeros(len(vw))
         inds_det = np.where(ty == 'det')
         inds_def = np.where(ty == 'def')
         inds_hyb = np.where(ty == 'hyb')
-        vplus[inds_det] = vw[inds_det]
+        vplus[inds_det]  = vw[inds_det]
         vminus[inds_det] = vp_tilde_from_vm_tilde(vw, alpha,
                                     plus=True, sg='minus')[inds_det]
-        vplus[inds_def] = vp_tilde_from_vm_tilde(vw, alpha,
+        vplus[inds_def]  = vp_tilde_from_vm_tilde(vw, alpha,
                                     plus=False, sg='plus')[inds_def]
         vminus[inds_def] = vw[inds_def]
-        vplus[inds_hyb] = vp_tilde_from_vm_tilde(cs, alpha,
+        vplus[inds_hyb]  = vp_tilde_from_vm_tilde(cs, alpha,
                                     plus=False, sg='plus')
         vminus[inds_hyb] = cs
 
@@ -389,16 +396,16 @@ def det_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, zero_v=-4):
     v0 at xi0
 
     Arguments:
-        v0 -- value of v0 at the boundary
-        xi0 -- position of the boundary
-        cs2 -- speed of sound squared (default is 1/3)
-        Nxi -- number of discretization points in xi
+        v0     -- value of v0 at the boundary
+        xi0    -- position of the boundary
+        cs2    -- speed of sound squared (default is 1/3)
+        Nxi    -- number of discretization points in xi
         zero_v -- reference zero velocity (default 1e-4)
 
     Returns:
-        xis -- array of xi
-        vs -- array of 1d velocities
-        ws -- array of 1d enthalpies
+        xis    -- array of xi
+        vs     -- array of 1d velocities
+        ws     -- array of 1d enthalpies
     '''
 
     # compute solution from initial condition v = v0 at xi = vw
@@ -411,30 +418,30 @@ def det_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, zero_v=-4):
         vs = np.logspace(np.log10(v0), np.log10(v0) + zero_v, Nxi)
         xis, sh, indsh = compute_xi_from_v(vs, xi0, cs2=cs2, shock=False)
         xi_sh = xis[indsh]
-        ws = compute_w(vs, xis, cs2=cs2)
+        ws    = compute_w(vs, xis, cs2=cs2)
 
         inds_sort = np.argsort(xis)
         xis = xis[inds_sort]
-        vs = vs[inds_sort]
-        ws = ws[inds_sort]
+        vs  = vs[inds_sort]
+        ws  = ws[inds_sort]
 
     else:
 
         xis = np.zeros((len(xi0), Nxi))
-        vs = np.zeros((len(xi0), Nxi))
-        ws = np.zeros((len(xi0), Nxi))
+        vs  = np.zeros((len(xi0), Nxi))
+        ws  = np.zeros((len(xi0), Nxi))
 
         for i in range(0, len(xi0)):
 
             vs[i, :] = np.logspace(np.log10(v0), np.log10(v0) + zero_v, Nxi)
             xis[i, :], _, _ = compute_xi_from_v(vs[i, :], xi0[i], cs2=cs2,
                                                 shock=False)
-            ws[i, :] = compute_w(vs[i, :], xis[i, :], cs2=cs2)
+            ws[i, :]  = compute_w(vs[i, :], xis[i, :], cs2=cs2)
 
             inds_sort = np.argsort(xis[i, :])
             xis[i, :] = xis[i, inds_sort]
-            vs[i, :] = vs[i, inds_sort]
-            ws[i, :] = ws[i, inds_sort]
+            vs[i, :]  = vs[i, inds_sort]
+            ws[i, :]  = ws[i, inds_sort]
 
     return xis, vs, ws
 
@@ -446,18 +453,18 @@ def def_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, shock=True, zero_v=-4):
     v0 at xi0
 
     Arguments:
-        v0 -- value of v0 at the boundary
-        xi0 -- position of the boundary
-        cs2 -- speed of sound squared (default is 1/3)
-        Nxi -- number of discretization points in xi
-        shock -- possibility to stop the calculation once a shock is formed
+        v0     -- value of v0 at the boundary
+        xi0    -- position of the boundary
+        cs2    -- speed of sound squared (default is 1/3)
+        Nxi    -- number of discretization points in xi
+        shock  -- possibility to stop the calculation once a shock is formed
                  (default is True)
         zero_v -- reference zero velocity (default 1e-4)
 
     Returns:
-        xis -- array of xi
-        vs -- array of 1d velocities
-        ws -- array of 1d enthalpies
+        xis    -- array of xi
+        vs     -- array of 1d velocities
+        ws     -- array of 1d enthalpies
         xi_sh, sh -- position of the shock and boolean which becomes
                         True if a shock forms
     '''
@@ -465,27 +472,27 @@ def def_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, shock=True, zero_v=-4):
     vs = np.logspace(np.log10(v0), np.log10(v0) + zero_v, Nxi)
     cs = np.sqrt(cs2)
     xi_sh = cs
-    sh = False
-    v_sh = 0
+    sh    = False
+    v_sh  = 0
 
     if shock:
         xiss, sh, indsh = compute_xi_from_v(vs, xi0, cs2=cs2, shock=True)
         xi_sh = xiss[indsh]
         if not sh: xi_sh = cs
-        v_sh = v_shock(xi_sh)
-        xis = np.linspace(xi0, xi_sh, Nxi + 1)
-        xis = xis[:Nxi-1]
-        vs = np.interp(xis, xiss, vs)
-        vs = np.append(vs, v_sh)
-        xis = np.append(xis, xi_sh)
+        v_sh  = v_shock(xi_sh)
+        xis   = np.linspace(xi0, xi_sh, Nxi + 1)
+        xis   = xis[:Nxi-1]
+        vs    = np.interp(xis, xiss, vs)
+        vs    = np.append(vs, v_sh)
+        xis   = np.append(xis, xi_sh)
 
     else:
         xis, sh, indsh = compute_xi_from_v(vs, xi0, cs2=cs2, shock=False)
         xi_sh = xis[indsh]
 
-    ws = compute_w(vs, xis, cs2=cs2)
+    ws   = compute_w(vs, xis, cs2=cs2)
     w_sh = w_shock(xi_sh)
-    ws = ws*w_sh/ws[-1]
+    ws   = ws*w_sh/ws[-1]
 
     return xis, vs, ws, xi_sh, sh
 
@@ -497,17 +504,17 @@ def compute_def(vw=vw_def, alpha=alpha_def, cs2=cs2_ref, Nxi=Nxi_ref,
     1d profile given vw and alpha, using def_sol
 
     Arguments:
-        vw -- wall velocity (default is 0.5)
+        vw    -- wall velocity (default is 0.5)
         alpha -- strength of the phase transition (default is 0.263)
-        cs2 -- speed of sound squared (default is 1/3)
-        Nxi -- number of discretization points in xi
+        cs2   -- speed of sound squared (default is 1/3)
+        Nxi   -- number of discretization points in xi
         shock -- possibility to stop the calculation once a shock is formed
                  (default is True)
 
     Returns:
-        xis -- array of xi
-        vs -- array of 1d velocities
-        ws -- array of 1d enthalpies
+        xis   -- array of xi
+        vs    -- array of 1d velocities
+        ws    -- array of 1d enthalpies
         xi_sh, sh -- position of the shock and boolean which becomes
                         True if a shock forms
         w_pl, w_m -- plus and minus values of the enthalpies
@@ -535,17 +542,17 @@ def compute_hyb(vw=vw_hyb, alpha=alpha_hyb, cs2=cs2_ref,Nxi=Nxi_ref,
     1d profile given vw and alpha, using det_sol and def_sol
 
     Arguments:
-        vw -- wall velocity (default is 0.7)
+        vw    -- wall velocity (default is 0.7)
         alpha -- strength of the phase transition (default is 0.052)
-        cs2 -- speed of sound squared (default is 1/3)
-        Nxi -- number of discretization points in xi
+        cs2   -- speed of sound squared (default is 1/3)
+        Nxi   -- number of discretization points in xi
         shock -- possibility to stop the calculation once a shock is formed
                  (default is True)
 
     Returns:
-        xis -- array of xi
-        vs -- array of 1d velocities
-        ws -- array of 1d enthalpies
+        xis   -- array of xi
+        vs    -- array of 1d velocities
+        ws    -- array of 1d enthalpies
         xi_sh, sh -- position of the shock and boolean which becomes
                         True if a shock forms
         w_pl, w_m -- plus and minus values of the enthalpies
@@ -556,7 +563,7 @@ def compute_hyb(vw=vw_hyb, alpha=alpha_hyb, cs2=cs2_ref,Nxi=Nxi_ref,
     ## relative velocity at + is computed from \tilde v- = cs
     vrels, _ = vplus_vminus(alpha, cs2=cs2, ty='hyb')
     vpl = Lor_mu(vrels, vw)
-    vm = Lor_mu(cs, vw)
+    vm  = Lor_mu(cs, vw)
 
     # compute deflagration solution
     xis, vs, ws, xi_sh, sh = def_sol(vpl, vw, cs2=cs2,
@@ -566,12 +573,12 @@ def compute_hyb(vw=vw_hyb, alpha=alpha_hyb, cs2=cs2_ref,Nxi=Nxi_ref,
     xis2, vs2, ws2 = det_sol(vm, vw, cs2=cs2, Nxi=int(Nxi/2))
     # ratio of w+ over w- across the bubble wall
     w_pl = ws[0]
-    w_m = w_pl*vrels/(1 - vrels**2)*(1 - cs2)/cs
+    w_m  = w_pl*vrels/(1 - vrels**2)*(1 - cs2)/cs
     ws2 *= w_m
 
     xis = np.append(xis2, xis)
-    vs = np.append(vs2, vs)
-    ws = np.append(ws2, ws)
+    vs  = np.append(vs2, vs)
+    ws  = np.append(ws2, ws)
 
     return xis, vs, ws, xi_sh, sh, w_pl, w_m
 
@@ -582,15 +589,15 @@ def compute_det(vw=vw_det, alpha=alpha_det, cs2=cs2_ref, Nxi=Nxi_ref):
     given vw and alpha, using det_sol
 
     Arguments:
-        vw -- wall velocity (default is 0.77)
+        vw    -- wall velocity (default is 0.77)
         alpha -- strength of the phase transition (default is 0.091)
-        cs2 -- speed of sound squared (default is 1/3)
-        Nxi -- number of discretization points in xi
+        cs2   -- speed of sound squared (default is 1/3)
+        Nxi   -- number of discretization points in xi
 
     Returns:
-        xis -- array of xi
-        vs -- array of 1d velocities
-        ws -- array of 1d enthalpies
+        xis   -- array of xi
+        vs    -- array of 1d velocities
+        ws    -- array of 1d enthalpies
         w_pl, w_m -- plus and minus values of the enthalpies
                         across the bubble
     '''
@@ -598,8 +605,8 @@ def compute_det(vw=vw_det, alpha=alpha_det, cs2=cs2_ref, Nxi=Nxi_ref):
     ## relative velocity at - is computed from \tilde v+ = \xi_w
     _, vrels = vplus_vminus(alpha, vw=vw, ty='det')
     # Lorentz boosted v minus
-    vm = Lor_mu(vrels, vw)
-    w_m = vw/(1 - vw**2)/vrels*(1 - vrels**2)
+    vm   = Lor_mu(vrels, vw)
+    w_m  = vw/(1 - vw**2)/vrels*(1 - vrels**2)
     w_pl = 1
 
     xis, vs, ws = det_sol(vm, vw, cs2=cs2, Nxi=Nxi)
@@ -608,7 +615,7 @@ def compute_det(vw=vw_det, alpha=alpha_det, cs2=cs2_ref, Nxi=Nxi_ref):
     # no shock is formed in detonations, so xi_sh is set to vw
     # and sh to False
     xi_sh = vw
-    sh = False
+    sh    = False
 
     return xis, vs, ws, xi_sh, sh, w_pl, w_m
 
@@ -621,25 +628,25 @@ def compute_alphan(vw=vw_def, alpha_obj=alpha_def, tol=tol_ref, cs2=cs2_ref,
     the value of alpha_+ that gives the correct alpha.
 
     Arguments:
-        vw -- wall velocity
+        vw        -- wall velocity
         alpha_obj -- value of alpha defined at the nucleation temperature that
                         wants to be reached
-        tol -- relative tolerance to consider convergence (default is 1e-4)
-        cs2 -- speed of sound squared (default is 1/3)
-        quiet -- option to avoid printing some debug options (default is False)
-        max_it -- maximum number of allowed iterations (default is 30)
-        meth -- method on the Newton-Raphson update (2 options)
-        Nxi -- number of points in xi discretization (default is 1000)
-        ty -- type of solution (options are def or hyb)
+        tol       -- relative tolerance to consider convergence (default is 1e-4)
+        cs2       -- speed of sound squared (default is 1/3)
+        quiet     -- option to avoid printing some debug options (default is False)
+        max_it    -- maximum number of allowed iterations (default is 30)
+        meth      -- method on the Newton-Raphson update (2 options)
+        Nxi       -- number of points in xi discretization (default is 1000)
+        ty        -- type of solution (options are def or hyb)
 
     Returns:
         xis0, vvs0, wws0 -- arrays of xi, velocity and enthalpy of the converged
                                solutions
         xi_sh, sh, w_pl, w_m -- shock position, boolean if shock has formed,
                                     plus and minus enthalpies
-        alpha_n -- converged (or not) alpha at nucleation
-        alp_plus -- value of alpha_+ leading to alpha_obj
-        conv -- boolean determining if the algorithm has converged
+        alpha_n   -- converged (or not) alpha at nucleation
+        alp_plus  -- value of alpha_+ leading to alpha_obj
+        conv      -- boolean determining if the algorithm has converged
     '''
 
     # first guess
@@ -678,8 +685,8 @@ def compute_alphan(vw=vw_def, alpha_obj=alpha_def, tol=tol_ref, cs2=cs2_ref,
 
     return xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, alpha_n, alp_plus, conv
 
-def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
-                         Nxi2=Nxi_ref, plot=True, plot_v='v', cols=[],
+def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=Nvws_ref, Nxi=Nxi_ref,
+                         Nxi2=Nxi2_ref, plot=False, plot_v='v', cols=[],
                          alphan=True, quiet=True, tol=tol_ref, max_it=it_ref,
                          ls='solid', alp=1., lam=False, meth=1, legs=False,
                          fs_lg=14, st_lg=2, eff=False, save=False, dec_vw=1,
@@ -690,47 +697,71 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
     alpha (at nucleation T, not alpha+) and a range of wall velocities.
 
     Arguments:
-        alpha -- nucleation T alpha
-        vws -- range of wall velocities
-        cs2 -- square of the speed of sound (default is 1/3)
-        Nvws -- number of wall velocities (if vws is not given)
-        Nxi -- number of discretization points in xi where the profiles are
-               computed
-        Nxi2 -- number of discretization points in xi from the constructed
-                profiles from 0 to 1
-        plot -- option to plot the resulting 1d profiles
-        plot_v -- choice of plotting ('v' for velocity, 'w' for enthalpy, 'both' for both)
-        cols -- array with colors (cols_ref by default)
-        alphan -- option to identify if the input alpha is at the nucleation temperature
-                  (if True) or alpha+ (if False), default is True
-        quiet -- option to avoid printing debugging information (default is True)
+        alpha  -- nucleation T alpha
+        vws    -- range of wall velocities
+        cs2    -- square of the speed of sound (default is 1/3)
+        Nvws   -- number of wall velocities (if vws is not given)
+        Nxi    -- number of discretization points in xi where the profiles are
+                  computed
+        Nxi2   -- number of discretization points in xi out of the solution
+                  of the 1d profiles
+        plot   -- option to plot the resulting 1d profiles
+        plot_v -- choice of plotting ('v' for velocity, 'w' for
+                  enthalpy, 'both' for both)
+        cols   -- array with colors (cols_ref by default)
+        alphan -- option to identify if the input alpha is at the
+                  nucleation temperature (if True) or alpha+ (if False),
+                  default is True
+        quiet  -- option to avoid printing debugging information (default is True)
         max_it -- maximum number of iterations to find alpha_+
-        ls -- line styles
-        alp -- opacity of the plots
-        lam -- option to compute energy perturbations lambda instead of enthalpy (default is False,
-               so enthalpy)
-        tol -- tolerance of the relative error to consider convergence of alpha_+ has been reached
-        legs -- legends to be included (default is False)
-        save -- option to save in a file the results of the 1d profiles (default is False)
-        ress -- directory where to save the files (default is 'results/1d_profiles')
-        eff -- option to compute the efficiency factors kappa and omega (default is False)
+        ls     -- line styles
+        alp    -- opacity of the plots
+        lam    -- option to compute energy perturbations lambda instead
+                  of enthalpy (default is False, so enthalpy)
+        tol    -- tolerance of the relative error to consider convergence
+                  of alpha_+ has been reached
+        legs   -- legends to be included (default is False)
+        save   -- option to save in a file the results of the 1d
+                  profiles (default is False)
+        ress   -- directory where to save the files (default is
+                  'results/1d_profiles')
+        eff    -- option to compute the efficiency factors kappa and
+                  omega (default is False)
+
+    Returns:
+        xis       -- array of xi positions
+        vvs       -- array of velocities
+        wws       -- array of enthalpies (energy density perturbations
+                     if lam is True)
+        alphas_n  -- array of nucleation alphas (if input is alpha+, when
+                     alphan is False, otherwise it returns array of values
+                     of alpha+)
+        conv      -- array of booleans determining if the alphan calculation
+                     has converged
+        shocks    -- array of booleans determining if a shock is produced
+                     in the fluid profile
+        xi_shocks -- positions of the shocks (if shock is not produced,
+                     it returns xi_front)
+        wms       -- enthalpy values at - side of the wall
+        kappas    -- ratio of kinetic to vacuum energy density
+                     (only returned if eff is True)
+        omegas    -- ratio of energy density perturbations to vacuum
+                     energy density (only returned if eff is True)
     '''
 
-    if save: import pandas as pd
-
     if len(vws) == 0: vws = np.linspace(0.1, .99, Nvws)
-    vCJ = Chapman_Jouget(alp=alpha)
-    cs = np.sqrt(cs2)
-    xis = np.linspace(0, 1, Nxi2)
-    vvs = np.zeros((len(vws), len(xis)))
-    wws = np.zeros((len(vws), len(xis))) + 1
-    alphas_n = np.zeros(len(vws))
-    conv = np.zeros(len(vws)) + 1
-    kappas = np.zeros(len(vws))
-    omegas = np.zeros(len(vws))
-    shocks = np.zeros(len(vws))
+    vCJ       = Chapman_Jouget(alp=alpha)
+    cs        = np.sqrt(cs2)
+    xis       = np.linspace(0, 1, Nxi + Nxi2)
+    vvs       = np.zeros((len(vws), len(xis)))
+    wws       = np.zeros((len(vws), len(xis))) + 1.
+    alphas_n  = np.zeros(len(vws))
+    conv      = np.zeros(len(vws)) + 1.
+    kappas    = np.zeros(len(vws))
+    omegas    = np.zeros(len(vws))
+    shocks    = np.zeros(len(vws))
     xi_shocks = np.zeros(len(vws))
-    wms = np.zeros(len(vws))
+    wms       = np.zeros(len(vws))
 
     if plot_v == 'both' and plot:
         plt.figure(1)
@@ -743,20 +774,22 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
         # determine type of solution
         ty = type_nucleation(vws[i], alpha, cs2=cs2)
 
-        j = i%11
         if ty == 'def':
 
             ## iteratively compute the real alpha_+ leading to alpha
             if alphan:
-                xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, alpha_n, alp_plus, conv[i] = \
-                        compute_alphan(vw=vws[i], alpha_obj=alpha, tol=tol, cs2=cs2, meth=meth,
-                                       quiet=quiet, max_it=max_it, Nxi=Nxi, ty='def')
+                xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, alpha_n, \
+                    alp_plus, conv[i] = compute_alphan(vw=vws[i], alpha_obj=alpha,
+                                            tol=tol, cs2=cs2, meth=meth,
+                                            quiet=quiet, max_it=max_it, Nxi=Nxi,
+                                            ty='def')
                 alphas_n[i] = alp_plus
 
             ## otherwise, alpha given is assumed to be alpha_+
             else:
                 xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m = \
-                        compute_def(vw=vws[i], alpha=alpha, cs2=cs2, Nxi=Nxi, shock=True)
+                        compute_def(vw=vws[i], alpha=alpha, cs2=cs2,
+                                    Nxi=Nxi, shock=True)
                 alphas_n[i] = alpha*w_pl
 
             inds = np.where((xis >= vws[i])*(xis <= xi_sh))[0]
@@ -767,9 +800,10 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
 
             ## iteratively compute the real alpha_+ leading to alpha
             if alphan:
-                xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, alpha_n, alp_plus, conv[i] = \
-                        compute_alphan(vw=vws[i], alpha_obj=alpha, tol=tol, cs2=cs2, ty='hyb',
-                                       meth=meth, quiet=quiet, max_it=max_it, Nxi=Nxi)
+                xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, alpha_n, \
+                    alp_plus, conv[i] = compute_alphan(vw=vws[i], alpha_obj=alpha,
+                                            tol=tol, cs2=cs2, ty='hyb', meth=meth,
+                                            quiet=quiet, max_it=max_it, Nxi=Nxi)
                 alphas_n[i] = alp_plus
 
             ## otherwise, alpha given is assumed to be alpha_+
@@ -780,7 +814,8 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
                 alphas_n[i] = alpha*w_pl
 
             inds = np.where((xis >= cs)*(xis <= xi_sh))[0]
-            if xi_sh == vws[i]: inds = np.append(inds, np.where((xis <= xi_sh))[-1] + 1)
+            if xi_sh == vws[i]: inds = \
+                    np.append(inds, np.where((xis <= xi_sh))[-1] + 1)
             inds2 = np.where(xis < cs)[0]
             wws[i, inds2] = wws0[0]
 
@@ -790,16 +825,16 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
                     compute_det(vw=vws[i], alpha=alpha, cs2=cs2,
                                 Nxi=Nxi)
 
-            inds = np.where((xis >= cs)*(xis <= vws[i]))[0]
+            inds  = np.where((xis >= cs)*(xis <= vws[i]))[0]
             inds2 = np.where(xis < cs)[0]
             wws[i, inds2] = wws0[0]
-            alphas_n[i] = alpha
+            alphas_n[i]   = alpha
 
         vvs[i, inds] = np.interp(xis[inds], xis0, vvs0)
         wws[i, inds] = np.interp(xis[inds], xis0, wws0)
-        shocks[i] = sh
+        shocks[i]    = sh
         xi_shocks[i] = xi_sh
-        wms[i] = w_m
+        wms[i]       = w_m
 
         # compute efficiency of energy density production
         if eff:
@@ -810,11 +845,12 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
         # compute mean energy density from enthalpy if lam is True
         if lam:
             if alphan: alp_lam = alpha
-            else: alp_lam = alphas_n[i]
-            wws[i, :] = w_to_lam(xis, wws[i, :], vws[i], alp_lam)
+            else: alp_lam      = alphas_n[i]
+            wws[i, :]          = w_to_lam(xis, wws[i, :], vws[i], alp_lam)
 
         if plot:
 
+            j = i%11
             if st_lg == 1: str_lg = r'$\xi_w=%.1f$'%vws[i]
             if st_lg == 2: str_lg = r'$\xi_w=%.2f$'%vws[i]
             if plot_v=='v': plt.plot(xis, vvs[i, :], color=cols[j], ls=ls, alpha=alp,
@@ -829,10 +865,13 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
 
         if save and alphan:
 
-            # option to save the results on files (one file for each alpha and wall velocity)
-            # save is only possible when the input alpha is that at the nucleation temperature (alphan = True)
-            df = pd.DataFrame({'alpha': alpha*xis**0, 'xi_w': vws[i]*xis**0, 'xi': xis, 'v': vvs[i, :],
-                               'w': wws[i, :], 'alpha_pl': alphas_n[i]*xis**0, 'shock': shocks[i]*xis**0,
+            # option to save the results on files (one file for each alpha
+            # and wall velocity)
+            # save is only possible when the input alpha is that at the
+            # nucleation temperature (alphan = True)
+            df = pd.DataFrame({'alpha': alpha*xis**0, 'xi_w': vws[i]*xis**0,
+                               'xi': xis, 'v': vvs[i, :], 'w': wws[i, :],
+                               'alpha_pl': alphas_n[i]*xis**0, 'shock': shocks[i]*xis**0,
                                'xi_sh': xi_shocks[i]*xis**0, 'wm': wms[i]*xis**0})
             # save file
             if len(str_alp) == 0:
@@ -844,8 +883,12 @@ def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=20, Nxi=Nxi_ref,
                 str_vws = str_vws[2:]
             else: str_vws = strs_vws[i]
             file_dir = ress + '/alpha_%s_vw_%s.csv'%(str_alp, str_vws)
-            df.to_csv(file_dir)
-            print('results of 1d profile saved in ', file_dir)
+            try:
+                df.to_csv(file_dir)
+                print('results of 1d profile saved in ', file_dir)
+            except:
+                print('create directory results/1d_profiles to save',
+                      ' the 1d profiles')
 
     if plot:
 
@@ -887,33 +930,31 @@ def kappas_from_prof(vw, alpha, xis, ws, vs):
 
     return kappa, omega
 
-# adapted from GW_fopt, combined kappa and kappas, to be tested
-def kappas_Esp(vw, alp, cs2=cs2):
+def kappas_Esp(vw, alp, cs2=cs2_ref):
 
     """"
     Function that computes the efficiency in converting vacuum to
     kinetic energy density for detonations, deflagrations and hybrids.
 
-    Uses the semiempirical fits from Espinosa:2010hh, appendix A.
+    Uses the semiempirical fits from Espinosa:2010hh, appendix A,
+    following the bag equation of state.
+
+    Numerical values can be computed from the 1d profiles using 
+    compute_profiles_vws function with eff = True
 
     Arguments:
-        vw -- value or array of wall velocities
-        alp -- strength of the phase transition at the nucleation temperature
-        cs2 -- square of the speed of sound (default is 1/3)
+        vw    -- value or array of wall velocities
+        alp   -- strength of the phase transition at the nucleation temperature
+        cs2   -- square of the speed of sound (default is 1/3)
 
     Returns:
-        kappa_def, kappa_det, kappa_hyb: efficiency of kinetic energy production
-            as a fraction of alpha/(1 + alpha) assuming the profile is a deflagration
-            ('def'), a detonation ('det') and a hybrid supersonic deflagration ('hyb')
+        kappa -- ratio of kinetic to vacuum energy density, computed
+                 in the bag equation of state
     """
 
-    cs = np.sqrt(cs2)
-    ty = type_nucleation(vw, alp, cs2=cs2)
-    multi = False
-
-    if isinstance(alp, (list, tuple, np.ndarray)):
-        alp, vw = np.meshgrid(alp, vw, indexing='ij')
-        multi = True
+    cs   = np.sqrt(cs2)
+    ty   = type_nucleation(vw, alp, cs2=cs2)
+    v_cj = Chapman_Jouget(alp)
 
     # kappa at vw << cs
     kapA = vw**(6/5)*6.9*alp/(1.36 - 0.037*np.sqrt(alp) + alp)
@@ -921,50 +962,63 @@ def kappas_Esp(vw, alp, cs2=cs2):
     kapB = alp**(2/5)/(0.017 + (0.997 + alp)**(2/5))
     # kappa at vw = cJ (Chapman-Jouget)
     kapC = np.sqrt(alp)/(0.135 + np.sqrt(0.98 + alp))
-    v_cj = Chapman_Jouget(alp)
-
     # kappa at vw -> 1
     kapD = alp/(0.73 + 0.083*np.sqrt(alp) + alp)
-    kappa_def = cs**(11/5)*kapA*kapB/((cs**(11/5) - vw**(11/5))*kapB + vw*cs**(6/5)*kapA)
-    kappa_det = (v_cj - 1)**3*(v_cj/vw)**(5/2)*kapC*kapD
-    den_kappa = ((v_cj - 1)**3 - (vw - 1)**3)*v_cj**(5/2)*kapC + (vw - 1)**3*kapD
-    kappa_det = kappa_det/den_kappa
 
-    ddk = -.9*np.log10(np.sqrt(alp)/(1 + np.sqrt(alp)))
-    kappa_hyb = kapB + (vw - cs)*ddk + ((vw - cs)/(v_cj - cs))**3*(kapC - kapB - (v_cj - cs)*ddk)
+    # deflagrations
+    den       = (cs**(11/5) - vw**(11/5))*kapB + vw*cs**(6/5)*kapA
+    kappa_def = cs**(11/5)*kapA*kapB/den
+
+    # detonations
+    kappa     = (v_cj - 1)**3*(v_cj/vw)**(5/2)*kapC*kapD
+    den       = ((v_cj - 1)**3 - (vw - 1)**3)*v_cj**(5/2)*kapC + (vw - 1)**3*kapD
+    kappa_det = kappa/den
+
+    # hybrids
+    ddk       = -.9*np.log(np.sqrt(alp)/(1 + np.sqrt(alp)))
+    kappa_hyb = kapB + (vw - cs)*ddk
+    kappa_hyb += ((vw - cs)/(v_cj - cs))**3*(kapC - kapB - (v_cj - cs)*ddk)
 
     if isinstance(vw, (list, tuple, np.ndarray)):
 
-        inds_def = np.where(vw <= cs)[0]
-        inds_hyb = np.where((vw > cs)*(vw <= v_cj))[0]
-        inds_det = np.where(vw > v_cj)[0]
-
-        kap = np.zeros(np.shape(alpha))
-        # subsonic deflagrations
-        kap[inds_def] = kappa_def[inds_def]
-        # supersonic detonations
-        kap[inds_det] = kappa_det[inds_det]
-        # supersonic deflagrations (hybrid)
-        kap[inds_hyb] = kappa_hyb[inds_hyb]
+        kappa = np.zeros(len(vw))
+        kappa[ty == 'def'] = kappa_def[ty == 'def']
+        kappa[ty == 'hyb'] = kappa_hyb[ty == 'hyb']
+        kappa[ty == 'det'] = kappa_det[ty == 'det']
 
     else:
 
-        # subsonic deflagrations
-        if vw < cs: kap =  kappa_def
-        # supersonic detonations
-        elif vw > v_cj: kap =  kappa_det
-        # supersonic deflagrations (hybrid)
-        else: kap = kappa_hyb
+        if   ty == 'def': kappa = kappa_def
+        elif ty == 'hyb': kappa = kappa_hyb
+        elif ty == 'det': kappa = kappa_det
+        else:             kappa = 0
 
-    return kap
+    return kappa
 
 ######################### COMPUTING DIAGNOSTIC PROFILES #########################
 
-def w_to_lam(xis, ws, vw, alpha_n):
+def w_to_lam(xis, ws, vw, alphan):
 
-    inds = np.where(xis < vw)[0]
-    lam = 3/4*(ws - 1)
-    lam[inds] -= 3/4*alpha_n
+    '''
+    Function that computes the energy density perturbations
+    given the 1d profile of enthalpy using the bag equation
+    of state.
+
+    Reference is Appendix A of RoperPol:2025a
+
+    Arguments:
+        xis    -- array of xi
+        ws     -- array of 1d enthalpies
+        vw     -- wall velocity
+        alphan -- value of the nucleation alpha
+
+    Returns:
+        lam    -- array of energy density perturbations
+    '''
+
+    lam        = 3/4*(ws - 1)
+    inds       = np.where(xis < vw)[0]
+    lam[inds] -= 3/4*alphan
 
     return lam
 
@@ -977,16 +1031,34 @@ Other used references are: Hindmarsh:2016lnk, Hindmarsh:2019phv, RoperPol:2023dz
 
 #### f' and l functions
 
-def fp_z(xi, vs, z, ls=[], multi=True, quiet=False, lz=False, gpz=False):
+def fp_z(xi, vs, z, lz=False, ls=[], multi=True, quiet=False):
 
     '''
-    Function that computes the functions f'(z) and l(z) that appears in the Fourier
-    transform of the velocity and enthalpy perturbations fields of an expanding bubble.
+    Function that computes the functions f'(z) and l(z)
+    that describe the Fourier transform of the velocity field
+    and the energy density perturbations for each expanding
+    bubble.
+    
+    These functions provide the initial conditions used to
+    compute the kinetic spectrum in the sound-wave regime
+    according to the Sound-Shell Model.
+
+    Arguments:
+        xi    -- array of xi
+        vs    -- array of 1d velocities
+        z     -- array of z = k (t - t_n) where f' and l functions
+                 are to be computed
+        lz    -- option to compute l(z) (default is False)
+        ls    -- array of energy density perturbations (used if lz
+                 is True)
+        multi -- option to use an array of wall velocities
+        quiet -- option to avoid information printing
+                 (default is False)
     '''
 
     xi_ij, z_ij = np.meshgrid(xi[1:], z, indexing='ij')
-    zxi_ij = z_ij*xi_ij
-    j1_z = np.sin(zxi_ij)/zxi_ij**2 - np.cos(zxi_ij)/zxi_ij
+    zxi_ij      = z_ij*xi_ij
+    j1_z        = np.sin(zxi_ij)/zxi_ij**2 - np.cos(zxi_ij)/zxi_ij
     # avoid division by zero
     j1_z[np.where(zxi_ij == 0)] = 0
 
@@ -1007,7 +1079,7 @@ def fp_z(xi, vs, z, ls=[], multi=True, quiet=False, lz=False, gpz=False):
             fpzs[i, :] = -4*np.pi*np.trapz(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
             if lz:
                 l_ij, z_ij = np.meshgrid(ls[i, 1:], z, indexing='ij')
-                lzs[i, :] = 4*np.pi*np.trapz(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
+                lzs[i, :]  = 4*np.pi*np.trapz(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
 
             if not quiet: print('vw ', i + 1, '/', Nvws, ' computed')
 
