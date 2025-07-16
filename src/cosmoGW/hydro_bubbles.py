@@ -109,7 +109,7 @@ def type_nucleation(vw, alp, cs2=cs2_ref):
     # check if vw is a list or a single value
     if not isinstance(vw, (list, tuple, np.ndarray)):
 
-        if vw < cs:     ty = 'def'
+        if   vw < cs:   ty = 'def'
         elif vw < v_cj: ty = 'hyb'
         else:           ty = 'det'
 
@@ -433,7 +433,7 @@ def det_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, zero_v=-4):
 
         for i in range(0, len(xi0)):
 
-            vs[i, :] = np.logspace(np.log10(v0), np.log10(v0) + zero_v, Nxi)
+            vs[i, :]  = np.logspace(np.log10(v0), np.log10(v0) + zero_v, Nxi)
             xis[i, :], _, _ = compute_xi_from_v(vs[i, :], xi0[i], cs2=cs2,
                                                 shock=False)
             ws[i, :]  = compute_w(vs[i, :], xis[i, :], cs2=cs2)
@@ -680,8 +680,9 @@ def compute_alphan(vw=vw_def, alpha_obj=alpha_def, tol=tol_ref, cs2=cs2_ref,
             print('iteration', j, 'alpha', alpha_n)
             print('iteration', j, 'new guess', alp_plus)
 
-    print(j, 'iterations for vw=', vw,' and alpha= ',alpha_obj)
-    print('alpha:', alpha_n, ', alpha_+:', alp_plus)
+    if not quiet:
+        print(j, 'iterations for vw=', vw,' and alpha= ',alpha_obj)
+        print('alpha:', alpha_n, ', alpha_+:', alp_plus)
 
     return xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, alpha_n, alp_plus, conv
 
@@ -1096,7 +1097,7 @@ def fp_z(xi, vs, z, lz=False, ls=[], multi=True, quiet=False):
     else:
         return fpzs
 
-def Rstar_beta(vw=1., cs2=cs2_ref, corr=True):
+def Rstar_beta(vws=1., cs2=cs2_ref, corr=True):
 
     """
     Function that computes the ratio of the mean-bubble separation Rstar
