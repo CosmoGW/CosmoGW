@@ -15,16 +15,16 @@ Other contributors: Antonino Midiri, Simona Procacci, Madeline Salomé
 
 Main references are:
 
-RoperPol:2022iel - A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,
+RoperPol:2022iel  - A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,
 "The gravitational wave signal from primordial magnetic fields in the
 Pulsar Timing Array frequency band," Phys. Rev. D 105, 123502 (2022),
 arXiv:2201.05630
 
-RoperPol:2023bqa - A. Roper Pol, A. Neronov, C. Caprini, T. Boyer,
+RoperPol:2023bqa  - A. Roper Pol, A. Neronov, C. Caprini, T. Boyer,
 D. Semikoz, "LISA and γ-ray telescopes as multi-messenger probes of a
 first-order cosmological phase transition," arXiv:2307.10744 (2023)
 
-RoperPol:2023dzg - A. Roper Pol, S. Procacci, C. Caprini,
+RoperPol:2023dzg  - A. Roper Pol, S. Procacci, C. Caprini,
 "Characterization of the gravitational wave spectrum from sound waves within
 the sound shell model," Phys. Rev. D 109, 063531 (2024), arXiv:2308.12943
 
@@ -32,11 +32,15 @@ Hindmarsh:2019phv - M. Hindmarsh, M. Hijazi, "Gravitational waves from first ord
 cosmological phase transitions in the Sound Shell Model,"
 JCAP 12 (2019) 062, arXiv:1909.10040
 
-RoperPol:2025b - A. Roper Pol, A. Midiri, M. Salomé, C. Caprini,
+Caprini:2024gyk   - A. Roper Pol, I. Stomberg, C. Caprini, R. Jinno,
+T. Konstandin, H. Rubira, "Gravitational waves from first-order
+phase transitions: from weak to strong," JHEP, arxiv:2409.03651
+
+RoperPol:2025b    - A. Roper Pol, A. Midiri, M. Salomé, C. Caprini,
 "Modeling the gravitational wave spectrum from slowly decaying sources in the
 early Universe: constant-in-time and coherent-decay models," in preparation
 
-RoperPol:2025a - A. Roper Pol, S. Procacci, A. S. Midiri,
+RoperPol:2025a    - A. Roper Pol, S. Procacci, A. S. Midiri,
 C. Caprini, "Irrotational fluid perturbations from first-order phase
 transitions," in preparation
 """
@@ -49,7 +53,7 @@ import cosmoGW.GW_analytical as an
 # reference values
 cs2_ref    = hb.cs2_ref  # speed of sound squared
 Oms_ref    = 0.1         # reference source amplitude
-                         # (fraction to total energy)
+                         # (fraction to radiation energy)
 lf_ref     = 0.01        # reference length scale of the source
                          # (normalized by the Hubble radius)
 N_turb     = 2           # ratio between the effective time duration of
@@ -62,6 +66,8 @@ Nkconv_ref = 1000        # reference number of wave number discretization
 Np_ref     = 3000        # reference number of wave number discretization
                          # for convolution calculations
 NTT_ref    = 5000        # reference number of lifetimes discretization
+dt0_ref    = 11          # dt0 = 11 is a numerical parameter of the fit
+                         # provided in Caprini:2024gyk
 
 '''
     RoperPol:2022iel/RoperPol:2023dzg and RoperPol:2025b/RoperPol:2025b
@@ -257,7 +263,7 @@ def EPi_correlators(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
 ###########  FUNCTIONS FOR THE CONSTANT-IN-TIME MODEL ###########
 
 def TGW_func(s, N=N_turb, Oms=Oms_ref, lf=lf_ref, cs2=cs2_ref,
-             tdecay='eddy', multi=False):
+             tdecay='eddy', multi=False, tp='magnetic'):
 
     """
     Function that computes the logarithmic term obtained as
@@ -300,8 +306,8 @@ def TGW_func(s, N=N_turb, Oms=Oms_ref, lf=lf_ref, cs2=cs2_ref,
     Arguments:
         s      -- array of frequencies, normalized by the
                  characteristic scale, s = f R*
-        N      -- relation between eddy turnover time and effective
-                 source duration
+        N      -- relation between the decay time and the effective
+                  source duration
         Oms    -- energy density of the source (i.e., 1/2 vrms^2)
         lf     -- characteristic scale of the turbulence as a
                  fraction of the Hubble radius, R* H*
@@ -316,12 +322,15 @@ def TGW_func(s, N=N_turb, Oms=Oms_ref, lf=lf_ref, cs2=cs2_ref,
 
     # characteristic velocity (for example, Alfven velocity or vrms)
     # see eq. 12 of RoperPol:2023bqa
-    vA    = np.sqrt(2*Oms/(1 + cs2))
+    if tp == 'kinetic': vA = np.sqrt(Oms)
+    else:               vA = np.sqrt(2*Oms/(1 + cs2))
+    # decay time in units of R*
+    if tdecay == 'eddy': tdec = 1./vA
 
     # effective duration of the source dtfin/R* is N units of
     # the decay time (see comment above for different choices
     # in the literature)
-    dtfin = N/vA
+    dtfin = N*tdec
 
     if multi:
 
@@ -430,9 +439,9 @@ def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
 
     The resulting GW spectrum is
 
-     Omega_GW (k) = (3pi)/(8cs) x (k/kst)^2 x (Oms/cal A)^2 x TGW x Omm(k)
+     Omega_GW (k) = (3pi)/(8cs) x Gamma2 x (k/kst)^2 x (Oms/cal A)^2 x TGW x Omm(k)
 
-     where Oms = .5 <v^2> = .5 vrms^2 and cal A = int zeta(K) d ln k
+     where Oms = <v^2> = vrms^2 and cal A = int zeta(K) d ln k
      (using the normalization of RoperPol:2025a for zeta)
 
     Reference: Appendix B of RoperPol:2023dzg; see eq.(B3)
@@ -585,3 +594,68 @@ def compute_Delta_mn(t, k, p, ptilde, cs2=cs2_ref, m=1, n=1, tini=1.,
         Delta_mn = 2*(1 - np.cos(pp*(t - tini)))/pp**2
 
     return Delta_mn
+
+########### FUNCTIONS FOR THE LOCALLY STATIONARY UETC ###########
+
+def K2int(dtfin, K0=1., dt0=dt0_ref, b=0., expansion=False, beta=1.):
+
+    '''
+    Function that returns the integrated kinetic energy density
+    squared for a power law
+
+      K(dt) = K0 (dt/dt0)^(-b),
+
+    where dt and dt0 represent time intervals, K0 is the amplitude
+    at the end of the phase transition, and dt0 = 11 is a numerical
+    parameter of the fit.
+
+    Based on the results of Higgsless simulations of Caprini:2024gyk,
+    see equation 2.27.
+
+    It determines the amplitude of GWs in the locally stationary
+    UETC describing the decay of compressional sources, see equation
+    2.33
+
+    Arguments:
+        dtfin -- duration of the sourcing (in units of 1/beta or 1/H* for
+                 expansion = False or True)
+        K0    -- amplitude of K at the end of the phase transition
+        dt0   -- numerical parameter used for the fits (= 11)
+        b     -- power law exponent of the decay of K in time
+        expansion -- option to consider flat Minkowski space-time
+                     (if expansion is False, default) or a radiation-
+                     dominated expanding Universe
+        beta  -- nucleation rate normalized to the Hubble time,
+                 beta/H*, relevant if expansion is chosen
+
+    Returns:
+        K2int -- integrated squared kinetic energy density
+    '''
+
+    K2int = K0**2*dt0
+
+    # computation in Minkowski space-time
+    if not expansion:
+        if b == 0.5:
+            K2int *= np.log(1 + dtfin/dt0)
+        else:
+            K2int *= ((1 + dtfin/dt0)**(1. - 2*b) - 1)/(1. - 2.*b)
+
+    # computation in expanding Universe during radiation-domination
+    else:
+
+        import scipy.special as spe
+
+        dt0   =  dt0/beta
+        K2int *= 1./beta/(dt0 - 1.)**2
+
+        if b == 0.5:
+            K2int *= (dt0 - 1.)/(1. + dtfin) + np.log((1 + dtfin/dt0)/(1 + dtfin))
+
+        else:
+            K2int *= 1./(1. - 2*b)
+            A = spe.hyp2f1(2, 1 - 2*b, 2. - 2*b, (dt0 + dtfin)/(dt0 - 1))
+            B = spe.hyp2f1(2, 1 - 2*b, 2. - 2*b, 1./(1. - 1./dt0))
+            K2int *= (1 + dtfin/dt0)**(1. - 2*b)*A - B
+
+    return K2int
