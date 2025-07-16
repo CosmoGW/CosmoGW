@@ -33,7 +33,17 @@ RoperPol:2023dzg - A. Roper Pol, S. Procacci, C. Caprini,
 "Characterization of the gravitational wave spectrum from sound waves within
 the sound shell model," Phys. Rev. D 109, 063531 (2024), arXiv:2308.12943.
 
-RoperPol:2025b - A. Roper Pol, A. Midiri, M. Salomé, C. Caprini,
+Caprini:2024gyk  - A. Roper Pol, I. Stomberg, C. Caprini, R. Jinno,
+T. Konstandin, H. Rubira, "Gravitational waves from first-order
+phase transitions: from weak to strong," JHEP, arxiv:2409.03651
+
+Caprini:2024hue  - E. Madge, C. Caprini, R. Jinno, M. Lewicki,
+M. Merchand, G. Nardini, M. Pieroni, A. Roper Pol, V. Vaskonen,
+"Gravitational waves from first-order phase transitions in LISA:
+reconstruction pipeline and physics interpretation,"
+JCAP 10, 020 (2024), arxiv:2403.03723
+
+RoperPol:2025b   - A. Roper Pol, A. Midiri, M. Salomé, C. Caprini,
 "Modeling the gravitational wave spectrum from slowly decaying sources in the
 early Universe: constant-in-time and coherent-decay models," in preparation
 """
@@ -418,7 +428,8 @@ def calC(a=a_ref, b=b_ref, alp=alp_ref, tp='vort', norm=True, alpha2=False,
 ###### ANALYTICAL TEMPLATE USED FOR A DOUBLE SMOOTHED BROKEN POWER LAW ######
 
 def smoothed_double_bPL(k, kpeak1, kpeak2, A=1., a=a_ref, b=1,
-                        c=b_ref, alp1=alp_ref, alp2=alp_ref, kref=1.):
+                        c=b_ref, alp1=alp_ref, alp2=alp_ref, kref=1.,
+                        alpha2=False):
 
     """
     Function that returns the value of the smoothed double broken power
@@ -435,6 +446,12 @@ def smoothed_double_bPL(k, kpeak1, kpeak2, A=1., a=a_ref, b=1,
     Reference is RoperPol:2023dzg, equation 50
     Also used in RoperPol:2023bqa, equation 7
 
+    The same broken power law with a slightly different form is used in
+    Caprini:2024gyk, Caprini:2024hue and can be used setting alpha2 = True
+
+        zeta(K) = A K^a/(1 + (K/K1)^alp1)^((a - b)/alp1)
+                           x (1 + (K/K2)^alp2)^(-(b + c)/alp2)
+
     Arguments:
 
         k -- array of wave numbers
@@ -444,7 +461,8 @@ def smoothed_double_bPL(k, kpeak1, kpeak2, A=1., a=a_ref, b=1,
         b -- slope of the spectrum at intermediate wave numbers, k^b
         c -- slope of the spectrum at high wave numbers, k^(-c)
         alp1, alp2 -- smoothness of the transitions from one power law to the other
-        kref -- reference wave number used to normalize the spectrum (default is 1)
+        kref   -- reference wave number used to normalize the spectrum (default is 1)
+        alpha2 -- option to use different normalization
 
     Returns:
         spectrum array
@@ -454,8 +472,12 @@ def smoothed_double_bPL(k, kpeak1, kpeak2, A=1., a=a_ref, b=1,
     K1 = kpeak1/kref
     K2 = kpeak2/kref
 
-    spec1 = (1 + (K/K1)**((a - b)*alp1))**(1/alp1)
-    spec2 = (1 + (K/K2)**((c + b)*alp2))**(1/alp2)
-    spec  = A*K^a/spec1/spec2
+    if not alpha2:
+        spec1 = (1 + (K/K1)**((a - b)*alp1))**(1/alp1)
+        spec2 = (1 + (K/K2)**((c + b)*alp2))**(1/alp2)
+    else:
+        spec1 = (1 + (K/K1)**alp1)**((a - b)/alp1)
+        spec2 = (1 + (K/K2)**alp2)**((c + b)/alp2)
+    spec = A*K^a/spec1/spec2
 
     return spec
