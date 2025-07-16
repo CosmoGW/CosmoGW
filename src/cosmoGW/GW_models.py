@@ -597,7 +597,7 @@ def compute_Delta_mn(t, k, p, ptilde, cs2=cs2_ref, m=1, n=1, tini=1.,
 
 ########### FUNCTIONS FOR THE LOCALLY STATIONARY UETC ###########
 
-def K2int(dtfin, K0=1., dt0=dt0_ref, b=0., expansion=False, beta=1.):
+def K2int(dtfin, K0=1., dt0=dt0_ref, b=0., expansion=False, beta=100):
 
     '''
     Function that returns the integrated kinetic energy density
@@ -646,6 +646,12 @@ def K2int(dtfin, K0=1., dt0=dt0_ref, b=0., expansion=False, beta=1.):
 
         import scipy.special as spe
 
+        if beta < dt0:
+            print('The value of beta in K2int cannot be smaller than',
+                  'dt0 = %.1f for the chosen model'%dt0)
+            print('Choose a larger value of beta to include expansion')
+            return 0
+
         dt0   =  dt0/beta
         K2int *= 1./beta/(dt0 - 1.)**2
 
@@ -654,8 +660,8 @@ def K2int(dtfin, K0=1., dt0=dt0_ref, b=0., expansion=False, beta=1.):
 
         else:
             K2int *= 1./(1. - 2*b)
-            A = spe.hyp2f1(2, 1 - 2*b, 2. - 2*b, (dt0 + dtfin)/(dt0 - 1))
-            B = spe.hyp2f1(2, 1 - 2*b, 2. - 2*b, 1./(1. - 1./dt0))
+            A      = spe.hyp2f1(2, 1 - 2*b, 2. - 2*b, (dt0 + dtfin)/(dt0 - 1))
+            B      = spe.hyp2f1(2, 1 - 2*b, 2. - 2*b, dt0/(dt0 - 1.))
             K2int *= (1 + dtfin/dt0)**(1. - 2*b)*A - B
 
     return K2int
