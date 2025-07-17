@@ -478,6 +478,6 @@ def smoothed_double_bPL(k, kpeak1, kpeak2, A=1., a=a_ref, b=1,
     else:
         spec1 = (1 + (K/K1)**alp1)**((a - b)/alp1)
         spec2 = (1 + (K/K2)**alp2)**((c + b)/alp2)
-    spec = A*K^a/spec1/spec2
+    spec = A*K**a/spec1/spec2
 
     return spec
