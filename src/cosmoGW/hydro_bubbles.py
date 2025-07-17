@@ -103,21 +103,22 @@ def type_nucleation(vw, alp, cs2=cs2_ref):
         ty -- type of solution ('def', 'hyb', 'det')
     '''
 
+    mult_vw  = isinstance(vw,  (list, tuple, np.ndarray))
+    mult_alp = isinstance(alp, (list, tuple, np.ndarray))
+    cs       = np.sqrt(cs2)
+
+    if not mult_vw:  vw  = np.array([vw])
+    if not mult_alp: alp = np.array([alp])
     v_cj = Chapman_Jouget(alp)
-    cs   = np.sqrt(cs2)
 
-    # check if vw is a list or a single value
-    if not isinstance(vw, (list, tuple, np.ndarray)):
+    ty = np.full((len(vw), len(alp)), 'hyb')
+    vw, v_cj = np.meshgrid(vw, v_cj, indexing='ij')
+    ty[vw < cs]   = 'def'
+    ty[vw > v_cj] = 'det'
 
-        if   vw < cs:   ty = 'def'
-        elif vw < v_cj: ty = 'hyb'
-        else:           ty = 'det'
-
-    else:
-
-        ty = np.array(['hyb']*len(vw))
-        ty[np.where(vw < cs)]   = 'def'
-        ty[np.where(vw > v_cj)] = 'det'
+    if   not mult_alp and not mult_vw: ty = ty[0, 0]
+    elif not mult_alp: ty = ty[:, 0]
+    elif not mult_vw:  ty = ty[0, :]
 
     return ty
 
@@ -686,6 +687,128 @@ def compute_alphan(vw=vw_def, alpha_obj=alpha_def, tol=tol_ref, cs2=cs2_ref,
 
     return xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, alpha_n, alp_plus, conv
 
+def compute_profiles_vws_multalp(alphas, vws=[], cs2=cs2_ref, Nvws=Nvws_ref, Nxi=Nxi_ref,
+                                 Nxi2=Nxi2_ref, alphan=True, quiet=True, tol=tol_ref,
+                                 max_it=it_ref, lam=False, eff=False):
+
+    '''
+    Function that computes the velocity and enthalpy profiles for an array
+    of alpha using compute_profiles_vws function
+
+    Arguments:
+        alphas -- nucleation T alphas
+        vws    -- range of wall velocities
+        cs2    -- square of the speed of sound (default is 1/3)
+        Nvws   -- number of wall velocities (if vws is not given)
+        Nxi    -- number of discretization points in xi where the profiles are
+                  computed
+        Nxi2   -- number of discretization points in xi out of the solution
+                  of the 1d profiles
+        alphan -- option to identify if the input alpha is at the
+                  nucleation temperature (if True) or alpha+ (if False),
+                  default is True
+        quiet  -- option to avoid printing debugging information (default is True)
+        max_it -- maximum number of iterations to find alpha_+
+        lam    -- option to compute energy perturbations lambda instead
+                  of enthalpy (default is False, so enthalpy)
+        tol    -- tolerance of the relative error to consider convergence
+                  of alpha_+ has been reached
+        eff    -- option to compute the efficiency factors kappa and
+                  omega (default is False)
+
+    Returns:
+        xis       -- array of xi positions
+        vvs       -- array of velocities
+        wws       -- array of enthalpies (energy density perturbations
+                     if lam is True)
+        alphas_n  -- array of nucleation alphas (if input is alpha+, when
+                     alphan is False, otherwise it returns array of values
+                     of alpha+)
+        conv      -- array of booleans determining if the alphan calculation
+                     has converged
+        shocks    -- array of booleans determining if a shock is produced
+                     in the fluid profile
+        xi_shocks -- positions of the shocks (if shock is not produced,
+                     it returns xi_front)
+        wms       -- enthalpy values at - side of the wall
+        kappas    -- ratio of kinetic to vacuum energy density
+                     (only returned if eff is True)
+        omegas    -- ratio of energy density perturbations to vacuum
+                     energy density (only returned if eff is True)
+    '''
+
+    if len(vws) == 0: vws = np.linspace(0.1, .99, Nvws)
+    xis = np.linspace(0, 1, Nxi + Nxi2)
+
+    if isinstance(alphas, (list, tuple, np.ndarray)):
+
+        vvs       = np.zeros((len(vws), len(alphas), len(xis)))
+        wws       = np.zeros((len(vws), len(alphas), len(xis))) + 1.
+        alphas_n  = np.zeros((len(vws), len(alphas)))
+        conv      = np.zeros((len(vws), len(alphas))) + 1.
+        shocks    = np.zeros((len(vws), len(alphas)))
+        xi_shocks = np.zeros((len(vws), len(alphas)))
+        wms       = np.zeros((len(vws), len(alphas)))
+
+    if eff:
+
+        if isinstance(alphas, (list, tuple, np.ndarray)):
+
+            kappas = np.zeros((len(vws), len(alphas)))
+            omegas = np.zeros((len(vws), len(alphas)))
+
+            for i in range(0, len(alphas)):
+
+                if not quiet:
+                    print('Computing alpha = %'%alphas[i], ' out of',
+                          '%i'%(len(alphas) + 1))
+
+                xis, vvs[:, i, :], wws[:, i, :], alphas_n[:, i], \
+                    conv[:, i], shocks[:, i], xi_shocks[:, i], wms[:, i], \
+                    kappas[:, i], omegas[:, i] = \
+                        compute_profiles_vws(alphas[i], vws=vws, cs2=cs2,
+                            Nxi=Nxi, Nxi2=Nxi2, plot=False, alphan=alphan,
+                            quiet=quiet, tol=tol, max_it=max_it, lam=lam,
+                            eff=eff)
+
+        else:
+
+            xis, vvs, wws, alphas_n, conv, shocks, xi_shocks, wms, \
+                    kappas, omegas = \
+                        compute_profiles_vws(alphas, vws=vws, cs2=cs2,
+                            Nxi=Nxi, Nxi2=Nxi2, plot=False, alphan=alphan,
+                            quiet=quiet, tol=tol, max_it=max_it, lam=lam,
+                            eff=eff)
+
+        return xis, vvs, wws, alphas_n, conv, shocks, xi_shocks, wms, kappas, omegas
+
+    else:
+
+        if isinstance(alphas, (list, tuple, np.ndarray)):
+
+            for i in range(0, len(alphas)):
+
+                if not quiet:
+                    print('Computing alpha = %'%alphas[i], ' out of',
+                          '%i'%(len(alphas) + 1))
+
+                xis, vvs[:, i, :], wws[:, i, :], alphas_n[:, i], \
+                    conv[:, i], shocks[:, i], xi_shocks[:, i], wms[:, i] = \
+                        compute_profiles_vws(alphas[i], vws=vws, cs2=cs2,
+                            Nxi=Nxi, Nxi2=Nxi2, plot=False, alphan=alphan,
+                            quiet=quiet, tol=tol, max_it=max_it, lam=lam,
+                            eff=eff)
+
+        else:
+
+            xis, vvs, wws, alphas_n, conv, shocks, xi_shocks, wms = \
+                compute_profiles_vws(alphas, vws=vws, cs2=cs2,
+                                     Nxi=Nxi, Nxi2=Nxi2, plot=False, alphan=alphan,
+                                     quiet=quiet, tol=tol, max_it=max_it, lam=lam,
+                                     eff=eff)
+
+        return xis, vvs, wws, alphas_n, conv, shocks, xi_shocks, wms
+
 def compute_profiles_vws(alpha, vws=[], cs2=cs2_ref, Nvws=Nvws_ref, Nxi=Nxi_ref,
                          Nxi2=Nxi2_ref, plot=False, plot_v='v', cols=[],
                          alphan=True, quiet=True, tol=tol_ref, max_it=it_ref,
@@ -940,7 +1063,7 @@ def kappas_Esp(vw, alp, cs2=cs2_ref):
     Uses the semiempirical fits from Espinosa:2010hh, appendix A,
     following the bag equation of state.
 
-    Numerical values can be computed from the 1d profiles using 
+    Numerical values can be computed from the 1d profiles using
     compute_profiles_vws function with eff = True
 
     Arguments:
@@ -954,8 +1077,18 @@ def kappas_Esp(vw, alp, cs2=cs2_ref):
     """
 
     cs   = np.sqrt(cs2)
-    ty   = type_nucleation(vw, alp, cs2=cs2)
+
+    mult_alp = isinstance(alp, (list, tuple, np.ndarray))
+    mult_vw  = isinstance(vw,  (list, tuple, np.ndarray))
+
+    if not mult_vw:  vw  = np.array([vw])
+    if not mult_alp: alp = np.array([alp])
     v_cj = Chapman_Jouget(alp)
+
+    ty       = type_nucleation(vw, alp, cs2=cs2)
+    _,  v_cj = np.meshgrid(vw, v_cj, indexing='ij')
+    vw, alp  = np.meshgrid(vw, alp,  indexing='ij')
+    kappa    = np.zeros_like(vw)
 
     # kappa at vw << cs
     kapA = vw**(6/5)*6.9*alp/(1.36 - 0.037*np.sqrt(alp) + alp)
@@ -969,30 +1102,23 @@ def kappas_Esp(vw, alp, cs2=cs2_ref):
     # deflagrations
     den       = (cs**(11/5) - vw**(11/5))*kapB + vw*cs**(6/5)*kapA
     kappa_def = cs**(11/5)*kapA*kapB/den
+    kappa[ty == 'def'] = kappa_def[ty == 'def']
 
     # detonations
-    kappa     = (v_cj - 1)**3*(v_cj/vw)**(5/2)*kapC*kapD
+    kappa_det = (v_cj - 1)**3*(v_cj/vw)**(5/2)*kapC*kapD
     den       = ((v_cj - 1)**3 - (vw - 1)**3)*v_cj**(5/2)*kapC + (vw - 1)**3*kapD
-    kappa_det = kappa/den
+    kappa_det = kappa_det/den
+    kappa[ty == 'det'] = kappa_det[ty == 'det']
 
     # hybrids
-    ddk       = -.9*np.log(np.sqrt(alp)/(1 + np.sqrt(alp)))
-    kappa_hyb = kapB + (vw - cs)*ddk
+    ddk        = -.9*np.log(np.sqrt(alp)/(1 + np.sqrt(alp)))
+    kappa_hyb  = kapB + (vw - cs)*ddk
     kappa_hyb += ((vw - cs)/(v_cj - cs))**3*(kapC - kapB - (v_cj - cs)*ddk)
+    kappa[ty == 'hyb'] = kappa_hyb[ty == 'hyb']
 
-    if isinstance(vw, (list, tuple, np.ndarray)):
-
-        kappa = np.zeros(len(vw))
-        kappa[ty == 'def'] = kappa_def[ty == 'def']
-        kappa[ty == 'hyb'] = kappa_hyb[ty == 'hyb']
-        kappa[ty == 'det'] = kappa_det[ty == 'det']
-
-    else:
-
-        if   ty == 'def': kappa = kappa_def
-        elif ty == 'hyb': kappa = kappa_hyb
-        elif ty == 'det': kappa = kappa_det
-        else:             kappa = 0
+    if   not mult_alp and not mult_vw: kappa = kappa[0, 0]
+    elif not mult_alp: kappa = kappa[:, 0]
+    elif not mult_vw:  kappa = kappa[0, :]
 
     return kappa
 
@@ -1039,7 +1165,7 @@ def fp_z(xi, vs, z, lz=False, ls=[], multi=True, quiet=False):
     that describe the Fourier transform of the velocity field
     and the energy density perturbations for each expanding
     bubble.
-    
+
     These functions provide the initial conditions used to
     compute the kinetic spectrum in the sound-wave regime
     according to the Sound-Shell Model.
