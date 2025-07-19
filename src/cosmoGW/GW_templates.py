@@ -81,6 +81,8 @@ transitions," in preparation
 import numpy  as np
 import pandas as pd
 import matplotlib.pyplot     as plt
+import cosmoGW.cosmoGW       as cGW
+import cosmoGW.cosmology     as co
 import cosmoGW.GW_analytical as an
 import cosmoGW.GW_models     as mod
 import cosmoGW.hydro_bubbles as hb
@@ -92,6 +94,11 @@ Oms_ref    = mod.Oms_ref    # reference source amplitude
                             # (fraction to radiation energy density)
 lf_ref     = mod.lf_ref     # reference length scale of the source
                             # (normalized by the Hubble radius)
+
+# reference values and constants (EWPT)
+Tref     = cGW.Tref       # EWPT (100 GeV)
+gref     = cGW.gref       # EWPT (100 dof)
+Neff_ref = co.Neff_ref    # reference Neff = 3
 
 '''
 Reference values for turbulence template
@@ -139,9 +146,11 @@ b_sw_ref    = 1       # intermediate frequency slope f found for GWs in
                       # the HL simulations, see Jinno:2022mie and Caprini:2024gyk
 c_sw_ref    = 3       # high frequency slope f^(-3) found for GWs in the
                       # HL simulations, see Jinno:2022mie and Caprini:2024gyk
+dt0_ref     = mod.dt0_ref  # reference value for dt0 used in the Higgsless fits
 
 # first and second peak smoothness parameters
 alp1_sw_ref = 1.5; alp2_sw_ref = 0.5  # used in RoperPol:2023bqa
+alp1_ssm    = 4;   alp2_ssm    = 2.   # used in Hindmarsh:2019phv
 alp1_HL     = 3.6; alp2_HL     = 2.4  # found in Caprini:2024gyk
 alp1_LISA   = 2.;  alp2_LISA   = 4.   # used in Caprini:2024hue
 
@@ -169,144 +178,6 @@ is developed and used in Caprini:2024gyk
 '''
 
 #################### GW SPECTRUM FOR SOUND WAVES AND TURBULENCE ####################
-
-# def OmGW_spec(ss, alpha, beta, xiw=1., tp='turb', cs2=cs2_ref,
-#               multi_ab=False, multi_xi=False, OmGW_tilde=OmGW_sw_ref,
-#               a_sw=a_sw, b_sw=b_sw, c_sw=c_sw, alp1_sw=alp1_sw, alp2_sw=alp2_sw,
-#               a_turb=a_turb, b_turb=b_turb, alp_turb=alp_turb, alpPi=alpPi, fPi=fPi,
-#               bPi=bPi_vort, eps_turb=1., ref='f', corrRs=True,
-#               model_shape_sw=''):
-
-#     '''
-#     Function that computes the GW spectrum (normalized to radiation
-#     energy density within RD era) for sound waves and turbulence.
-
-#     It takes the form:
-
-#         OmGW = 3 * ampl_GWB * pref_GWB * Sf_shape,
-
-#     see ampl_GWB, pref_GWB, and Sf_shape functions for details and references.
-
-#     Arguments:
-#         ss -- normalized wave number, divided by the mean bubbles size Rstar, s = f R*
-#         alpha -- strength of the phase transition
-#         beta -- rate of nucleation of the phase transition
-#         xiw -- wall velocity
-#         tp -- type of GW source (options are sw_SSM for the sound shell model of Hindmarsh:2019phv,
-#                'sw_HL' for the fit based on the Higgsless simulations of Jinno:2022mie, and
-#                'turb' for MHD turbulence)
-#         cs2 -- square of the speed of sound (default is 1/3 for radiation domination)
-#         multi_ab -- option to provide an array of values of alpha and beta as input
-#         multi_xi -- option to provide an array of values of xiw as input
-#         Omgwtilde_sw -- efficiency of GW production from sound waves (default value is 1e-2,
-#                         based on numerical simulations)
-#         a_sw, b_sw, c_sw -- slopes for sound wave template, used when tp = 'sw_HL'
-#         alp1_sw, alp2_sw -- transition parameters for sound wave template, used when tp = 'sw_HL'
-
-#         a_turb, b_turb, alp_turb -- slopes and smoothness of the turbulent source spectrum
-#                                     (either magnetic or kinetic), default values are for a
-#                                     von Karman spectrum
-#         alpPi, fPi -- parameters of the fit of the spectral anisotropic stresses for turbulence
-#         eps_turb -- fraction of energy density converted from sound waves into turbulence
-#     '''
-
-#     cs = np.sqrt(cs2)
-
-#     ###### input parameters
-#     #
-#     # kappa (efficiency in converting vacuum to kinetic energy)
-#     # computed using the bag equation of state taken from
-#     # Espinosa:2010hh
-#     kap = np.zeros((len(alpha), len(xiw)))
-#     if isinstance(alpha, (list, tuple, np.ndarray)):
-#         for i in range(0, len(alpha)):
-#             kap[i] = hb.kappas_Esp(xiw, alpha[i], cs2=cs2)
-#     #
-#     # K = rho_kin/rho_total = kappa alpha/(1 + alpha)
-#     #
-#     if isinstance(xiw, (list, tuple, np.ndarray)):
-#         alpha, _ = np.meshgrid(alpha, xiw, indexing='ij')
-#         beta, vw = np.meshgrid(beta,  xiw, indexing='ij')
-#     K = kap*alpha/(1 + alpha)
-
-#     # Oms = rho_source/rho_total = K eps_turb
-#     Oms = K*eps_turb
-
-#     if corrRs:
-#         lf = (8*np.pi)**(1/3)*np.maximum(xiw, cs)/beta
-#     else:
-#         lf = (8*np.pi)**(1/3)*xiw/beta
-
-#     Dw = abs(xiw - cs)/xiw
-
-#     # amplitude factors
-#     if multi_ab and multi_xi:
-#         Oms, lf, xiw_ij = np.meshgrid(alpha, beta, xiw, indexing='ij')
-#         for i in range(0, len(beta)): Oms_ij[:, i, :] = Oms
-#         for i in range(0, len(alpha)): lf_ij[i, :, :] = lf
-#     elif multi_ab and not multi_xi:
-#         Oms, lf = np.meshgrid(Oms, lf, indexing='ij')
-
-#     preff = pref_GWB(Oms=Oms, lf=lf, tp=tp, b_turb=b_turb, alpPi=alpPi, fPi=fPi)
-
-#     ampl  = ampl_GWB(tp=tp, cs2=cs2, Omgwtilde_sw=OmGW_sw_ref, a_turb=a_turb,
-#                     b_turb=b_turb, alp=alp_turb, alpPi=alpPi, fPi=fPi)
-
-#     # spectral shape for sound waves templates
-#     if tp == 'sw':
-#         if multi_xi:
-#             OmGW_aux = np.zeros((len(ss), len(xiw)))
-#             for i in range(0, len(xiw)):
-#                 S = Sf_shape(ss, tp=tp, Dw=Dw[i], a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
-#                              alp1_sw=alp1_sw, alp2_sw=alp2_sw)
-#                 mu = np.trapz(S, np.log(ss))
-#                 OmGW_aux[:, i] = 3*S*ampl/mu
-
-#             if multi_ab:
-#                 OmGW = np.zeros((len(ss), len(alpha), len(beta), len(xiw)))
-#                 for i in range(0, len(xiw)):
-#                     for j in range(0, len(ss)):
-#                         OmGW[j, :, :, i] = OmGW_aux[j, i]*preff[:, :, i]
-#             else: OmGW = OmGW_aux*preff[i]
-
-#         else:
-#             S = Sf_shape(ss, tp=tp, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
-#                          alp1_sw=alp1_sw, alp2_sw=alp2_sw)
-#             mu = np.trapz(S, np.log(ss))
-#             OmGW_aux = 3*S*ampl/mu
-#             if multi_ab:
-#                 OmGW = np.zeros((len(ss), len(alpha), len(beta)))
-#                 for j in range(0, len(ss)):
-#                     OmGW[j, :, :] = OmGW_aux[j]*preff
-#             else: OmGW = OmGW_aux*preff
-
-#     # spectral shape for turbulence templates
-#     if tp2 == 'turb':
-#         if multi_xi:
-#             if multi_ab:
-#                 OmGW = np.zeros((len(ss), len(xiw), len(alpha), len(beta)))
-#                 for i in range(0, len(xiw)):
-#                     OmGW[:, i, :, :] = Sf_shape(ss, tp=tp, b_turb=b_turb, N=N_turb,
-#                                                 Oms=Oms[:, :, i], lf=lf[:, :, i],
-#                                                 alpPi=alpPi, fPi=fPi, ref=ref, cs2=cs2,
-#                                                 multi=multi_ab)
-#                     for j in range(0, len(ss)):
-#                         OmGW[j, i, :, :] = 3*OmGW[j, i, :, :]*ampl*preff[i, :, :]
-
-#             else:
-#                 OmGW = np.zeros((len(ss), len(xiw)))
-#                 for i in range(0, len(xiw)):
-#                     OmGW[:, i] = Sf_shape(ss, tp=tp, b_turb=b_turb, N=N_turb, Oms=Oms[i],
-#                                           lf=lf[i], alpPi=alpPi, fPi=fPi,
-#                                           ref=ref, cs2=cs2, multi=multi_ab)
-#                     OmGW[:, i] = 3*OmGW[:, i]*ampl*preff[i]
-
-#         else:
-#             S = Sf_shape(ss, tp=tp, b_turb=b_turb, N=N_turb, Oms=Oms, lf=lf,
-#                          alpPi=alpPi, fPi=fPi, ref=ref, cs2=cs2, multi=multi_ab)
-#             OmGW = 3*OmGW*ampl*preff
-
-#     return OmGW
 
 ############# fit for the anisotropic stresses #############
 
@@ -341,13 +212,12 @@ def pPi_fit(s, b=b_turb, alpPi=alpPi, fPi=fPi, bPi=bPi_vort):
                  stresses compared to b
 
     Returns:
-        Pi -- array of the anisotropic stresses spectrum
-        fGW -- maximum value of the function s * Pi that determines
-               the amplitude of the GW spectrum for MHD turbulence
+        Pi    -- array of the anisotropic stresses spectrum
+        fGW   -- maximum value of the function s * Pi that determines
+                 the amplitude of the GW spectrum for MHD turbulence
         pimax -- maximum value of Pi when s = fGW
     """
 
-    #Pi    = (1 + (s/fPi)**alpPi)**(-(b + bPi)/alpPi)
     Pi    = an.smoothed_bPL(s, a=0, b=b + bPi, kpeak=fPi,
                             alp=alpPi, norm=False, alpha2=True,
                             dlogk=False)
@@ -439,8 +309,8 @@ def interpolate_HL_vals(df, vws, alphas, value='Omega_tilde_int_extrap',
 
 ###################### TEMPLATE FOR SOUND WAVES ######################
 
-def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[],
-                alphas=[], numerical=False, bs_HL=20, quiet=False):
+def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[0],
+                alphas=[0], numerical=False, bs_HL=20, quiet=False):
 
     '''
     Reference for sound waves is RoperPol:2023bqa, equation 3.
@@ -467,7 +337,7 @@ def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[],
         val_str  = 'Omega_tilde_int_extrap'
 
         try:
-            if len(vws) == 0 or len(alphas) == 0:
+            if vws == [0] or alphas == [0]:
                 print('Provide values of vws and alphas to use Higgsless model',
                       ' in ampl_GWB_sw')
                 return 0
@@ -493,6 +363,7 @@ def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[],
     else:
         print('Choose an available model for ampl_GWB_sw for sound waves')
         print('Available models are fixed_value and higgsless')
+        return 0
 
     if   not mult_alp and not mult_vw: Omegas = Omegas[0, 0]
     elif not mult_alp: Omegas = Omegas[:, 0]
@@ -500,8 +371,6 @@ def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[],
 
     if numerical and model == 'higgsless': return Omegas, Omnum, val_alphas, val_vws
     else:                                  return Omegas
-
-
 
 def pref_GWB_sw(Oms=Oms_ref, lf=lf_ref, alpha=0, model='sound_waves',
                 Nshock=1., b=0., expansion=True, beta=100, cs2=cs2_ref):
@@ -606,14 +475,15 @@ def pref_GWB_sw(Oms=Oms_ref, lf=lf_ref, alpha=0, model='sound_waves',
 
     elif model == 'decay':
 
-        K2int = mod.K2int(tdur, K0=K, b=b, expansion=expansion, beta=beta)
+        K2int = mod.K2int(tdur, K0=K, b=b, dt0=dt0_ref, expansion=expansion, beta=beta)
         pref  = K2int*lf
 
     return pref
 
 def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_sw_ref,
                 alp1_sw=0, alp2_sw=0, strength='weak', interpolate_HL=False,
-                bsk1_HL=40, bsk2_HL=20, vws=[], alphas=[], quiet=False):
+                bs_k1HL=40, bs_k2HL=20, vws=[], alphas=[], quiet=False,
+                interpolate_HL_n3=False, corrRs=True, cs2=cs2_ref):
 
     """
     Function that computes the GW spectral shape generated by sound waves
@@ -624,21 +494,21 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
                  size, s = f R*
         model -- model for the sound-wave template (options are 'sw_SSM',
                  'sw_HL', 'sw_LISA', 'sw_LISAold', and 'sw_HLnew')
-        Dw -- ratio between peak frequencies, determined by the shell thickness,
-              note that different models use slightly different conventions for Dw
+        Dw    -- ratio between peak frequencies, determined by the shell thickness,
+                 note that different models use slightly different conventions for Dw
         a_sw, b_sw, c_sw -- slopes for sound wave template (default is 3, 1, 3)
         alp1_sw, alp2_sw -- transition parameters for sound wave template
                             (default values for each model are listed above)
         strength -- phase transition strength, used to determine peak2 in sw_HLnew
                     (unless interpolate_HL is True)
-        interpolate_HL -- option to use numerical data from Caprini:2024gyk to
-                          estimate slope c_sw and peak1 and peak2 positions
+        interpolate_HL   -- option to use numerical data from Caprini:2024gyk to
+                            estimate slope c_sw and peak1 and peak2 positions
         bsk1_HL, bsk2_HL -- box size of Higgsless simulations used to estimate the
                             the peaks (default is 20 for k2 and 40 for k1)
-        vws, alphas    -- array of wall velocities and alphas for which the
-                          parameters are to be estimated
-        quiet          -- option to output a warning about the interpolation
-                          method and its range of validity
+        vws, alphas      -- array of wall velocities and alphas for which the
+                            parameters are to be estimated
+        quiet            -- option to output a warning about the interpolation
+                            method and its range of validity
 
     Returns:
         S -- spectral shape of the GW spectrum (still to be normalized)
@@ -649,18 +519,40 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
 
     mult_Dw = isinstance(Dw, (list, tuple, np.ndarray))
 
+    # in some models, Dw can be a 0, 1, or 2d input (vw, alpha) dependence
+    Dw_2d = False
+    if model == 'sw_LISA': Dw_2d = True
+    if model == 'sw_HLnew':
+        if strength == 'weak' and not interpolate_HL:
+            Dw_2d = True
+
+    if Dw_2d:
+
+            # sound-shell thickness Dw needs to be used as an input
+            NDw = len(np.shape(Dw))
+            if NDw == 1: s, Dw = np.meshgrid(s, Dw, indexing='ij')
+            if NDw == 2:
+                s0  = np.zeros((len(s), np.shape(Dw)[0], np.shape(Dw)[1]))
+                Dw0 = np.zeros((len(s), np.shape(Dw)[0], np.shape(Dw)[1]))
+                for i in range(0, np.shape(Dw)[0]):
+                    for j in range(0, np.shape(Dw)[1]):
+                        s0[:,  i, j] = s
+                        Dw0[:, i, j] = Dw[i, j]
+                s   = s0
+                Dw  = Dw0
+
     if model == 'sw_LISAold':
 
         # Reference for sound waves based on simulations of Hindmarsh:2017gnf
         # is Caprini:2019egz (equation 30) with only one peak
 
         # peak positions
-        peak1 = 10/2/np.pi
+        peak1 = 2*np.pi/10
         s     = peak1*s
 
         S = s**3*(7/(4 + 3*s**2))**(7/2)
 
-    if model == 'sw_SSM':
+    elif model == 'sw_SSM':
 
         # Reference for sound waves based on Sound Shell Model (sw_SSM) is
         # RoperPol:2023bqa, equation 6, based on the results presented in
@@ -670,15 +562,30 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
         if not mult_Dw: Dw = [Dw]
         s, Dw = np.meshgrid(s, Dw, indexing='ij')
 
-        s2 = s*Dw
-        m  = (9*Dw**4 + 1)/(Dw**4 + 1)
-        M1 = ((Dw**4 + 1)/(Dw**4 + s2**4))**2
-        M2 = (5/(5 - m + m*s2**2))**(5/2)
-        S  =  M1*M2*s2**9
+        # uses a different slope at large frequencies to adapt the result
+        # at intermediate ones
+        if c_sw == 3: c_sw = 4
+        # takes a different slope at small frequencies
+        if a_sw == 3: a_sw = 9
+
+        # amplitude such that S = 1 at s = 1/Dw
+        m = (9*Dw**4 + 1)/(Dw**4 + 1)
+        A = Dw**9*(1 + Dw**(-4))**2*(5/(5 - m))**(5/2)
+
+        # peak positions
+        peak1 = 1.
+        peak2 = np.sqrt((5 - m)/m)/Dw
+
+        if alp1_sw == 0: alp1_sw=alp1_ssm
+        if alp2_sw == 0: alp2_sw=alp2_ssm
+
+        S = A*an.smoothed_double_bPL(s, peak1, peak2, A=1., a=a_sw, b=b_sw,
+                                     c=c_sw, alp1=alp1_sw, alp2=alp2_sw,
+                                     alpha2=True)
 
         if not mult_Dw: S = S[:, 0]
 
-    if model == 'sw_HL':
+    elif model == 'sw_HL':
 
         # Reference for sound waves based on Higgsless (sw_HL) simulations is
         # RoperPol:2023bqa, equation 7, based on the results presented in
@@ -689,7 +596,7 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
         s, Dw = np.meshgrid(s, Dw, indexing='ij')
 
         # amplitude such that S = 1 at s = 1/Dw
-        A = 16*(1 + Dw**(-3))**(2/3)*Dw**3*9
+        A = 16*(1 + Dw**(-3))**(2/3)*Dw**3
 
         # peak positions
         peak1 = 1.
@@ -703,7 +610,7 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
 
         if not mult_Dw: S = S[:, 0]
 
-    if model == 'sw_LISA':
+    elif model == 'sw_LISA':
 
         # Reference for sound waves based on Higgsless simulations is
         # Caprini:2024hue (equation 2.8), based on the results presented in
@@ -714,26 +621,14 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
         if alp1_sw == 0: alp1_sw = alp1_LISA
         if alp2_sw == 0: alp2_sw = alp2_LISA
 
-        NDw = len(np.shape(Dw))
-        if NDW == 1: s, Dw = np.meshgrid(s, Dw, indexing='ij')
-        if NDw == 2:
-            s0  = np.zeros((len(s), np.shape(Dw)[0], np.shape(Dw)[1]))
-            Dw0 = np.zeros((len(s), np.shape(Dw)[0], np.shape(Dw)[1]))
-            for i in range(0, np.shape(Dw)[0]):
-                for j in range(0, np.shape(Dw)[1]):
-                    s0[:,  i, j] = s
-                    Dw0[:, i, j] = Dw[i, j]
-            s  = s0
-            Dw = Dw0
-
-         # peak positions
+        # peak positions
         peak1 = 0.2
         peak2 = 0.5/Dw
 
         S = an.smoothed_double_bPL(s, peak1, peak2, A=1., a=a_sw, b=b_sw,
                                    c=c_sw, alp1=alp1_sw, alp2=alp2_sw, alpha2=True)
 
-    if model == 'sw_HLnew':
+    elif model == 'sw_HLnew':
 
         # Reference for sound waves based on updated HL results (sw_HLnew)
         # is Caprini:2024gyk
@@ -743,32 +638,23 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
         if alp1_sw == 0: alp1_sw = alp1_HL
         if alp2_sw == 0: alp2_sw = alp2_HL
 
-        NDw = len(np.shape(Dw))
-        if NDW == 1: s, Dw = np.meshgrid(s, Dw, indexing='ij')
-        if NDw == 2:
-            s0  = np.zeros((len(s), np.shape(Dw)[0], np.shape(Dw)[1]))
-            Dw0 = np.zeros((len(s), np.shape(Dw)[0], np.shape(Dw)[1]))
-            for i in range(0, np.shape(Dw)[0]):
-                for j in range(0, np.shape(Dw)[1]):
-                    s0[:,  i, j] = s
-                    Dw0[:, i, j] = Dw[i, j]
-            s  = s0
-            Dw = Dw0
+        if not interpolate_HL:
 
-        # peak positions
-        peak1 = 0.4
-        if   strength == 'interm': peak2 = 1.
-        elif strength == 'strong': peak2 = 0.5
-        else:                      peak2 = 0.5/Dw
+            # peak positions
+            peak1 = 0.4
+            if   strength == 'weak':   peak2 = 0.5/Dw
+            elif strength == 'interm': peak2 = 1.
+            else:                      peak2 = 0.5
 
-        S = an.smoothed_double_bPL(s, peak1, peak2, A=1., a=a_sw, b=b_sw,
-                                   c=c_sw, alp1=alp1_sw, alp2=alp2_sw, alpha2=True)
+            S = an.smoothed_double_bPL(s, peak1, peak2, A=1., a=a_sw, b=b_sw,
+                                       c=c_sw, alp1=alp1_sw, alp2=alp2_sw, alpha2=True)
 
-        if interpolate_HL:
+        else:
 
-            if len(vws) or len(alphas) == 0:
+            if len(vws) == 0 or len(alphas) == 0:
                 print('To use interpolate_HL in Sf_shape_sw',
                       ' give values of vws and alphas')
+                return 0
 
             # take values from higgsless dataset
             dirr     = importlib.resources.open_binary('cosmoGW',
@@ -777,29 +663,53 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
 
             val_str  = 'k1'
             peaks1   = interpolate_HL_vals(df, vws, alphas, quiet=True,
-                                   value=val_str, boxsize=bs_k1HL)/(2*np.pi)
+                                   value=val_str, boxsize=bs_k1HL)
             val_str  = 'k2'
             peaks2   = interpolate_HL_vals(df, vws, alphas, quiet=True,
-                                   value=val_str, boxsize=bs_k2HL)/(2*np.pi)
-            val_str  = 'n3'
-            c_sw     = - interpolate_HL_vals(df, vws, alphas, quiet=True,
                                    value=val_str, boxsize=bs_k2HL)
 
-            if not quiet: data_warning(boxsize=bs_HL)
+            s0      = np.zeros((len(s), len(vws), len(alphas)))
+            peaks10 = np.zeros((len(s), len(vws), len(alphas)))
+            peaks20 = np.zeros((len(s), len(vws), len(alphas)))
 
-            S = an.smoothed_double_bPL(s, peaks1,
-                                       peaks2, A=1., a=a_sw, b=b_sw,
-                                          c=c_sw, alp1=alp1, alp2=alp2)
+            Rstar_beta = hb.Rstar_beta(vws=vws, corr=corrRs, cs2=cs2)/2/np.pi
+            for i in range(0, len(vws)):
+                for j in range(0, len(alphas)):
+                    peaks10[:, i, j] = peaks1[i, j]*Rstar_beta[i]
+                    peaks20[:, i, j] = peaks2[i, j]*Rstar_beta[i]
+                    s0[:, i, j]      = s
+
+            peaks1 = peaks10
+            peaks2 = peaks20
+            s      = s0
+
+            if interpolate_HL_n3:
+                val_str  = 'n3'
+                c_sw     = - interpolate_HL_vals(df, vws, alphas, quiet=True,
+                                       value=val_str, boxsize=bs_k2HL)
+
+            if not quiet: data_warning(boxsize='%i and %i'%(bs_k1HL,bs_k2HL))
+
+            S = an.smoothed_double_bPL(s, peaks1, peaks2, A=1., a=a_sw, b=b_sw,
+                                       c=c_sw, alp1=alp1_sw, alp2=alp2_sw)
+
+    else:
+        print('Choose an available model in Sf_shape_sw for the sound wave',
+              'spectral shape.')
+        print('Available models are sw_LISAold, sw_SSM, sw_HL, sw_LISA, sw_HLnew')
+        return 0
 
     return S
 
-def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=False, a_sw=a_sw_ref,
+def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_ref,
                  b_sw=b_sw_ref, c_sw=c_sw_ref, alp1_sw=0, alp2_sw=0, corrRs=True,
                  expansion=False, Nsh=1.,
                  model_efficiency='fixed_value', OmGW_tilde=OmGW_sw_ref,
-                 bs_HL_eff=20, model_K0='Espinosa', bs_HL_peak1=40,
+                 bs_HL_eff=20, model_K0='Espinosa', bs_k1HL=40,
                  model_decay='sound_waves', interpolate_HL_decay=True, b=0,
-                 model_shape='sw_LISA', interpolate_HL_shape=False):
+                 model_shape='sw_LISA', strength='weak', interpolate_HL_shape=False,
+                 interpolate_HL_n3=False, redshift=False, gstar=gref, gS=0, T=Tref,
+                 h0=1., Neff=Neff_ref):
 
     '''
     Function that computes the GW spectrum (normalized to radiation
@@ -819,7 +729,7 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=False, a_sw=a_sw_
 
     The GW spectrum as an observable at present time is then computed using
 
-        OmGW0 (f) = OmGW x  FGW0,
+        OmGW0 (f) = OmGW x FGW0,
 
     where FGW0 is the redshift from the time of generation to present
     time, computed in cosmoGW.py that depends on the degrees of freedom at
@@ -853,9 +763,13 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=False, a_sw=a_sw_
     '''
 
     cs         = np.sqrt(cs2)
-    mult_alpha = isinstance(alpha, (list, tuple, np.ndarray))
-    mult_beta  = isinstance(beta,  (list, tuple, np.ndarray))
-    mult_vws   = isinstance(vws,   (list, tuple, np.ndarray))
+    mult_alpha = isinstance(alphas, (list, tuple, np.ndarray))
+    mult_beta  = isinstance(betas,  (list, tuple, np.ndarray))
+    mult_vws   = isinstance(vws,    (list, tuple, np.ndarray))
+
+    if not mult_alpha: alphas = np.array([alphas])
+    if not mult_vws:   vws    = np.array([vws])
+    if not mult_beta:  betas  = np.array([betas])
 
     #### Computing ampl_GWB
 
@@ -863,8 +777,8 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=False, a_sw=a_sw_
         print('Computing the OmGW efficiency')
         data_warning(boxsize=bs_HL_eff)
 
-    ampl = ampl_GWB(model=model_efficiency, OmGW_sw=OmGW_tilde,
-                    vws=vws, alphas=alphas, bs_HL=bs_HL_eff, quiet=True)
+    ampl = ampl_GWB_sw(model=model_efficiency, OmGW_sw=OmGW_tilde,
+                       vws=vws, alphas=alphas, bs_HL=bs_HL_eff, quiet=True)
 
     #### Computing pref_GWB
 
@@ -884,6 +798,7 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=False, a_sw=a_sw_
         # K = rho_kin/rho_total = kappa alpha/(1 + alpha)
         # Oms_sw = v_f^2 = kappa alpha/(1 + cs2)
         kap    = hb.kappas_Esp(vws, alphas, cs2=cs2)
+        K      = kap*alphas/(1 + alphas)
         Oms_sw = kap*alphas/(1 + cs2)
 
     elif model_K0 == 'higgsless':
@@ -904,9 +819,11 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=False, a_sw=a_sw_
     else:
         print('Choose an available model for K0 in OmGW_spec_sw')
         print('Available models are Espinosa and higgsless')
+        return 0
 
     # Decay rate
 
+    interpol_b = False
     if interpolate_HL_decay and model_decay == 'decay':
 
         dirr    = importlib.resources.open_binary('cosmoGW',
@@ -914,131 +831,122 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=False, a_sw=a_sw_
         df      = pd.read_csv(dirr)
 
         val_str = 'b'
-        b       = tmp.interpolate_HL_vals(df, vws, alphas, quiet=quiet,
+        b       = interpolate_HL_vals(df, vws, alphas, quiet=quiet,
                                           value=val_str, boxsize=bs_HL_eff)
-
-    # Fluid length scale
-
-    if not mult_alpha: alphas = [alphas]
-    if not mult_vws:   vws    = [vws]
-    if not mult_beta:  betas  = [betas]
-
-    lf = np.zeros((len(vws), len(alphas), len(betas)))
-    for i in range(0, len(vws)):
-        for j in range(0, len(alphas)):
-            lf[i, j, :] = hb.Rstar_beta(vws[i], cs2=cs2, corr=corrRs)/betas
+        interpol_b = True
 
     # prefactor GWB of sound waves
 
-    pref = np.zeros_like(lf)
-    for i in range(0, len(betas)):
-        pref = pref_GWB_sw(Oms=Oms_sw, lf=lf[:, :, i], alpha=alphas,
-                           model_decay='sound_waves', Nshock=Nsh, b=b,
-                           expansion=expansion, beta=betas[i], cs2=cs2)
+    pref = np.zeros((len(vws), len(alphas), len(betas)))
+    print(np.shape(b))
+    for i in range(0, len(vws)):
+        # Fluid length scale R_star x beta
+        lf = hb.Rstar_beta(vws[i], cs2=cs2, corr=corrRs)/betas
+        for j in range(0, len(alphas)):
+            for l in range(0, len(betas)):
+                if interpol_b: b_ij = b[i, j]
+                else:          b_ij = b
+                pref[i, j, l] = pref_GWB_sw(Oms=Oms_sw[i, j], lf=lf[l], alpha=alphas[j],
+                                    model=model_decay, Nshock=Nsh, b=b_ij,
+                                    expansion=expansion, beta=betas[l], cs2=cs2)
 
-    #### Computing spectral shape
+    #### Computing the spectral shape
 
     # sound-shell thickness and spectral shape
 
-    if model == ['sw_LISAold']:
+    if not quiet: print('Computing spectral shape using model ',
+                        model_shape)
 
-        S  = Sf_shape_sw(ss, model=model)
+    if model_shape == ['sw_LISAold']:
 
-    elif model in ['sw_HL',   'sw_SSM']:
+        S  = Sf_shape_sw(ss, model=model_shape)
+        mu = np.trapezoid(S, np.log(ss))
+        # normalized spectral shape
+        S  = S/mu
+        S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
+
+    elif model_shape in ['sw_HL', 'sw_SSM']:
 
         Dw = abs(vws - cs)/vws
-        S  = Sf_shape_sw(ss, model=model, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
+        S  = Sf_shape_sw(ss, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
                          alp1_sw=alp1_sw, alp2_sw=alp2_sw)
-
-    elif model in ['sw_LISA', 'sw_HLnew']:
-
-        print('Computing sound-shell thickness')
-        xis, vvs, wws, alphas_n, conv, shocks, xi_shocks, wms = \
-                        hb.compute_profiles_vws_multalp(alphas, vws=vws,
-                                alphan=True, quiet=True, eff=False)
-
-        Dw = np.zeros((len(vws), len(alphas)))
+        mu = np.trapezoid(S, np.log(ss), axis=0)
+        S  = S/mu
+        S0 = np.zeros((len(ss), len(vws), len(alphas)))
         for i in range(0, len(alphas)):
-            Dw[:, i] = (xi_shocks[:, i] - np.minimum(vws, cs))/np.maximum(vws, cs)
+            S0[:, :, i] = S
+        S  = S0
 
-        S  = Sf_shape_sw(ss, model=model, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
-                alp1_sw=alp1_sw, alp2_sw=alp2_sw, strength=strength_shape,
+    elif model_shape in ['sw_LISA', 'sw_HLnew']:
+
+        # in some models, Dw is required to be computed for the array
+        # of vws and alphas
+        Dw_2d = True
+        if model_shape == 'sw_HLnew':
+            if strength != 'weak' or interpolate_HL_shape: Dw_2d = False
+
+        if Dw_2d:
+            if not quiet: print('Computing sound-shell thickness')
+            _, _, _, _, _, _, xi_shocks, _ = \
+                            hb.compute_profiles_vws_multalp(alphas, vws=vws)
+
+            Dw = np.zeros((len(vws), len(alphas)))
+            for i in range(0, len(alphas)):
+                Dw[:, i] = (xi_shocks[:, i] - np.minimum(vws, cs))/np.maximum(vws, cs)
+
+        else: Dw = 0.
+
+        S = Sf_shape_sw(ss, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
+                alp1_sw=alp1_sw, alp2_sw=alp2_sw, strength=strength,
                 interpolate_HL=interpolate_HL_shape,
-                bsk1_HL=bs_HL_peak1, bsk2_HL=bs_HL_eff, vws=vws,
-                alphas=alphas, quiet=quiet)
+                bs_k1HL=bs_k1HL, bs_k2HL=bs_HL_eff, vws=vws, alphas=alphas, quiet=quiet,
+                interpolate_HL_n3=interpolate_HL_n3, corrRs=corrRs, cs2=cs2)
+
+        mu = np.trapezoid(S, np.log(ss), axis=0)
+        S  = S/mu
+
+        if not interpolate_HL_shape:
+            if strength != 'weak':
+                S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
 
     else:
         print('Choose an available model for model_shape in OmGW_spec_sw')
         print('Available models are sw_LISA, sw_HL, sw_HLnew, sw_SSM, sw_LISAold')
+        return 0
 
-    # amplitude factors
-    if multi_ab and multi_xi:
-        Oms, lf, xiw_ij = np.meshgrid(alpha, beta, xiw, indexing='ij')
-        for i in range(0, len(beta)): Oms_ij[:, i, :] = Oms
-        for i in range(0, len(alpha)): lf_ij[i, :, :] = lf
-    elif multi_ab and not multi_xi:
-        Oms, lf = np.meshgrid(Oms, lf, indexing='ij')
+    OmGW  = np.zeros((len(ss), len(vws), len(alphas), len(betas)))
+    freqs = np.zeros((len(ss), len(vws), len(betas)))
+    for i in range(0, len(vws)):
+        lf = hb.Rstar_beta(vws[i], cs2=cs2, corr=corrRs)/betas
+        for l in range(0, len(betas)):
+            # express freqs as f/H_ast (instead of f/R_ast)
+            freqs[:, i, l] = ss/lf[l]
+            for j in range(0, len(alphas)):
+                OmGW[:, i, j, l] = 3*ampl[i, j]*pref[i, j, l]*S[:, i, j]
 
-    preff = pref_GWB(Oms=Oms, lf=lf, tp=tp, b_turb=b_turb, alpPi=alpPi, fPi=fPi)
+    if redshift:
 
-    # spectral shape for sound waves templates
-    if tp == 'sw':
-        if multi_xi:
-            OmGW_aux = np.zeros((len(ss), len(xiw)))
-            for i in range(0, len(xiw)):
-                S = Sf_shape(ss, tp=tp, Dw=Dw[i], a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
-                             alp1_sw=alp1_sw, alp2_sw=alp2_sw)
-                mu = np.trapz(S, np.log(ss))
-                OmGW_aux[:, i] = 3*S*ampl/mu
+        freqs, OmGW = cGW.shift_OmGW_today(freqs, OmGW, g=gstar, gS=gS,
+                                           T=T, h0=h0, kk=False, Neff=Neff)
 
-            if multi_ab:
-                OmGW = np.zeros((len(ss), len(alpha), len(beta), len(xiw)))
-                for i in range(0, len(xiw)):
-                    for j in range(0, len(ss)):
-                        OmGW[j, :, :, i] = OmGW_aux[j, i]*preff[:, :, i]
-            else: OmGW = OmGW_aux*preff[i]
-
+    if not mult_vws:
+        if not mult_beta:
+            freqs = freqs[:, 0, 0]
+            if not mult_alpha: OmGW = OmGW[:, 0, 0, 0]
+            else:              OmGW = OmGW[:, 0, :, 0]
         else:
-            S = Sf_shape(ss, tp=tp, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
-                         alp1_sw=alp1_sw, alp2_sw=alp2_sw)
-            mu = np.trapz(S, np.log(ss))
-            OmGW_aux = 3*S*ampl/mu
-            if multi_ab:
-                OmGW = np.zeros((len(ss), len(alpha), len(beta)))
-                for j in range(0, len(ss)):
-                    OmGW[j, :, :] = OmGW_aux[j]*preff
-            else: OmGW = OmGW_aux*preff
-
-    # Oms = rho_source/rho_total = K eps_turb
-    Oms_turb = K*eps_turb
-
-    # spectral shape for turbulence templates
-    if tp2 == 'turb':
-        if multi_xi:
-            if multi_ab:
-                OmGW = np.zeros((len(ss), len(xiw), len(alpha), len(beta)))
-                for i in range(0, len(xiw)):
-                    OmGW[:, i, :, :] = Sf_shape(ss, tp=tp, b_turb=b_turb, N=N_turb,
-                                                Oms=Oms[:, :, i], lf=lf[:, :, i],
-                                                alpPi=alpPi, fPi=fPi, ref=ref, cs2=cs2,
-                                                multi=multi_ab)
-                    for j in range(0, len(ss)):
-                        OmGW[j, i, :, :] = 3*OmGW[j, i, :, :]*ampl*preff[i, :, :]
-
-            else:
-                OmGW = np.zeros((len(ss), len(xiw)))
-                for i in range(0, len(xiw)):
-                    OmGW[:, i] = Sf_shape(ss, tp=tp, b_turb=b_turb, N=N_turb, Oms=Oms[i],
-                                          lf=lf[i], alpPi=alpPi, fPi=fPi,
-                                          ref=ref, cs2=cs2, multi=multi_ab)
-                    OmGW[:, i] = 3*OmGW[:, i]*ampl*preff[i]
-
+            freqs = freqs[:, 0, :]
+            if not mult_alpha: OmGW = OmGW[:, 0, 0, :]
+            else:              OmGW = OmGW[:, 0, :, :]
+    else:
+        if not mult_beta:
+            freqs = freqs[:, :, 0]
+            if not mult_alpha: OmGW = OmGW[:, :, 0, 0]
+            else:              OmGW = OmGW[:, :, :, 0]
         else:
-            S = Sf_shape(ss, tp=tp, b_turb=b_turb, N=N_turb, Oms=Oms, lf=lf,
-                         alpPi=alpPi, fPi=fPi, ref=ref, cs2=cs2, multi=multi_ab)
-            OmGW = 3*OmGW*ampl*preff
+            if not mult_alpha: OmGW = OmGW[:, :, 0, :]
 
-    return OmGW
+    return freqs, OmGW
 
 ################# TEMPLATE FOR MHD TURBULENCE #################
 
