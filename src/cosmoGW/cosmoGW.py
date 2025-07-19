@@ -17,7 +17,7 @@ Updated: 13/03/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
 
 Main references used in this library are:
 
-Maggiore:1999vm - M. Maggiore, "Gravitational wave experiments and
+Maggiore:1999vm  - M. Maggiore, "Gravitational wave experiments and
 early universe cosmology," Phys.Rept. 331 (2000) 283-367,
 arXiv:gr-qc/9909001.
 
@@ -42,8 +42,8 @@ import numpy as np
 import cosmoGW.cosmology as co
 
 # reference values and constants (EWPT)
-Tref = 100*u.GeV          # EWPT
-gref = 100                # EWPT
+Tref     = 100*u.GeV      # EWPT
+gref     = 100            # EWPT
 Neff_ref = co.Neff_ref    # reference Neff = 3
 
 ########################## SGWB at present time ##########################
@@ -55,7 +55,7 @@ def fac_hc_OmGW(d=1, h0=1.):
     hc(f) to the GW energy density OmGW (f) away from the source.
 
     Arguments:
-        d -- option to give the factor to convert from energy density to
+        d  -- option to give the factor to convert from energy density to
              strain if set to -1 (default 1)
         h0 -- parameterizes the uncertainties (Hubble tension) in the value
               of the Hubble rate (default 1)
@@ -94,12 +94,12 @@ def hc_OmGW(f, OmGW, d=1, h0=1.):
     Careful with the different notations (can be confusing!!), see below.
 
     Arguments:
-        f -- frequency array (in units of frequency, e.g. Hz)
+        f    -- frequency array (in units of frequency, e.g. Hz)
         OmGW -- GW energy density spectrum OmGW (f)
-        d -- option to convert from energy density to strain if set
-             to -1 (default 1)
-        h0 -- parameterizes the uncertainties (Hubble tension) in the value
-              of the Hubble rate (default 1)
+        d    -- option to convert from energy density to strain if set
+                to -1 (default 1)
+        h0   -- parameterizes the uncertainties (Hubble tension) in the value
+                of the Hubble rate (default 1)
 
     Returns:
         hc -- strain spectrum
@@ -123,9 +123,9 @@ def hc_OmGW(f, OmGW, d=1, h0=1.):
     Sh^pm (f) = hc^2 (f)/f.
     """
 
-    f = check_frequency(f, func='hc_OmGW')
+    f   = check_frequency(f, func='hc_OmGW')
     fac = fac_hc_OmGW(d=d, h0=h0)
-    hc = fac/f*np.sqrt(OmGW)
+    hc  = fac/f*np.sqrt(OmGW)
     if d==-1: hc = fac*f**2*OmGW**2
 
     return hc
@@ -149,9 +149,9 @@ def hc_Sf(f, Sf, d=1):
     characteristic strain spectrum function hc(f).
 
     Arguments:
-        f -- frequency array (in units of frequency, e.g. Hz)
+        f  -- frequency array (in units of frequency, e.g. Hz)
         Sf -- power spectral density Sf (f) (in units of 1/Hz^3)
-        d -- option to convert from strain to power spectral density if set
+        d  -- option to convert from strain to power spectral density if set
              to -1 (default 1)
 
     Returns:
@@ -160,7 +160,7 @@ def hc_Sf(f, Sf, d=1):
     Reference: RoperPol:2022iel, eq. 42
     """
 
-    f = check_frequency(f, func='hc_Sf')
+    f  = check_frequency(f, func='hc_Sf')
     Sf = check_Sf(Sf, func='hc_Sf')
     hc = np.sqrt(12*np.pi**2*Sf*f**3)
     if d==-1: hc = Sf**2/12/np.pi**2/f**3
@@ -183,14 +183,14 @@ def Omega_A(A=1., fref=0, beta=0, h0=1.):
     hc = A (f/fyr)^alpha
 
     Arguments:
-        A -- amplitude of the characteristic strain PL using 1yr as the
-             reference frequency
+        A    -- amplitude of the characteristic strain PL using 1yr as the
+                reference frequency
         fref -- reference frequency used for the PL expression of the
                 GW background given in units of frequency (default
                 1 yr^(-1))
         beta -- slope of the PL
-        h0 -- parameterizes the uncertainties (Hubble tension) in the value
-              of the Hubble rate (default 1)
+        h0   -- parameterizes the uncertainties (Hubble tension) in the value
+                of the Hubble rate (default 1)
 
     Returns:
         Omref -- amplitude of the GW energy density PL
@@ -218,14 +218,14 @@ def shift_onlyOmGW_today(OmGW, g=gref, gS=0., d=1, h0=1., Neff=Neff_ref):
     Arguments:
         OmGW -- GW energy density spectrum per logarithmic interval
                 (normalized by the radiation energy density)
-        g -- number of relativistic degrees of freedom (dof) at the time of generation
-             (default is 100)
-        gS -- number of adiabatic dof (default is gS = g)
-        d -- option to reverse the transformation if set to -1, i.e.,
-             to return OmGW(k) from the shifted to present time OmGW(f)
-             (default 1)
-        h0 -- parameterizes the uncertainties (Hubble tension) in the value
-              of the Hubble rate (default 1)
+        g    -- number of relativistic degrees of freedom (dof) at the time of generation
+                (default is 100)
+        gS   -- number of adiabatic dof (default is gS = g)
+        d    -- option to reverse the transformation if set to -1, i.e.,
+                to return OmGW(k) from the shifted to present time OmGW(f)
+                (default 1)
+        h0   -- parameterizes the uncertainties (Hubble tension) in the value
+                of the Hubble rate (default 1)
         Neff -- effective number of neutrino species (default is 3)
 
 
@@ -240,7 +240,7 @@ def shift_onlyOmGW_today(OmGW, g=gref, gS=0., d=1, h0=1., Neff=Neff_ref):
     # if gS is not specified, it is assumed to be equal to g*
     if gS==0: gS = g
     OmGW_f = Hs_f**2/co.H0_ref**2/h0**2*as_f**4*g/gS**(4./3.)
-    if d==1: OmGW0 = OmGW*OmGW_f
+    if d==1:  OmGW0 = OmGW*OmGW_f
     if d==-1: OmGW0 = OmGW/OmGW_f
 
     return OmGW0
@@ -253,17 +253,17 @@ def shift_frequency_today(k, g=gref, gS=0., T=Tref, d=1, kk=True,
     generation by the Hubble rate H_* to the present time frequency.
 
     Arguments:
-        k -- array of wave numbers (normalized by the Hubble scale)
-        g -- number of relativistic degrees of freedom (dof) at the time of generation
-             (default is 100)
-        gS -- number of adiabatic dof (default is gS = g)
-        T -- temperature scale at the time of generation in energy units
-             (convertible to MeV) (default is 100 GeV)
-        d -- option to reverse the transformation if set to -1, i.e.,
-             to return the normalized k from the frequency shifted to present
-             time f (default 1)
-        kk -- if kk is True, then kf corresponds to k_* HH_*, otherwise it refers
-              to the length in terms of the Hubble size HH_* l_* = 2 pi/(k_*/HH_*)
+        k    -- array of wave numbers (normalized by the Hubble scale)
+        g    -- number of relativistic degrees of freedom (dof) at the time of generation
+                (default is 100)
+        gS   -- number of adiabatic dof (default is gS = g)
+        T    -- temperature scale at the time of generation in energy units
+                (convertible to MeV) (default is 100 GeV)
+        d    -- option to reverse the transformation if set to -1, i.e.,
+                to return the normalized k from the frequency shifted to present
+                time f (default 1)
+        kk   -- if kk is True, then kf corresponds to k_* HH_*, otherwise it refers
+                to the length in terms of the Hubble size HH_* l_* = 2 pi/(k_*/HH_*)
         Neff -- effective number of neutrino species (default is 3)
 
     Returns:
@@ -277,7 +277,7 @@ def shift_frequency_today(k, g=gref, gS=0., T=Tref, d=1, kk=True,
     if gS==0: gS = g
     HHs = co.Hs_val(g=g, T=T)*co.as_a0_rat(g=gS, T=T, Neff=Neff)
     if d == 1:
-        if kk == False: k = 2*np.pi/k
+        if kk == False: k = 2*np.pi*k
         f = k*HHs/2/np.pi
     if d==-1:
         f = 2*np.pi*k.to(u.Hz)/HHs
@@ -294,26 +294,26 @@ def shift_OmGW_today(k, OmGW, g=gref, gS=0., T=Tref, d=1, h0=1.,
     is within the radiation dominated era.
 
     Arguments:
-        k -- array of wave numbers (normalized by the Hubble scale)
+        k    -- array of wave numbers (normalized by the Hubble scale)
         OmGW -- GW energy density spectrum per logarithmic interval
                 (normalized by the radiation energy density)
-        g -- number of relativistic degrees of freedom (dof) at the time of generation
-             (default is 100)
-        gS -- number of adiabatic dof (default is gS = g)
-        T -- temperature scale at the time of generation in energy units
-             (convertible to MeV) (default is 100 GeV)
-        d -- option to reverse the transformation if set to -1, i.e.,
-             to return the normalized k from the frequency shifted to present
-             time f (default 1)
-        h0 -- parameterizes the uncertainties (Hubble tension) in the value
-              of the Hubble rate (default 1)
-        kk -- if kk is True, then kf corresponds to k_* HH_*, otherwise it refers
-              to the length in terms of the Hubble size HH_* l_* = 2 pi/(k_*/HH_*)
+        g    -- number of relativistic degrees of freedom (dof) at the time of generation
+                (default is 100)
+        gS   -- number of adiabatic dof (default is gS = g)
+        T    -- temperature scale at the time of generation in energy units
+                (convertible to MeV) (default is 100 GeV)
+        d    -- option to reverse the transformation if set to -1, i.e.,
+                to return the normalized k from the frequency shifted to present
+                time f (default 1)
+        h0   -- parameterizes the uncertainties (Hubble tension) in the value
+                of the Hubble rate (default 1)
+        kk   -- if kk is True, then kf corresponds to k_* HH_*, otherwise it refers
+                to the length in terms of the Hubble size HH_* l_* = 2 pi/(k_*/HH_*)
         Neff -- effective number of neutrino species (default is 3)
 
     Returns:
-        f -- shifted wave number to frequency as a present time observable
-             (in Hz)
+        f     -- shifted wave number to frequency as a present time observable
+                 (in Hz)
         OmGW0 -- shifted spectrum OmGW to present time
 
     Reference: see functions shift_onlyOmGW_today and shift_frequency_today
@@ -322,7 +322,7 @@ def shift_OmGW_today(k, OmGW, g=gref, gS=0., T=Tref, d=1, h0=1.,
     # shift Omega_GW
     OmGW0 = shift_onlyOmGW_today(OmGW, g=g, gS=gS, d=d, h0=h0, Neff=Neff)
     # shift frequency
-    f = shift_frequency_today(k, g=g, gS=gS, T=T, d=d, kk=kk, Neff=Neff)
+    f     = shift_frequency_today(k,   g=g, gS=gS, T=T, d=d, kk=kk, Neff=Neff)
 
     return f, OmGW0
 
@@ -336,32 +336,32 @@ def shift_hc_today(k, hc, g=gref, gS=0., T=Tref, d=1, kk=True, Neff=Neff_ref):
     era.
 
     Arguments:
-        k -- array of wave numbers (normalized by the Hubble scale)
-        hc -- spectrum of GW characteristic amplitude per logarithmic interval
-        g -- number of relativistic degrees of freedom (dof) at the time of generation
-             (default is 100)
-        gS -- number of adiabatic dof (default is gS = g)
-        T -- temperature scale at the time of generation in energy units
-             (convertible to MeV) (default is 100 GeV)
-        d -- option to reverse the transformation if set to -1, i.e.,
-             to return the normalized k from the frequency shifted to present
-             time f, and hc(k) from the shifted to present time hc0(f) (default 1)
-        kk -- if kk is True, then kf corresponds to k_* HH_*, otherwise it refers
-              to the length in terms of the Hubble size HH_* l_* = 2 pi/(k_*/HH_*)
+        k    -- array of wave numbers (normalized by the Hubble scale)
+        hc   -- spectrum of GW characteristic amplitude per logarithmic interval
+        g    -- number of relativistic degrees of freedom (dof) at the time of generation
+                (default is 100)
+        gS   -- number of adiabatic dof (default is gS = g)
+        T    -- temperature scale at the time of generation in energy units
+                (convertible to MeV) (default is 100 GeV)
+        d    -- option to reverse the transformation if set to -1, i.e.,
+                to return the normalized k from the frequency shifted to present
+                time f, and hc(k) from the shifted to present time hc0(f) (default 1)
+        kk   -- if kk is True, then kf corresponds to k_* HH_*, otherwise it refers
+                to the length in terms of the Hubble size HH_* l_* = 2 pi/(k_*/HH_*)
         Neff -- effective number of neutrino species (default is 3)
 
     Returns:
-        f -- shifted wave number to frequency as a present time observable
-             (in Hz)
-        hc0 -- shifted hc spectrum to present time
+        f    -- shifted wave number to frequency as a present time observable
+                (in Hz)
+        hc0  -- shifted hc spectrum to present time
 
     Reference: RoperPol:2018sap, eq. B.12
     """
 
     as_f = co.as_fact(Neff=Neff)
-    T = co.check_temperature_MeV(T, func='cosmoGW.shift_hc_today')
-    hc0 = hc*as_f*g**(-1/3)/T
+    T    = co.check_temperature_MeV(T, func='cosmoGW.shift_hc_today')
+    hc0  = hc*as_f*g**(-1/3)/T
     if d == -1: hc0 = hc/as_f/g**(-1/3)*T
-    f = shift_frequency_today(k, g=g, gS=gS, T=T, d=d, kk=kk, Neff=Neff)
+    f    = shift_frequency_today(k, g=g, gS=gS, T=T, d=d, kk=kk, Neff=Neff)
 
     return f, hc0
