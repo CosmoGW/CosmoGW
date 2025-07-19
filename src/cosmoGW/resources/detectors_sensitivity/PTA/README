@@ -1,0 +1,94 @@
+
+Data files regarding PTA observations of a common-process spectrum fit to a power law.
+It contains data from their analyses to fit the amplitude and slope of the potential
+SGWB observed (observations from 2020-22 papers not confirmed to follow Hellings-Downs curve, yet).
+
+References:
+
+    The references for the NANOGrav, PPTA, and EPTA results are:
+
+        - [NANOGrav], "The NANOGrav 12.5 yr data set: Search for an isotropic
+        stochastic gravitational-wave background," Astrophys. J. Lett. 905,
+        L34 (2020), arXiv:2009.04496
+
+        - B. Goncharov et al., "On the evidence for a common-spectrum process
+        in the search for the nanohertz gravitational-wave background with the
+        Parkes Pulsar Timing Array," Astrophys. J. Lett. 917, L19 (2021),
+        arXiv:2107.12112
+
+        - S. Chen et al., "Common-red-signal analysis with 24-yr high-precision
+        timing of the European Pulsar Timing Array: Inferences in the stochastic
+        gravitational-wave background search," Mon. Not. Royal Astron. Soc.
+        508, 4970 (2021), arXiv:2110.13184
+
+    - J. Antoniadis et al., "The International Pulsar Timing Array second data
+    release: Search for an isotropic Gravitational Wave Background," Mon. Not.
+    Royal Astron. Soc. 510, 4873 (2022), arXiv:2201.03980
+
+    These files have been used for the work:
+
+    - A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz, "The gravitational wave signal
+    from primordial magnetic fields in the Pulsar Timing Array frequency band,"
+    Phys.Rev.D 105, 12, 123502 (2022), arXiv:2201.05630.
+
+    The 'old' reference for EPTA ('EPTA_singlePL_1s_old' and 'EPTA_singlePL_2s_old') is taken from:
+
+    - Talk at the 3rd Annual Assembly GdR “Ondes Gravitationnneles" by S. Chen,
+    "25 years of European Pulsar Timing Array."
+
+    The NANOGrav and the old EPTA references were used in the work:
+
+    - A. Neronov, A. Roper Pol, C. Caprini, D. Semikoz, "NANOGrav signal from magnetohydrodynamic
+    turbulence at the QCD phase transition in the early Universe," Phys. Rev. D 103, L041302
+    (2021), arXiv:2009.14174
+
+Files: 
+
+- 'excluded_max_EPTA24yr'
+
+    includes 'f' and 'CP' corresponding to the maximum values compatible to the observations
+    with the 2sigma violin plots using the noise model ENTERPRISE (EP) for common-uncorrelated red
+    noise (CURN), see their figure 3
+
+- 'excluded_max_PPTA15yr'
+
+    analogous to 'excluded_max_EPTA...' for PPTA using the assumption of timing noise only in specific pulsars,
+    see their figure 1
+
+- 'excluded_max_NG12p5yr'
+
+    analogous to 'excluded_max_EPTA...' for NANOGrav, see their figure 1
+
+- 'excluded_max_IPTA_DR2'
+
+    analogous to 'excluded_max_EPTA...' for IPTA, see their figure 1
+
+- 'EPTA_singlePL_2s_new_42'
+
+    includes 'A' and 'gamma' corresponding to the 2sigma amplitudes of an common-uncorrelated red noise (CURN) power
+    law spectrum using the noise model DR 42 Chebyshev for CURN, see their figure 3
+
+- 'EPTA_singlePL_1s_EP' and 'EPTA_singlePL_2s_EP'
+
+    similar to 'EPTA_singlePL_2s_new_42' with 1sigma and 2sigma amplitudes using the noise model
+    ENTERPRISE (EP) for CURN 
+
+- 'NANOGrav_brokenPL_1s' and 'NANOGrav_brokenPL_2s'
+
+    similar to 'EPTA_singlePL_2s_new_42' using the broken power law fit of NANOGrav data,
+    see their figure 1
+
+- 'NANOGrav_singlePL_1s' and 'NANOGrav_singlePL_2s'
+
+    same as 'NANOGrav_brokenPL' using the single power law fit of NANOGrav data,
+    see their figure 1
+
+- 'PPTA_blue_1s' and 'PPTA_blue_2s'
+ 
+    similar to 'EPTA_singlePL_2s_new_42' using the single power law fit of PPTA data and the
+    assumption of timing noise only in specific pulsars, see their figure 1
+
+- 'IPTA_1s' and 'IPTA_2s'
+
+    similar to 'EPTA_singlePL_2s_new_42' using the single power law fit of IPTA data (DR2) and
+    using the full auto + cross-correlations, see their figure 3
