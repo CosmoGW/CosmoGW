@@ -33,11 +33,11 @@ RoperPol:2022iel - A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,
 Pulsar Timing Array frequency band," Phys. Rev. D 105, 123502 (2022),
 arXiv:2201.05630.
 
-He:2022qcs - Y. He, A. Roper Pol, A. Brandenburg,
+He:2022qcs       - Y. He, A. Roper Pol, A. Brandenburg,
 "Modified propagation of gravitational waves from the early
 radiation era," JCAP 06 (2023), 025, arXiv:2212.06082.
 
-Planck:2018vyg - [Planck], "Planck 2018 results. VI.
+Planck:2018vyg   - [Planck], "Planck 2018 results. VI.
 Cosmological parameters," Astron.Astrophys. 641 (2020) A6,
 Astron.Astrophys. 652 (2021) C4 (erratum),
 arXiv:1807.06209.
@@ -56,17 +56,17 @@ import importlib
 #import cosmoGW.spectra as sp
 
 # reference values and constants
-Tref = 100*u.GeV    # EWPT
-gref = 100          # EWPT
-Neff_ref = 3        # reference Neff = 3
+Tref     = 100*u.GeV  # EWPT
+gref     = 100        # EWPT
+Neff_ref = 3          # reference Neff = 3
 
 # values at present time from Planck:2018vyg
-T0K = 2.72548*u.K
-H0_ref = 100*u.km/u.s/u.Mpc
-H0_ref = H0_ref.to(u.Hz)
+T0K      = 2.72548*u.K
+H0_ref   = 100*u.km/u.s/u.Mpc
+H0_ref   = H0_ref.to(u.Hz)
 OmL0_ref = 0.6841
 OmM0_ref = 1. - OmL0_ref
-h0_ref = 0.6732
+h0_ref   = 0.6732
 
 ######################### Values at present time #########################
 
@@ -76,20 +76,20 @@ def values_0(h0=1., neut=False, Neff=Neff_ref, ret_rad=False):
     Function that returns the values of cosmological parameters at present time.
 
     Arguments:
-        h0 -- parameterizes the uncertainties (Hubble tension)
-              on the value of the Hubble rate (default 1)
-        neut -- option to add neutrinos in the calculation of today's
-                relativistic dofs
-        Neff -- effective number of neutrino species (default is 3)
+        h0      -- parameterizes the uncertainties (Hubble tension)
+                   on the value of the Hubble rate (default 1)
+        neut    -- option to add neutrinos in the calculation of today's
+                   relativistic dofs
+        Neff    -- effective number of neutrino species (default is 3)
         ret_rad -- option to return radiation energy density at present time
 
     Returns:
-        g0 -- 2 relativistic degrees of freedom (assumes massive neutrinos
-              unless ret_rad=True)
-        g0s -- ~3.91 entropic/adiabatic degrees of freedom (including neutrinos)
-        T0 -- temperature 2.72548 K, returned in energy units (MeV)
-        H0 -- Hubble rate at the present time H0 = 100 h0 km/s/Mpc in frequency
-              units (Hz)
+        g0      -- 2 relativistic degrees of freedom (assumes massive neutrinos
+                   unless ret_rad=True)
+        g0s     -- ~3.91 entropic/adiabatic degrees of freedom (including neutrinos)
+        T0      -- temperature 2.72548 K, returned in energy units (MeV)
+        H0      -- Hubble rate at the present time H0 = 100 h0 km/s/Mpc in frequency
+                   units (Hz)
         rho_rad0, Om_rad0 -- radiation energy density (and ratio to critial density)
                              at present time
 
@@ -97,21 +97,20 @@ def values_0(h0=1., neut=False, Neff=Neff_ref, ret_rad=False):
     """
 
     # relativistic dofs from photons
-    g0 = 2
+    g0  = 2
     # contribution from neutrinos if neut is True
     if neut: g0 = 2*(1 + Neff*7/8*(4/11)**(4/3))
     # adiabatic dofs
     g0s = 2*(1 + Neff*7/8*4/11)
-    T0 = (T0K*const.k_B).to(u.MeV)
-    H0 = H0_ref*h0
+    T0  = (T0K*const.k_B).to(u.MeV)
+    H0  = H0_ref*h0
 
     if ret_rad:
         rho_rad0 = rho_radiation(g=g0, T=T0)
-        rho_c = rho_critical(H=H0)
-        Om_rad0 = rho_rad0/rho_c
+        rho_c    = rho_critical(H=H0)
+        Om_rad0  = rho_rad0/rho_c
         return g0, g0s, T0, H0, rho_rad0, Om_rad0
-    else:
-        return g0, g0s, T0, H0
+    else: return g0, g0s, T0, H0
 
 ########################  Radiation-dominated era ########################
 
@@ -151,10 +150,10 @@ def Hs_val(g=gref, T=Tref):
     (within the radiation-dominated era).
 
     Arguments:
-        g -- number of relativistic degrees of freedom (dof) at the
-             time of generation (default is 100)
-        T -- temperature scale at the time of generation in energy units
-             (convertible to MeV) (default is 100 GeV)
+        g  -- number of relativistic degrees of freedom (dof) at the
+              time of generation (default is 100)
+        T  -- temperature scale at the time of generation in energy units
+              (convertible to MeV) (default is 100 GeV)
 
     Returns:
         Hs -- Hubble rate in frequency units (Hz)
@@ -163,8 +162,8 @@ def Hs_val(g=gref, T=Tref):
     """
 
     Hs_f = Hs_fact()
-    T = check_temperature_MeV(T, func='Hs_val')
-    Hs = Hs_f*T**2*np.sqrt(g)
+    T    = check_temperature_MeV(T, func='Hs_val')
+    Hs   = Hs_f*T**2*np.sqrt(g)
 
     return Hs
 
@@ -201,11 +200,11 @@ def as_a0_rat(g=gref, T=Tref, Neff=Neff_ref):
     expansion of the universe.
 
     Arguments:
-        g -- number of relativistic degrees of freedom (dof) at the
-             time of generation (default is 100)
-        T -- temperature scale at the time of generation in energy units
-             (convertible to MeV) (default is 100 GeV)
-        Neff -- effective number of neutrino species (default is 3)
+        g     -- number of relativistic degrees of freedom (dof) at the
+                 time of generation (default is 100)
+        T     -- temperature scale at the time of generation in energy units
+                 (convertible to MeV) (default is 100 GeV)
+        Neff  -- effective number of neutrino species (default is 3)
 
     Returns:
         as_a0 -- ratio of scale factors (a*/a0)
@@ -213,8 +212,8 @@ def as_a0_rat(g=gref, T=Tref, Neff=Neff_ref):
     Reference: RoperPol:2022iel, eq. 28
     """
 
-    as_f = as_fact(Neff=Neff)
-    T = check_temperature_MeV(T, func='as_a0_rat')
+    as_f  = as_fact(Neff=Neff)
+    T     = check_temperature_MeV(T, func='as_a0_rat')
     as_a0 = as_f*g**(-1/3)/T
 
     return as_a0
@@ -239,7 +238,7 @@ def rho_radiation(g=gref, T=Tref):
     Reference: RoperPol:2019wvy, eq. 3
     """
 
-    T = check_temperature_MeV(T, func='rho_radiation')
+    T       = check_temperature_MeV(T, func='rho_radiation')
     rho_rad = np.pi**2/30*g*T**4/(const.hbar*const.c)**3
     rho_rad = rho_rad.to(u.GeV/u.m**3)
 
@@ -272,7 +271,7 @@ def rho_critical(H=H0_ref):
     Reference: RoperPol:2019wvy, eq. 3
     """
 
-    H = check_Hubble_Hz(H, func='rho_critical')
+    H     = check_Hubble_Hz(H, func='rho_critical')
     rho_c = 3*H**2*const.c**2/8/np.pi/const.G
     rho_c = rho_c.to(u.GeV/u.m**3)
 
@@ -289,10 +288,10 @@ def thermal_g(dir0='', T=Tref, s=0, file=True, Neff=Neff_ref):
     Arguments:
         dir0 -- directory where the file of dof is stored
                 ('resources/cosmology/' directory by default)
-        T -- temperature scale at the time of generation in energy units
-             (default is 100 GeV)
-        s -- option to return adiabatic (s=1) dof instead of relativistic
-             (default 0)
+        T    -- temperature scale at the time of generation in energy units
+                (default is 100 GeV)
+        s    -- option to return adiabatic (s=1) dof instead of relativistic
+                (default 0)
         file -- option to read g_* or gS from a file with numerical values,
                 based on numerical calculations (default True)
                 It reads the file 'dir0/cosmology/T_gs.csv' and should be a
@@ -300,7 +299,7 @@ def thermal_g(dir0='', T=Tref, s=0, file=True, Neff=Neff_ref):
         Neff -- effective number of neutrino species (default is 3)
 
     Returns:
-        g -- relativistic or adiabatic degrees of freedom
+        g    -- relativistic or adiabatic degrees of freedom
 
     Reference: Rasanen.
     """
@@ -320,9 +319,9 @@ def thermal_g(dir0='', T=Tref, s=0, file=True, Neff=Neff_ref):
             Ts = np.array(df['T [GeV]'])
             if s == 0: gs = np.array(df['g_*'])
             if s == 1: gs = np.array(df['gS'])
-            T = T.to(u.GeV)    # values of T from file are in GeV
-            g = np.interp(T.value, np.sort(Ts), np.sort(gs))
-            T = check_temperature_MeV(T, func='thermal_g')
+            T  = T.to(u.GeV)    # values of T from file are in GeV
+            g  = np.interp(T.value, np.sort(Ts), np.sort(gs))
+            T  = check_temperature_MeV(T, func='thermal_g')
             # check if T is a single value or an array
             if not isinstance(T.value, (list, tuple, np.ndarray)):
                 if T.value < 0.1:
@@ -386,8 +385,8 @@ def RD_dofs(dir0='', Neff=Neff_ref, scalef=False):
         Neff -- effective number of neutrino species (default is 3)
 
     Returns:
-        T -- array of temperatures within RD era
-        as_T -- array of scale factors
+        T      -- array of temperatures within RD era
+        as_T   -- array of scale factors
         gs, gS -- array of relativistic and adiabatic dofs
 
     Calls functions 'values_0' and 'thermal_g'; see references therein.
@@ -398,7 +397,7 @@ def RD_dofs(dir0='', Neff=Neff_ref, scalef=False):
     #### thermal_g
 
     # array of temperatures during RD era
-    T = np.logspace(-4, 8, 1000)*u.MeV
+    T  = np.logspace(-4, 8, 1000)*u.MeV
     gS = thermal_g(T=T, s=1, file=True, dir0=dir0)
     gs = thermal_g(T=T, s=0, file=True, dir0=dir0)
 
@@ -417,7 +416,7 @@ def dofs_vs_a(a, dir0='', Neff=Neff_ref):
     for an array of scale factors.
 
     Arguments:
-        a -- array of scale factors
+        a    -- array of scale factors
         dir0 -- directory where the file of dof is stored ('/cosmology/' directory by default)
         Neff -- effective number of neutrino species (default is 3)
 
@@ -433,11 +432,11 @@ def dofs_vs_a(a, dir0='', Neff=Neff_ref):
     #### convert arrays of degrees of freedom and interpolate to original array of scale factors a
     #### (needs to be sorted first for interp to work)
     inds = np.argsort(as_T)
-    as2 = as_T[inds]
-    gs = gs[inds]
-    gS = gS[inds]
-    gs = np.interp(a, as2, gs)
-    gS = np.interp(a, as2, gS)
+    as2  = as_T[inds]
+    gs   = gs[inds]
+    gS   = gS[inds]
+    gs   = np.interp(a, as2, gs)
+    gS   = np.interp(a, as2, gS)
 
     return gs, gS
 
@@ -450,12 +449,12 @@ def Hs_from_a(a, dir0='', Neff=Neff_ref):
         a^3 g_S T^3 = constant
 
     Arguments:
-        a -- array of scale factors
+        a    -- array of scale factors
         dir0 -- directory where the file of dof is stored ('/cosmology/' directory by default)
         Neff -- effective number of neutrino species (default is 3)
 
     Returns:
-        Hs -- Hubble rate during RD era
+        Hs   -- Hubble rate during RD era
 
     Calls functions 'values_0' and 'thermal_g'; see references therein.
     """
@@ -478,7 +477,7 @@ def Omega_rad_dof(a, dir0='', Neff=Neff_ref):
     the RD era.
 
     Arguments:
-        a -- array of scale factors
+        a    -- array of scale factors
         dir0 -- directory where the file of dof is stored ('/cosmology/' directory by default)
         Neff -- effective number of neutrino species (default is 3)
 
@@ -513,18 +512,18 @@ def Omega_vs_a(a, dir0='', a0=1, h0=h0_ref, OmL0=OmL0_ref, dofs=True, Neff=Neff_
     Omega (a) = OmR0 x a^(-4) + OmM0 x a^(-3) + OmL0
 
     Arguments:
-        a -- array of scale factors
+        a    -- array of scale factors
         dir0 -- directory where the file of dof is stored ('/cosmology/' directory by default)
-        a0 -- reference value of the scale factor at present time (default is 1)
-        h0 -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
-              (default is 67.32 km/s/Mpc based on CMB observations)
+        a0   -- reference value of the scale factor at present time (default is 1)
+        h0   -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
+                (default is 67.32 km/s/Mpc based on CMB observations)
         OmL0 -- present-time content of dark energy
         dofs -- option to compensate the rad energy density using dofs during RD era
         dir0 -- directory where file for dofs during RD era is stored
 
     Returns:
-        Om_tot -- total energy density (normalized to present-time critical)
-        Om_rad -- radiation energy density (normalized)
+        Om_tot  -- total energy density (normalized to present-time critical)
+        Om_rad  -- radiation energy density (normalized)
         Om_matt -- matter energy density (normalized)
 
     Reference: He:2022qcs, eq.A.2
@@ -543,7 +542,7 @@ def Omega_vs_a(a, dir0='', a0=1, h0=h0_ref, OmL0=OmL0_ref, dofs=True, Neff=Neff_
         OmR0 = OmR0*Om_rat_dof
 
     ##### compute other contributions Om_Lam0 and Om_mat0, and total Om_tot
-    OmM0 = 1 - OmL0 - OmR0
+    OmM0   = 1 - OmL0 - OmR0
     Om_mat = (a/a0)**(-3)*OmM0
     Om_rad = (a/a0)**(-4)*OmR0
     Om_tot = OmL0 + Om_rad + Om_mat
@@ -557,37 +556,37 @@ def friedmann(a, dir0='', a0=1, h0=h0_ref, OmL0=OmL0_ref, dofs=True, Neff=Neff_r
     of the scale factor for the radiation energy density described in Omega_vs_a().
 
     Arguments:
-        a -- array of scale factors
+        a    -- array of scale factors
         dir0 -- directory where the file of dof is stored ('/cosmology/' directory by default)
-        a0 -- reference value of the scale factor at present time (default is 1)
-        h0 -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
-              (default is 67.32 km/s/Mpc based on CMB observations)
+        a0   -- reference value of the scale factor at present time (default is 1)
+        h0   -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
+                (default is 67.32 km/s/Mpc based on CMB observations)
         OmL0 -- present-time content of dark energy
         dofs -- option to compensate the rad energy density using dofs during RD era
         dir0 -- directory where file for dofs during RD era is stored
 
     Returns:
-        w -- equation of state (p = w rho)
-        ad -- cosmic time derivative of the scale factor
+        w   -- equation of state (p = w rho)
+        ad  -- cosmic time derivative of the scale factor
         add -- second cosmic time derivative of the scale factor
-        ap -- conformal time derivative of the scale factor
+        ap  -- conformal time derivative of the scale factor
         app -- second conformal time derivative of the scale factor
 
     Reference: He:2022qcs, eqs. A.5-A.6
     """
 
-    g0, g0s, T0, H0 = values_0(h0=h0, neut=True, Neff=Neff)
+    g0, g0s, T0, H0   = values_0(h0=h0, neut=True, Neff=Neff)
     Om_tot, Om_rad, _ = Omega_vs_a(a, a0=a0, h0=h0, OmL0=OmL0, dofs=dofs,
-                                         dir0=dir0, Neff=Neff)
+                                   dir0=dir0, Neff=Neff)
 
     # equation of state
-    w = (1/3*Om_rad - OmL0)/Om_tot
+    w   = (1/3*Om_rad - OmL0)/Om_tot
     # time derivatives (cosmic time)
     add = -.5*Om_tot*H0**2*(a/a0)*(1 + 3*w)
-    ad = (a/a0)*np.sqrt(Om_tot)*H0
+    ad  = (a/a0)*np.sqrt(Om_tot)*H0
     # time derivatives (conformal time)
     app = .5*a**3*Om_tot*(1 - 3*w)*H0**2
-    ap = ad*a
+    ap  = ad*a
 
     return w, ad, add, ap, app
 
@@ -603,11 +602,11 @@ def friedmann_solver(a, dir0='', a0=1., h0=h0_ref, OmL0=OmL0_ref,
     A tutorial is available under cosmology/cosmology.ipynb
 
     Arguments:
-        a -- array of scale factors
+        a    -- array of scale factors
         dir0 -- directory where the file of dof is stored ('/cosmology/' directory by default)
-        a0 -- reference value of the scale factor at present time (default is 1)
-        h0 -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
-              (default is 67.32 km/s/Mpc based on CMB observations)
+        a0   -- reference value of the scale factor at present time (default is 1)
+        h0   -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
+                (default is 67.32 km/s/Mpc based on CMB observations)
         OmL0 -- present-time content of dark energy (default is 0.6841)
         dofs -- option to compensate the rad energy density using dofs during RD era
         Neff -- effective number of neutrino species (default is 3)
@@ -625,7 +624,7 @@ def friedmann_solver(a, dir0='', a0=1., h0=h0_ref, OmL0=OmL0_ref,
 
     #### numerically compute the arrays of cosmic and conformal times
     #### from the energy density ratio
-    difft = np.zeros(len(a))
+    difft   = np.zeros(len(a))
     diffeta = np.zeros(len(a))
     if a[0] > 1e-18:
         print('minimum a given is ', a[0])
@@ -638,15 +637,15 @@ def friedmann_solver(a, dir0='', a0=1., h0=h0_ref, OmL0=OmL0_ref,
     print('Entering Friedmann solver')
 
     for i in range(1, len(a)):
-        aas = np.logspace(np.log10(a[0]), np.log10(a[i]), 10000)
+        aas   = np.logspace(np.log10(a[0]), np.log10(a[i]), 10000)
         Om_as = np.interp(aas, a, Om_tot)
-        fft = 1/aas/np.sqrt(Om_as)
+        fft   = 1/aas/np.sqrt(Om_as)
         ffeta = fft/aas
-        difft[i] = np.trapz(fft, aas)
-        diffeta[i] = np.trapz(ffeta, aas)
+        difft[i]   = np.trapezoid(fft, aas)
+        diffeta[i] = np.trapezoid(ffeta, aas)
 
     g0, g0s, T0, H0 = values_0(h0=h0)
-    t = difft/H0
+    t   = difft/H0
     eta = diffeta/H0
 
     # Using Friedmann equations, we compute the eos (w), and the time derivatives of the
@@ -667,8 +666,7 @@ def friedmann_solver(a, dir0='', a0=1., h0=h0_ref, OmL0=OmL0_ref,
 
     print('Leaving Friedmann solver')
 
-    if return_all:
-        return t, eta, Om_tot, Om_rad, Om_mat, w, ad, add, ap, app
+    if return_all: return t, eta, Om_tot, Om_rad, Om_mat, w, ad, add, ap, app
     else: return t, eta
 
 def normalized_variables(a, eta, ap_a, app_a, dir0='', T=Tref, h0=h0_ref):
@@ -680,29 +678,29 @@ def normalized_variables(a, eta, ap_a, app_a, dir0='', T=Tref, h0=h0_ref):
     A tutorial is available under cosmology/cosmology_PC.ipynb
 
     Arguments:
-        a -- scale factors, normalized to present-time a_0 = 1
-        eta -- conformal times, normalized to present-time a_0 = 1
-        ap_a -- conformal Hubble time a'/a, normalized to present-time a_0 = 1
+        a     -- scale factors, normalized to present-time a_0 = 1
+        eta   -- conformal times, normalized to present-time a_0 = 1
+        ap_a  -- conformal Hubble time a'/a, normalized to present-time a_0 = 1
         app_a -- a''/a, normalized to present-time a_0 = 1
-        dir0 -- directory where the file of dof is stored ('/cosmology/' directory by default)
-        T -- temperature scale at the time of generation in energy units
-             (default is 100 GeV)
-        h0 -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
-              (default is 67.32 km/s/Mpc based on CMB observations)
+        dir0  -- directory where the file of dof is stored ('/cosmology/' directory by default)
+        T     -- temperature scale at the time of generation in energy units
+                 (default is 100 GeV)
+        h0    -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
+                 (default is 67.32 km/s/Mpc based on CMB observations)
 
     Returns:
-        a_n -- normalized scale factor a/a_*
-        eta_n -- normalized conformal time eta/eta_*
-        HH_n -- normalized conformal Hubble rate H/H_*
-        app_a_n -- normalized second conformal time derivative of a, (a''/a)/H_*^2
-        Omega -- ratio of total energy to present-time critical energy denstiy
-        w -- equation of state
-        eta_n_0 -- normalized conformal present time
-        aEQ_n -- normalized equipartition scale factor
-        aL_n -- normalized dark energy domination scale factor
-        a_acc_n -- normalized scale factor when acceleration starts
-        eta_n_EQ -- normalized conformal time at equipartition
-        eta_n_L -- normalized conformal time at dark energy domination
+        a_n       -- normalized scale factor a/a_*
+        eta_n     -- normalized conformal time eta/eta_*
+        HH_n      -- normalized conformal Hubble rate H/H_*
+        app_a_n   -- normalized second conformal time derivative of a, (a''/a)/H_*^2
+        Omega     -- ratio of total energy to present-time critical energy denstiy
+        w         -- equation of state
+        eta_n_0   -- normalized conformal present time
+        aEQ_n     -- normalized equipartition scale factor
+        aL_n      -- normalized dark energy domination scale factor
+        a_acc_n   -- normalized scale factor when acceleration starts
+        eta_n_EQ  -- normalized conformal time at equipartition
+        eta_n_L   -- normalized conformal time at dark energy domination
         eta_n_acc -- normalized conformal time when acceleration starts
 
     Reference: He:2022qcs, appendix A.
@@ -710,19 +708,19 @@ def normalized_variables(a, eta, ap_a, app_a, dir0='', T=Tref, h0=h0_ref):
     The normalization follows that from RoperPol:2018sap.
     """
 
-    g = thermal_g(T=T, s=0, dir0=dir0)
-    gS = thermal_g(T=T, s=1, dir0=dir0)
+    g   = thermal_g(T=T, s=0, dir0=dir0)
+    gS  = thermal_g(T=T, s=1, dir0=dir0)
     ast = as_a0_rat(T=T, g=gS)
-    Hs = Hs_val(T=T, g=g)
+    Hs  = Hs_val(T=T, g=g)
 
     # normalized scale rates
     a_n = a/ast
-    a0 = 1/ast
+    a0  = 1/ast
 
     ## Find value of eta at the initial time of generation
     eta_ast = np.interp(ast, a, eta)
     # normalized conformal times
-    eta_n = eta/eta_ast
+    eta_n   = eta/eta_ast
     eta_n_0 = np.interp(a0, a_n, eta_n)
 
     # normalized conformal Hubble rate
@@ -732,9 +730,9 @@ def normalized_variables(a, eta, ap_a, app_a, dir0='', T=Tref, h0=h0_ref):
     app_a_n = app_a/Hs**2/ast**2
 
     ### we can recover the values of Omega and w
-    H0 = h0*H0_ref
+    H0    = h0*H0_ref
     Omega = (HH_n.value*Hs)**2/a_n**2/H0**2
-    w = 1/3*(1 - app_a_n*2/HH_n**2)
+    w     = 1/3*(1 - app_a_n*2/HH_n**2)
 
     # compute aEQ, aL, and a_acc
     inds      = np.argsort(w)
@@ -758,11 +756,11 @@ def ratio_app_a_n_factor(a, dir0='', a0=1, h0=h0_ref, OmL0=OmL0_ref,
     Reference: He:2022qcs, eq. 3.11
 
     Arguments:
-        a -- array of scale factors
+        a    -- array of scale factors
         dir0 -- directory where the file of dof is stored ('/cosmology/' directory by default)
-        a0 -- reference value of the scale factor at present time (default is 1)
-        h0 -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
-              (default is 67.32 km/s/Mpc based on CMB observations)
+        a0   -- reference value of the scale factor at present time (default is 1)
+        h0   -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
+                (default is 67.32 km/s/Mpc based on CMB observations)
         OmL0 -- present-time content of dark energy (default is 0.6841)
         dofs -- option to compensate the rad energy density using dofs during RD era
         Neff -- effective number of neutrino species (default is 3)
@@ -786,43 +784,44 @@ def norm_variables_cut(eta_n, HH_n, a_n, Omega, Omega_mat, eta_n_0, dir0='',
     to present-time.
 
     Arguments:
-        eta_n -- normalized conformal time eta/eta_*
-        HH_n -- normalized conformal Hubble rate H/H_*
-        a_n -- normalized scale factor a/a_*
-        Omega -- ratio of total energy to present-time critical energy denstiy
-        Om_mat -- matter energy density (normalized)
+        eta_n   -- normalized conformal time eta/eta_*
+        HH_n    -- normalized conformal Hubble rate H/H_*
+        a_n     -- normalized scale factor a/a_*
+        Omega   -- ratio of total energy to present-time critical energy denstiy
+        Om_mat  -- matter energy density (normalized)
         eta_n_0 -- normalized conformal present time
-        Hs -- Hubble rate at the initial time
-        ast -- scale factor at the initial time
-        dir0 -- directory where the file of dof is stored ('/cosmology/' directory by default)
-        T -- temperature scale at the initial time in energy units
-             (default is 100 GeV)
-        OmM0 -- present-time content of matter (default is 0.3159)
-        h0 -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
-              (default is 67.32 km/s/Mpc based on CMB observations)
+        Hs      -- Hubble rate at the initial time
+        ast     -- scale factor at the initial time
+        dir0    -- directory where the file of dof is stored
+                   ('/cosmology/' directory by default)
+        T       -- temperature scale at the initial time in energy units
+                   (default is 100 GeV)
+        OmM0    -- present-time content of matter (default is 0.3159)
+        h0      -- present-time value of the Hubble rate H0 = h0 x 100 km/s/Mpc
+                   (default is 67.32 km/s/Mpc based on CMB observations)
 
     Returns: variables given as arrays from the initial time until present time
-        eta_nn -- normalized conformal time
-        HH_nn -- normalized conformal Hubble rate
-        a_nn -- normalized scale factor
-        Omega_nn -- ratio of total energy to present-time critical energy denstiy
+        eta_nn       -- normalized conformal time
+        HH_nn        -- normalized conformal Hubble rate
+        a_nn         -- normalized scale factor
+        Omega_nn     -- ratio of total energy to present-time critical energy denstiy
         Omega_mat_nn -- matter energy density (normalized)
-        app_nn -- second time derivative of the scale factor
-        w_nn -- equation of state p/rho
+        app_nn       -- second time derivative of the scale factor
+        w_nn         -- equation of state p/rho
     """
 
     H0 = h0*H0_ref
 
     # relativistic and adiabatic dofs
-    g  = thermal_g(T=T, s=0, dir0=dir0)
-    gS = thermal_g(T=T, s=1, dir0=dir0)
+    g   = thermal_g(T=T, s=0, dir0=dir0)
+    gS  = thermal_g(T=T, s=1, dir0=dir0)
     # scale factor and Hubble rate
     ast = as_a0_rat(T=T, g=gS)
     Hs  = Hs_val(T=T, g=g)
 
     # indices
-    inds  = np.where(eta_n > 1)[0]
-    inds2 = np.where(eta_n[inds] < eta_n_0)[0]
+    inds   = np.where(eta_n > 1)[0]
+    inds2  = np.where(eta_n[inds] < eta_n_0)[0]
 
     eta_nn = cut_var(eta_n, 1, eta_n_0, inds, inds2)
     HH_n0  = np.interp(1, eta_n, HH_n.value)
