@@ -687,7 +687,7 @@ def compute_alphan(vw=vw_def, alpha_obj=alpha_def, tol=tol_ref, cs2=cs2_ref,
 
     return xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, alpha_n, alp_plus, conv
 
-def compute_profiles_vws_multalp(alphas, vws=[], cs2=cs2_ref, Nvws=Nvws_ref, Nxi=Nxi_ref,
+def compute_profiles_vws_multalp(alphas, vws=[0], cs2=cs2_ref, Nvws=Nvws_ref, Nxi=Nxi_ref,
                                  Nxi2=Nxi2_ref, alphan=True, quiet=True, tol=tol_ref,
                                  max_it=it_ref, lam=False, eff=False):
 
@@ -737,7 +737,7 @@ def compute_profiles_vws_multalp(alphas, vws=[], cs2=cs2_ref, Nvws=Nvws_ref, Nxi
                      energy density (only returned if eff is True)
     '''
 
-    if len(vws) == 0: vws = np.linspace(0.1, .99, Nvws)
+    if vws == [0]: vws = np.linspace(0.1, .99, Nvws)
     xis = np.linspace(0, 1, Nxi + Nxi2)
 
     if isinstance(alphas, (list, tuple, np.ndarray)):
@@ -768,7 +768,7 @@ def compute_profiles_vws_multalp(alphas, vws=[], cs2=cs2_ref, Nvws=Nvws_ref, Nxi
                     kappas[:, i], omegas[:, i] = \
                         compute_profiles_vws(alphas[i], vws=vws, cs2=cs2,
                             Nxi=Nxi, Nxi2=Nxi2, plot=False, alphan=alphan,
-                            quiet=quiet, tol=tol, max_it=max_it, lam=lam,
+                            quiet=True, tol=tol, max_it=max_it, lam=lam,
                             eff=eff)
 
         else:
@@ -777,7 +777,7 @@ def compute_profiles_vws_multalp(alphas, vws=[], cs2=cs2_ref, Nvws=Nvws_ref, Nxi
                     kappas, omegas = \
                         compute_profiles_vws(alphas, vws=vws, cs2=cs2,
                             Nxi=Nxi, Nxi2=Nxi2, plot=False, alphan=alphan,
-                            quiet=quiet, tol=tol, max_it=max_it, lam=lam,
+                            quiet=True, tol=tol, max_it=max_it, lam=lam,
                             eff=eff)
 
         return xis, vvs, wws, alphas_n, conv, shocks, xi_shocks, wms, kappas, omegas
@@ -789,14 +789,14 @@ def compute_profiles_vws_multalp(alphas, vws=[], cs2=cs2_ref, Nvws=Nvws_ref, Nxi
             for i in range(0, len(alphas)):
 
                 if not quiet:
-                    print('Computing alpha = %'%alphas[i], ' out of',
+                    print('Computing alpha = %f'%alphas[i], ' out of',
                           '%i'%(len(alphas) + 1))
 
                 xis, vvs[:, i, :], wws[:, i, :], alphas_n[:, i], \
                     conv[:, i], shocks[:, i], xi_shocks[:, i], wms[:, i] = \
                         compute_profiles_vws(alphas[i], vws=vws, cs2=cs2,
                             Nxi=Nxi, Nxi2=Nxi2, plot=False, alphan=alphan,
-                            quiet=quiet, tol=tol, max_it=max_it, lam=lam,
+                            quiet=True, tol=tol, max_it=max_it, lam=lam,
                             eff=eff)
 
         else:
@@ -804,7 +804,7 @@ def compute_profiles_vws_multalp(alphas, vws=[], cs2=cs2_ref, Nvws=Nvws_ref, Nxi
             xis, vvs, wws, alphas_n, conv, shocks, xi_shocks, wms = \
                 compute_profiles_vws(alphas, vws=vws, cs2=cs2,
                                      Nxi=Nxi, Nxi2=Nxi2, plot=False, alphan=alphan,
-                                     quiet=quiet, tol=tol, max_it=max_it, lam=lam,
+                                     quiet=True, tol=tol, max_it=max_it, lam=lam,
                                      eff=eff)
 
         return xis, vvs, wws, alphas_n, conv, shocks, xi_shocks, wms
@@ -1049,8 +1049,8 @@ def kappas_from_prof(vw, alpha, xis, ws, vs):
     and thermal factor omega from the 1d profiles.
     '''
 
-    kappa = 4/vw**3/alpha*np.trapz(xis**2*ws/(1 - vs**2)*vs**2, xis)
-    omega = 3/vw**3/alpha*np.trapz(xis**2*(ws - 1), xis)
+    kappa = 4/vw**3/alpha*np.trapezoid(xis**2*ws/(1 - vs**2)*vs**2, xis)
+    omega = 3/vw**3/alpha*np.trapezoid(xis**2*(ws - 1), xis)
 
     return kappa, omega
 
@@ -1203,20 +1203,20 @@ def fp_z(xi, vs, z, lz=False, ls=[], multi=True, quiet=False):
 
         for i in range(0, Nvws):
             v_ij, z_ij = np.meshgrid(vs[i, 1:], z, indexing='ij')
-            fpzs[i, :] = -4*np.pi*np.trapz(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
+            fpzs[i, :] = -4*np.pi*np.trapezoid(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
             if lz:
                 l_ij, z_ij = np.meshgrid(ls[i, 1:], z, indexing='ij')
-                lzs[i, :]  = 4*np.pi*np.trapz(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
+                lzs[i, :]  = 4*np.pi*np.trapezoid(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
 
             if not quiet: print('vw ', i + 1, '/', Nvws, ' computed')
 
     else:
 
         v_ij, z_ij = np.meshgrid(vs[1:], z, indexing='ij')
-        fpzs = -4*np.pi*np.trapz(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
+        fpzs = -4*np.pi*np.trapezoid(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
         if lz:
             l_ij, z_ij = np.meshgrid(ls[1:], z, indexing='ij')
-            lzs = 4*np.pi*np.trapz(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
+            lzs = 4*np.pi*np.trapezoid(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
 
     if lz:
         return fpzs, lzs
