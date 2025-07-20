@@ -309,8 +309,8 @@ def interpolate_HL_vals(df, vws, alphas, value='Omega_tilde_int_extrap',
 
 ###################### TEMPLATE FOR SOUND WAVES ######################
 
-def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[0],
-                alphas=[0], numerical=False, bs_HL=20, quiet=False):
+def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[],
+                alphas=[], numerical=False, bs_HL=20, quiet=False):
 
     '''
     Reference for sound waves is RoperPol:2023bqa, equation 3.
@@ -337,10 +337,11 @@ def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[0],
         val_str  = 'Omega_tilde_int_extrap'
 
         try:
-            if vws == [0] or alphas == [0]:
-                print('Provide values of vws and alphas to use Higgsless model',
-                      ' in ampl_GWB_sw')
-                return 0
+            if len(np.shape(vws)) == 1 or len(np.shape(alphas)) == 1:
+                if len(vws) == 0 or len(alphas) == 0:
+                    print('Provide values of vws and alphas to use Higgsless model',
+                          ' in ampl_GWB_sw')
+                    return 0
 
         except:
             tst = True
@@ -701,7 +702,7 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
 
     return S
 
-def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_ref,
+def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_ref,
                  b_sw=b_sw_ref, c_sw=c_sw_ref, alp1_sw=0, alp2_sw=0, corrRs=True,
                  expansion=False, Nsh=1.,
                  model_efficiency='fixed_value', OmGW_tilde=OmGW_sw_ref,
@@ -736,30 +737,64 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_r
     the time of generation.
 
     Arguments:
-        ss     -- normalized wave number, divided by the mean bubbles size Rstar, s = f R*
-        alphas -- strength of the phase transition
-        betas  -- rate of nucleation of the phase transition
-        vws    -- wall velocity
-
-        cs2 -- square of the speed of sound (default is 1/3 for radiation domination)
-        quiet --
-        multi_ab -- option to provide an array of values of alpha and beta as input
-        multi_xi -- option to provide an array of values of xiw as input
-        a_sw, b_sw, c_sw -- slopes for sound wave template, used when tp = 'sw_HL'
-        alp1_sw, alp2_sw -- transition parameters for sound wave template, used when tp = 'sw_HL'
-        corr_Rs
-        model_efficiency
-        OmGW_tilde -- efficiency of GW production from sound waves (default value is 1e-2,
-                        based on numerical simulations)
-        bs_HL_eff
-        model_K0
-
-
-        a_turb, b_turb, alp_turb -- slopes and smoothness of the turbulent source spectrum
-                                    (either magnetic or kinetic), default values are for a
-                                    von Karman spectrum
-        alpPi, fPi -- parameters of the fit of the spectral anisotropic stresses for turbulence
-        eps_turb -- fraction of energy density converted from sound waves into turbulence
+        s                    -- normalized wave number, divided by the mean bubbles
+                                size Rstar, s = f R*
+        alphas               -- strength of the phase transition
+        betas                -- rate of nucleation of the phase transition
+        vws                  -- array of wall velocities
+        cs2                  -- square of the speed of sound
+                                (default is 1/3 for radiation domination)
+        quiet                -- option to avoid printing debugging info (default is True)
+        a_sw, b_sw, c_sw     -- slopes of the sound wave template
+                                (takes 3, 1, 3 by default)
+        alp1_sw, alp2_sw     -- transition parameters of the sound wave template
+                                (takes the template values by default of each model_shape)
+        corr_Rs              -- option to correct the ratio R* beta with max(vw, cs)
+        expansion            -- option to include the Universe expansion
+                                (in radiation domination)
+        Nsh                  -- number of shock formation times to determine the
+                                source duration (default is 1)
+        model_efficiency     -- model to compute Omega tilde (default is 'fixed_value',
+                                other option available is 'higgsless')
+        OmGW_tilde           -- value of Omega tilde used when
+                                model_efficiency='fixed_value' (default is 1e-2)
+        bs_HL_eff            -- box size of the Higgsless simulations used to interpolate
+                                the values of Omega tilde when model_efficiency='higgsless'
+                                (default if L/vw = 20)
+        model_K0             -- model to compute the kinetic energy ratio K0
+                                (default is 'Espinosa' to use the the single-bubble value,
+                                other option is 'higgsless')
+        bs_k1HL              -- box size of the Higgsless simulations used to interpolate
+                                the values of k1 when model_shape='higgsless'
+                                (default if L/vw = 20)
+        model_decay          -- model to compute the prefactor of the GW amplitude
+                                (default is 'sound_waves' to consider stationary sourcing,
+                                other option is 'decay')
+        interpolate_HL_decay -- option to use Higgsless simulations to interpolate the
+                                values of b (default is False)
+        b                    -- decay law in time of the kinetic energy density
+                                (default is 0)
+        model_shape          -- model used to compute the spectral shape (options
+                                are 'sw_LISAold', 'sw_SSM', 'sw_HL', 'sw_LISA',
+                                'sw_HLnew')
+        strength             -- strength of the phase transition to use average
+                                values of k1 and k2 when model_shape = 'sw_HLnew'
+                                is used (default is 'weak', other options are
+                                'interm' and 'strong')
+        interpolate_HL_shape -- option to use Higgsless simulations to interpolate the
+                                values of k1 and k2 (default is False)
+        interpolate_HL_n3    -- option to use Higgsless simulations to interpolate the
+                                values of c_sw (default is False)
+        redshift             -- option to redshift the GW spectrum and frequencies to
+                                present time (default is False)
+        gstar                -- number of degrees of freedom (default is 100) when
+                                redshift = True
+        gS                   -- number of adiabatic degrees of freedom (default is gstar)
+                                when redshift = True
+        T                    -- temperature scale (default is 100 GeV) when redshift = True
+        h0                   -- value of the Hubble rate at present time (100 h0 Mpc/km/s)
+                                (default is one)
+        Neff                 -- effective number of neutrino species (default is 3)
     '''
 
     cs         = np.sqrt(cs2)
@@ -838,7 +873,6 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_r
     # prefactor GWB of sound waves
 
     pref = np.zeros((len(vws), len(alphas), len(betas)))
-    print(np.shape(b))
     for i in range(0, len(vws)):
         # Fluid length scale R_star x beta
         lf = hb.Rstar_beta(vws[i], cs2=cs2, corr=corrRs)/betas
@@ -858,9 +892,9 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_r
                         model_shape)
 
     if model_shape == ['sw_LISAold']:
-
-        S  = Sf_shape_sw(ss, model=model_shape)
-        mu = np.trapezoid(S, np.log(ss))
+        
+        S  = Sf_shape_sw(s,  model=model_shape)
+        mu = np.trapezoid(S, np.log(s))
         # normalized spectral shape
         S  = S/mu
         S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
@@ -868,11 +902,11 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_r
     elif model_shape in ['sw_HL', 'sw_SSM']:
 
         Dw = abs(vws - cs)/vws
-        S  = Sf_shape_sw(ss, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
+        S  = Sf_shape_sw(s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
                          alp1_sw=alp1_sw, alp2_sw=alp2_sw)
-        mu = np.trapezoid(S, np.log(ss), axis=0)
+        mu = np.trapezoid(S, np.log(s), axis=0)
         S  = S/mu
-        S0 = np.zeros((len(ss), len(vws), len(alphas)))
+        S0 = np.zeros((len(s), len(vws), len(alphas)))
         for i in range(0, len(alphas)):
             S0[:, :, i] = S
         S  = S0
@@ -896,13 +930,13 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_r
 
         else: Dw = 0.
 
-        S = Sf_shape_sw(ss, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
+        S = Sf_shape_sw(s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
                 alp1_sw=alp1_sw, alp2_sw=alp2_sw, strength=strength,
                 interpolate_HL=interpolate_HL_shape,
                 bs_k1HL=bs_k1HL, bs_k2HL=bs_HL_eff, vws=vws, alphas=alphas, quiet=quiet,
                 interpolate_HL_n3=interpolate_HL_n3, corrRs=corrRs, cs2=cs2)
 
-        mu = np.trapezoid(S, np.log(ss), axis=0)
+        mu = np.trapezoid(S, np.log(s), axis=0)
         S  = S/mu
 
         if not interpolate_HL_shape:
@@ -914,20 +948,20 @@ def OmGW_spec_sw(ss, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_r
         print('Available models are sw_LISA, sw_HL, sw_HLnew, sw_SSM, sw_LISAold')
         return 0
 
-    OmGW  = np.zeros((len(ss), len(vws), len(alphas), len(betas)))
-    freqs = np.zeros((len(ss), len(vws), len(betas)))
+    OmGW  = np.zeros((len(s), len(vws), len(alphas), len(betas)))
+    freqs = np.zeros((len(s), len(vws), len(betas)))
     for i in range(0, len(vws)):
         lf = hb.Rstar_beta(vws[i], cs2=cs2, corr=corrRs)/betas
         for l in range(0, len(betas)):
             # express freqs as f/H_ast (instead of f/R_ast)
-            freqs[:, i, l] = ss/lf[l]
+            freqs[:, i, l] = s/lf[l]
             for j in range(0, len(alphas)):
                 OmGW[:, i, j, l] = 3*ampl[i, j]*pref[i, j, l]*S[:, i, j]
 
     if redshift:
 
         freqs, OmGW = cGW.shift_OmGW_today(freqs, OmGW, g=gstar, gS=gS,
-                                           T=T, h0=h0, kk=False, Neff=Neff)
+                                           T=T, h0=h0,  kk=False, Neff=Neff)
 
     if not mult_vws:
         if not mult_beta:
