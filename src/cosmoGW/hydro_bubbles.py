@@ -737,7 +737,8 @@ def compute_profiles_vws_multalp(alphas, vws=[0], cs2=cs2_ref, Nvws=Nvws_ref, Nx
                      energy density (only returned if eff is True)
     '''
 
-    if vws == [0]: vws = np.linspace(0.1, .99, Nvws)
+    if len(np.shape(vws)) == 1:
+        if len(vws) == 0: vws = np.linspace(0.1, .99, Nvws)
     xis = np.linspace(0, 1, Nxi + Nxi2)
 
     if isinstance(alphas, (list, tuple, np.ndarray)):
