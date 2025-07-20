@@ -11,7 +11,7 @@ Currently part of the cosmoGW code:
 https://github.com/cosmoGW/cosmoGW/
 https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/cosmoGW.py
 
-Author: Alberto Roper Pol
+Author:  Alberto Roper Pol
 Created: 01/12/2021 (GW_turbulence)
 Updated: 13/03/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
 
