@@ -262,8 +262,8 @@ def EPi_correlators(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
 
 ###########  FUNCTIONS FOR THE CONSTANT-IN-TIME MODEL ###########
 
-def TGW_func(s, N=N_turb, Oms=Oms_ref, lf=lf_ref, cs2=cs2_ref,
-             tdecay='eddy', multi=False, tp='magnetic'):
+def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb, cs2=cs2_ref,
+             expansion=True, tdecay='eddy', tp='magnetic'):
 
     """
     Function that computes the logarithmic term obtained as
@@ -306,51 +306,57 @@ def TGW_func(s, N=N_turb, Oms=Oms_ref, lf=lf_ref, cs2=cs2_ref,
     Arguments:
         s      -- array of frequencies, normalized by the
                  characteristic scale, s = f R*
-        N      -- relation between the decay time and the effective
-                  source duration
         Oms    -- energy density of the source (i.e., 1/2 vrms^2)
         lf     -- characteristic scale of the turbulence as a
-                 fraction of the Hubble radius, R* H*
+                  fraction of the Hubble radius, R* H*
+        N      -- relation between the decay time and the effective
+                  source duration
         cs2    -- square of the speed of sound (default is 1/3)
+        expansion -- option to include the expansion of the Universe
+                     during radiation domination (default is True)
         tdecay -- determines the finite duration in the cit model
                   (default is to use eddy turnover time)
-        multi  -- option to use arrays for Oms and lf if multi is set to True
+        tp     -- type of source (default is 'magnetic', other options are
+                  'kinetic' or 'max') used to compute the characteristic
+                  velocity in the eddy turnover time
 
     Returns:
         TGW   -- logarithmic function that characterizes the spectral shape
     """
 
+    mult_Oms = isinstance(Oms, (list, tuple, np.ndarray))
+    mult_lf  = isinstance(lf,  (list, tuple, np.ndarray))
+
+    if not mult_Oms: Oms = [Oms]
+    if not mult_lf:  lf  = [lf]
+
+    s, Oms, lf = np.meshgrid(s, Oms, lf, indexing='ij')
+
     # characteristic velocity (for example, Alfven velocity or vrms)
     # see eq. 12 of RoperPol:2023bqa
-    if tp == 'kinetic': vA = np.sqrt(Oms)
-    else:               vA = np.sqrt(2*Oms/(1 + cs2))
+    if   tp == 'kinetic':  vA = np.sqrt(Oms)
+    elif tp == 'magnetic': vA = np.sqrt(2*Oms/(1 + cs2))
+    else:                  vA = np.sqrt(max(1, 2/(1 + cs2))*Oms)
     # decay time in units of R*
-    if tdecay == 'eddy': tdec = 1./vA
+    if   tdecay == 'eddy': tdec = 1./vA
 
     # effective duration of the source dtfin/R* is N units of
     # the decay time (see comment above for different choices
     # in the literature)
     dtfin = N*tdec
 
-    if multi:
-
-        s_ij, lf_ij, Oms_ij = np.meshgrid(s, lf, Oms, indexing='ij')
-        TGW1 = np.log(1 + lf_ij/2/np.pi/s_ij)**2
-
-        lf_ij, dtfin_ij = np.meshgrid(lf, dtfin, indexing='ij')
-        TGW0 = np.log(1 + dtfin_ij*lf_ij/2/np.pi)**2
-
-        TGW = np.zeros((len(s), len(lf), len(Oms)))
-        for i in range(0, len(dtfin)):
-            TGW[s <  1/dtfin[i], :, i] = TGW0[:, i]
-            TGW[s >= 1/dtfin[i], :, i] = TGW1[s >= 1/dtfin[i], :, i]
+    TGW = np.zeros_like(dtfin)
+    if expansion:
+        TGW[s <  1/dtfin] = np.log(1 + dtfin*lf/2/np.pi)**2
+        TGW[s >= 1/dtfin] = np.log(1 + lf/2/np.pi/s)**2
     else:
+        TGW[s <  1/dtfin] = (dtfin*lf/2/np.pi)**2
+        TGW[s >= 1/dtfin] = (lf/2/np.pi/s)**2
 
-        TGW = np.zeros(len(s))
-        TGW[s <  1/dtfin] = \
-            np.log(1 + lf*dtfin/2/np.pi)**2*s[(s < 1/dtfin)]**0
-        TGW[s >= 1/dtfin] = \
-            np.log(1 + lf/2/np.pi/s[np.where(s >= 1/dtfin)])**2
+
+    if not mult_Oms and not mult_lf: TGW = TGW[:, 0, 0]
+    elif not mult_Oms:               TGW = TGW[:, 0, :]
+    elif not mult_lf:                TGW = TGW[:, :, 0]
 
     return TGW
 
