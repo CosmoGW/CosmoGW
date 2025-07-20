@@ -3,12 +3,16 @@ interferometry.py is a Python routine that computes the response and
 sensitivity functions of interferometer space-based GW detectors, e.g., LISA and Taiji,
 to the detection of SGWB (see tutorial on interferometry/interferometry.ipynb).
 
+Adapted from the original interferometry in GW_turbulence
+(https://github.com/AlbertoRoper/GW_turbulence),
+created in May 2022
+
 Currently part of the cosmoGW code:
 
 https://github.com/cosmoGW/cosmoGW/
 https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/interferometry.py
 
-Author: Alberto Roper Pol
+Author:  Alberto Roper Pol
 Created: 01/05/2022
 Updated: 01/11/2023 (preparation of cosmoGW code, included tutorial)
 Updated: 18/07/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
