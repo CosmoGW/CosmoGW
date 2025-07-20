@@ -134,6 +134,8 @@ N_turb   = mod.N_turb  # ratio between the effective time duration of
                        # the source and the eddy turnover time,
                        # based on the simulations of RoperPol:2022iel,
                        # used in RoperPol:2023bqa
+t_decay_ref = 'eddy'   # decaying time used in the constant-in-time model
+                       # (default is eddy turnover time)
 
 ### Reference values for sound waves templates
 
@@ -177,56 +179,9 @@ The Higgsless template for decaying compressional sources
 is developed and used in Caprini:2024gyk
 '''
 
-#################### GW SPECTRUM FOR SOUND WAVES AND TURBULENCE ####################
+############################ SOUND WAVES ############################
 
-############# fit for the anisotropic stresses #############
-
-def pPi_fit(s, b=b_turb, alpPi=alpPi, fPi=fPi, bPi=bPi_vort):
-
-    """
-    Function that computes the fit of the spectrum of the
-    anisotropic stresses.
-
-    The spectrum can be computed numerically for a Gaussian
-    source using EPi_correlators in GW_models module.
-
-    Default values are valid for a purely vortical velocity or
-    magnetic field following a von Kárman spectrum, as indicated
-    in RoperPol:2023bqa, equation 17.
-
-    Using different values of alpPi, fPi, bPi can be generalized
-    to other sources, see RoperPol:2025b
-
-    It assumes that the anisotropic stresses can
-    be expressed with the following fit:
-
-    p_Pi = (1 + (f/fPi)^alpPi)^(-(b + bPi)/alpPi)
-
-    Arguments:
-        s     -- array of frequencies, normalized by the characteristic scale,
-                 s = f R*
-        b     -- high-f slope f^(-b)
-        alpPi -- smoothness parameter of the fit
-        fPi   -- position of the fit break
-        bPi   -- extra power law decay of the spectrum of the
-                 stresses compared to b
-
-    Returns:
-        Pi    -- array of the anisotropic stresses spectrum
-        fGW   -- maximum value of the function s * Pi that determines
-                 the amplitude of the GW spectrum for MHD turbulence
-        pimax -- maximum value of Pi when s = fGW
-    """
-
-    Pi    = an.smoothed_bPL(s, a=0, b=b + bPi, kpeak=fPi,
-                            alp=alpPi, norm=False, alpha2=True,
-                            dlogk=False)
-    pimax = ((b + bPi)/(b + bPi - 1))**(-(b + bPi)/alpPi)
-    fGW   = fPi/(b + bPi - 1)**(1/alpPi)
-
-    return Pi, fGW, pimax
-
-############# values from Higgsless simulations #############
+################# values from Higgsless simulations #################
 
 def data_warning(boxsize=20):
 
@@ -714,7 +669,7 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_re
 
     '''
     Function that computes the GW spectrum (normalized to radiation
-    energy density within RD era) for sound waves and turbulence.
+    energy density within RD era) for sound waves.
 
     The general shape of the GW spectrum is based on that of reference
     RoperPol:2023bqa, equations 3 and 9:
@@ -795,6 +750,12 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_re
         h0                   -- value of the Hubble rate at present time (100 h0 Mpc/km/s)
                                 (default is one)
         Neff                 -- effective number of neutrino species (default is 3)
+
+    Returns:
+        freq                 -- array of frequencies (normalized with Rstar if redshift
+                                is False and in Hz otherwise)
+        OmGW                 -- GW spectrum normalized to the radiation energy density
+                                (or to the present critical density if redshift is True)
     '''
 
     cs         = np.sqrt(cs2)
@@ -892,7 +853,7 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_re
                         model_shape)
 
     if model_shape == ['sw_LISAold']:
-        
+
         S  = Sf_shape_sw(s,  model=model_shape)
         mu = np.trapezoid(S, np.log(s))
         # normalized spectral shape
@@ -982,7 +943,54 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_re
 
     return freqs, OmGW
 
-################# TEMPLATE FOR MHD TURBULENCE #################
+############################ TURBULENCE ############################
+
+################# fit for the anisotropic stresses #################
+
+def pPi_fit(s, b=b_turb, alpPi=alpPi, fPi=fPi, bPi=bPi_vort):
+
+    """
+    Function that computes the fit of the spectrum of the
+    anisotropic stresses.
+
+    The spectrum can be computed numerically for a Gaussian
+    source using EPi_correlators in GW_models module.
+
+    Default values are valid for a purely vortical velocity or
+    magnetic field following a von Kárman spectrum, as indicated
+    in RoperPol:2023bqa, equation 17.
+
+    Using different values of alpPi, fPi, bPi can be generalized
+    to other sources, see RoperPol:2025b
+
+    It assumes that the anisotropic stresses can
+    be expressed with the following fit:
+
+    p_Pi = (1 + (f/fPi)^alpPi)^(-(b + bPi)/alpPi)
+
+    Arguments:
+        s     -- array of frequencies, normalized by the characteristic scale,
+                 s = f R*
+        b     -- high-f slope f^(-b)
+        alpPi -- smoothness parameter of the fit
+        fPi   -- position of the fit break
+        bPi   -- extra power law decay of the spectrum of the
+                 stresses compared to b
+
+    Returns:
+        Pi    -- array of the anisotropic stresses spectrum
+        fGW   -- maximum value of the function s * Pi that determines
+                 the amplitude of the GW spectrum for MHD turbulence
+        pimax -- maximum value of Pi when s = fGW
+    """
+
+    Pi    = an.smoothed_bPL(s, a=0, b=b + bPi, kpeak=fPi,
+                            alp=alpPi, norm=False, alpha2=True,
+                            dlogk=False)
+    pimax = ((b + bPi)/(b + bPi - 1))**(-(b + bPi)/alpPi)
+    fGW   = fPi/(b + bPi - 1)**(1/alpPi)
+
+    return Pi, fGW, pimax
 
 def ampl_GWB_turb(a_turb=a_turb, b_turb=b_turb, alp=alp_turb):
 
@@ -1006,28 +1014,38 @@ def ampl_GWB_turb(a_turb=a_turb, b_turb=b_turb, alp=alp_turb):
 
     return ampl
 
-def pref_GWB_turb(Oms=Oms_ref, lf=lf_ref, b_turb=b_turb,
-                  alpPi=alpPi, fPi=fPi, bPi=bPi_vort):
+def pref_GWB_turb(Oms=Oms_ref, lf=lf_ref):
 
     '''
-    Dependence of the GW spectrum from turbulence on the mean
-    size of the bubbles lf = R* H_* and the kinetic energy density Oms.
+    Dependence of the GW spectrum from turbulence on the turbulence length
+    scale, defined as lf = 2pi/kf, where kf is the position of the spectral peak,
+    and the fraction of turbulent to radiation energy density Oms.
 
     Reference is RoperPol:2023bqa, equation 9, based on RoperPol:2022iel,
     section II D.
+
+    Also used in EPTA:2023xxk, Caprini:2024hue
+    See further details in RoperPol:2025b
 
     Arguments:
         Oms -- energy density of the source (i.e., 1/2 vrms^2)
         lf  -- mean-size of the bubbles, given as a fraction of the Hubble radius
     '''
 
-    pref = (Oms*lf)**2
+    if not mult_Oms: Oms = [Oms]
+    if not mult_lf:  lf  = [lf]
+    Oms, lf = np.meshgrid(Oms, lf, indexing='ij')
+    pref    = (Oms*lf)**2
+
+    if   not mult_Oms and not mult_lf: pref = pref[0, 0]
+    elif not mult_Oms: pref = pref[0, :]
+    elif not mult_lf:  pref = pref[:, 0]
 
     return pref
 
-def Sf_shape_turb(s, b_turb=b_turb, N=N_turb, Oms=.1, lf=1., alpPi=alpPi, fPi=fPi,
-                  bPi=bPi_vort,
-                  ref='f', cs2=cs2_ref, multi=False):
+def Sf_shape_turb(s, Oms=Oms_ref, lf=lf_ref, N=N_turb, cs2=cs2_ref, expansion=True,
+                  tdecay=tdecay_ref, tp='magnetic', b_turb=b_turb, alpPi=alpPi,
+                  fPi=fPi, bPi=bPi_vort):
 
     """
     Function that computes the spectral shape derived for GWs generated by
@@ -1043,26 +1061,148 @@ def Sf_shape_turb(s, b_turb=b_turb, N=N_turb, Oms=.1, lf=1., alpPi=alpPi, fPi=fP
     Arguments:
         s      -- normalized wave number, divided by the mean bubbles
                   size, s = f R*
-        b_turb -- slope of the velocity/magnetic field spectrum in the UV
-        N      -- relation between the decay time and the effective
-                  source duration
         Oms    -- energy density of the source (i.e., 1/2 vrms^2)
         lf     -- characteristic scale of the turbulence as a
-                 fraction of the Hubble radius, R* H*
-        alpPi, fPi, bPi_vort  -- parameters of the pPi_fit
-        fPi    --
-        alp1_sw, alp2_sw -- transition parameters for sound wave template, used when tp = 'sw_HL'
+                  fraction of the Hubble radius, R* H*
+        N      -- relation between the decay time and the effective
+                  source duration
+        cs2    -- square of the speed of sound (default is 1/3)
+        tdecay -- determines the finite duration in the cit model
+                  (default is to use eddy turnover time)
+        tp     -- type of source (default is 'magnetic', other options are
+                  'kinetic' or 'max') used to compute the characteristic
+                  velocity in the eddy turnover time
+        b_turb -- slope of the velocity/magnetic field spectrum in the UV
+        alpPi, fPi, bPi -- parameters of the pPi_fit
 
     Returns:
-        spec -- spectral shape, normalized such that S = 1 at its peak
+        S      -- spectral shape
     """
 
-    TGW      = mod.TGW_func(s, N=N, Oms=Oms, lf=lf, cs2=cs2, multi=multi)
-    Pi, _, _ = pPi_fit(s, b=b_turb, alpPi=alpPi, fPi=fPi, bPi=bPi)
-    s3Pi = s**3*Pi
-    BB   = 1/lf**2
-    if multi: s3Pi, BB, _ = np.meshgrid(s3Pi, BB, Oms, indexing='ij')
+    if not mult_Oms: Oms = [Oms]
+    if not mult_lf:  lf  = [lf]
 
-    S = s3Pi*BB*TGW
+    TGW = mod.TGW_func(s, Oms=Oms, lf=lf, N=N, cs2=cs2, expansion=expansion,
+                       tdecay=tdecay, tp=tp)
+
+    Pi, _, _ = pPi_fit(s, b=b_turb, alpPi=alpPi, fPi=fPi, bPi=bPi)
+    s3Pi  = s**3*Pi
+    s3Pi, Oms, lf = np.meshgrid(s3Pi, Oms, lf, indexing='ij')
+    S = s3Pi/lf**2*TGW
+
+    if   not mult_Oms and not mult_lf: S = S[:, 0, 0]
+    elif not mult_Oms: S = S[:, 0, :]
+    elif not mult_lf:  S = S[:, :, 0]
 
     return S
+
+def OmGW_spec_turb(s, Oms, lfs, N=N_turb, cs2=cs2_ref, quiet=True, a_turb=a_turb,
+                   b_turb=b_turb, alp=alp_turb, expansion=True, tdecay=tdecay_ref,
+                   tp='magnetic', alpPi=alpPi, fPi=fPi, bPi=bPi_vort
+                   redshift=False, gstar=gref, gS=0, T=Tref, h0=1., Neff=Neff_ref):
+
+    '''
+    Function that computes the GW spectrum (normalized to radiation
+    energy density within RD era) for turbulence.
+
+    The general shape of the GW spectrum is based on that of reference
+    RoperPol:2023bqa, equations 3 and 9:
+
+        OmGW (f) = 3 * ampl_GWB * pref_GWB * S(f),
+
+    where:
+
+    - ampl_GWB is the efficiency of GW production by the specific source,
+    - pref_GWB is the dependence of the GW amplitude on the source
+      parameters (e.g. length scale and strength of the source),
+    - S(f) is a normalized spectral shape, such that int S(f) d ln f = 1
+
+    The GW spectrum as an observable at present time is then computed using
+
+        OmGW0 (f) = OmGW x FGW0,
+
+    where FGW0 is the redshift from the time of generation to present
+    time, computed in cosmoGW.py that depends on the degrees of freedom at
+    the time of generation.
+
+    Arguments:
+        s               -- normalized wave number, divided by the mean bubbles
+                           size Rstar, s = f R*
+        Oms             -- energy density of the source (i.e., 1/2 vrms^2)
+        lf              -- characteristic scale of the turbulence as a
+                           fraction of the Hubble radius, R* H*
+        N               -- relation between the decay time and the effective
+                           source duration
+        cs2             -- square of the speed of sound
+                           (default is 1/3 for radiation domination)
+        quiet           -- option to avoid printing debugging info (default is True)
+        a_turb, b_turb, -- slopes and smoothness of the turbulent
+        alp_turb           source spectrum (either magnetic or kinetic), default
+                           values are for a von Karman spectrum
+        expansion       -- option to include the Universe expansion
+                           (in radiation domination)
+        tdecay          -- determines the finite duration in the cit model
+                           (default is to use eddy turnover time)
+        tp              -- type of source (default is 'magnetic', other options are
+                           'kinetic' or 'max') used to compute the characteristic
+                           velocity in the eddy turnover time
+        alpPi, fPi, bPi -- parameters of the pPi_fit
+        redshift        -- option to redshift the GW spectrum and frequencies to
+                           present time (default is False)
+        gstar           -- number of degrees of freedom (default is 100) when
+                           redshift = True
+        gS              -- number of adiabatic degrees of freedom (default is gstar)
+                           when redshift = True
+        T               -- temperature scale (default is 100 GeV) when redshift = True
+        h0              -- value of the Hubble rate at present time (100 h0 Mpc/km/s)
+                           (default is one)
+        Neff            -- effective number of neutrino species (default is 3)
+
+    Returns:
+        freq            -- array of frequencies (normalized with Rstar if redshift
+                           is False and in Hz otherwise)
+        OmGW            -- GW spectrum normalized to the radiation energy density
+                           (or to the present critical density if redshift is True)
+    '''
+
+    mult_Oms = isinstance(Oms, (list, tuple, np.ndarray))
+    mult_lfs = isinstance(lfs,  (list, tuple, np.ndarray))
+
+    if not mult_Oms: Oms = np.array([Oms])
+    if not mult_lfs: lfs = np.array([lfs])
+
+    #### Computing ampl_GWB
+
+    ampl = ampl_GWB_turb(a_turb=a_turb, b_turb=b_turb, alp=alp_turb)
+
+    #### Computing pref_GWB
+
+    pref = pref_GWB_turb(Oms=Oms, lf=lfs)
+
+    #### Computing the spectral shape
+
+    S = Sf_shape_turb(s, Oms=Oms, lf=lfs, N=N, cs2=cs2, expansion=expansion,
+                      tdecay=tdecay, tp=tp, b_turb=b_turb, alpPi=alpPi,
+                      fPi=fPi, bPi=bPi)
+
+    OmGW  = np.zeros((len(s), len(Oms), len(lfs)))
+    freqs = np.zeros((len(s), len(lfs)))
+
+    for l in range(0, len(lfs)):
+        # express freqs as f/H_ast (instead of f/R_ast)
+        freqs[:, l] = s/lf[l]
+        for j in range(0, len(Oms)):
+            OmGW[:, j, l] = 3*ampl*pref[j, l]*S[:, j, l]
+
+    if redshift:
+        freqs, OmGW = cGW.shift_OmGW_today(freqs, OmGW, g=gstar, gS=gS,
+                                           T=T, h0=h0,  kk=False, Neff=Neff)
+
+    if not mult_lf:
+        freqs = freqs[:, 0]
+        if not mult_Oms: OmGW = OmGW[:, 0, 0]
+        else:            OmGW = OmGW[:, :, 0]
+    else:
+        if not mult_Oms: OmGW = OmGW[:, 0, :]
+
+    return freqs, OmGW
