@@ -302,8 +302,10 @@ def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[],
             tst = True
 
         # take values from higgsless dataset
+        #dirr   = importlib.resources.open_binary('cosmoGW',
+        #                'resources/higgsless/parameters_fit_sims.csv')
         dirr   = importlib.resources.open_binary('cosmoGW',
-                        'resources/higgsless/parameters_fit_sims.csv')
+                        'parameters_fit_sims.csv')
 
         df     = pd.read_csv(dirr)
 
