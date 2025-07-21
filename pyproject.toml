@@ -26,7 +26,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "License :: OSI Approved :: GNU General Public License",
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 
 [project.urls]
 Homepage = "https://github.com/cosmoGW/cosmoGW"
