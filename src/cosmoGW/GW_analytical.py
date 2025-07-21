@@ -377,8 +377,8 @@ def calC(a=a_ref, b=b_ref, alp=alp_ref, tp='vort', norm=True, alpha2=False,
     It gives the value of the spectrum at K -> 0 limit as a prefactor
     pref that depends on the type of source and an integral over
 
-    zeta^2/P^4     when dlog is True (see appendix B of RoperPol:2025b)
-    zeta^2/P^2     when dlog is False (eq. 22 of RoperPol:2022iel for
+    zeta^2/P^4     when dlogk is True (see appendix B of RoperPol:2025b)
+    zeta^2/P^2     when dlogk is False (eq. 22 of RoperPol:2022iel for
                      vortical fields and eq. 46 of RoperPol:2023dzg
                      for compressional fields
 
