@@ -49,6 +49,7 @@ import cosmoGW.cosmology as co
 import importlib
 
 dir0 = 'resources/detectors_sensitivity/'
+dir0 = ''
 
 # Reference values for LISA and Taiji interferometers
 L_LISA   = 2.5e6*u.km
