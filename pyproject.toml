@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cosmoGW"
-version = "0.0.8"
+version = "0.0.15"
 authors = [
   { name="Alberto Roper Pol", email="alberto.roperpol@unige.ch" },
 ]
@@ -24,15 +24,9 @@ dependencies = [
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
-    "License :: OSI Approved :: GNU General Public License",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 
 [project.urls]
 Homepage = "https://github.com/cosmoGW/cosmoGW"
-
-[tool.setuptools.packages.find]
-where = ["src/cosmoGW/resources"]
-
-[tool.setuptools.package-data]
-mypkg = ["*.csv", "*.rst", "*.txt"]
