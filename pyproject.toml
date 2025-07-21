@@ -30,3 +30,9 @@ requires-python = ">=3.8"
 
 [project.urls]
 Homepage = "https://github.com/cosmoGW/cosmoGW"
+
+[tool.setuptools.packages.find]
+where = ["src/cosmoGW/resources"]
+
+[tool.setuptools.package-data]
+mypkg = ["*.csv", "*.rst", "*.txt"]
