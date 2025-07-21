@@ -1098,7 +1098,7 @@ def Sf_shape_turb(s, Oms=Oms_ref, lf=lf_ref, N=N_turb, cs2=cs2_ref, expansion=Tr
 
 def OmGW_spec_turb(s, Oms, lfs, N=N_turb, cs2=cs2_ref, quiet=True, a_turb=a_turb,
                    b_turb=b_turb, alp=alp_turb, expansion=True, tdecay=tdecay_ref,
-                   tp='magnetic', alpPi=alpPi, fPi=fPi, bPi=bPi_vort
+                   tp='magnetic', alpPi=alpPi, fPi=fPi, bPi=bPi_vort,
                    redshift=False, gstar=gref, gS=0, T=Tref, h0=1., Neff=Neff_ref):
 
     '''
