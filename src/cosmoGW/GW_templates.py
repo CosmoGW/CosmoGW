@@ -134,7 +134,7 @@ N_turb   = mod.N_turb  # ratio between the effective time duration of
                        # the source and the eddy turnover time,
                        # based on the simulations of RoperPol:2022iel,
                        # used in RoperPol:2023bqa
-t_decay_ref = 'eddy'   # decaying time used in the constant-in-time model
+tdecay_ref = 'eddy'    # decaying time used in the constant-in-time model
                        # (default is eddy turnover time)
 
 ### Reference values for sound waves templates
