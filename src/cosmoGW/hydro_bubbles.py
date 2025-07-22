@@ -1050,8 +1050,12 @@ def kappas_from_prof(vw, alpha, xis, ws, vs):
     and thermal factor omega from the 1d profiles.
     '''
 
-    kappa = 4/vw**3/alpha*np.trapezoid(xis**2*ws/(1 - vs**2)*vs**2, xis)
-    omega = 3/vw**3/alpha*np.trapezoid(xis**2*(ws - 1), xis)
+    try:
+        kappa = 4/vw**3/alpha*np.trapezoid(xis**2*ws/(1 - vs**2)*vs**2, xis)
+        omega = 3/vw**3/alpha*np.trapezoid(xis**2*(ws - 1), xis)
+    except:
+        kappa = 4/vw**3/alpha*np.trapz(xis**2*ws/(1 - vs**2)*vs**2, xis)
+        omega = 3/vw**3/alpha*np.trapz(xis**2*(ws - 1), xis)
 
     return kappa, omega
 
@@ -1204,20 +1208,24 @@ def fp_z(xi, vs, z, lz=False, ls=[], multi=True, quiet=False):
 
         for i in range(0, Nvws):
             v_ij, z_ij = np.meshgrid(vs[i, 1:], z, indexing='ij')
-            fpzs[i, :] = -4*np.pi*np.trapezoid(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
+            try:    fpzs[i, :] = -4*np.pi*np.trapezoid(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
+            except: fpzs[i, :] = -4*np.pi*np.trapz(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
             if lz:
                 l_ij, z_ij = np.meshgrid(ls[i, 1:], z, indexing='ij')
-                lzs[i, :]  = 4*np.pi*np.trapezoid(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
+                try:    lzs[i, :]  = 4*np.pi*np.trapezoid(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
+                except: lzs[i, :]  = 4*np.pi*np.trapz(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
 
             if not quiet: print('vw ', i + 1, '/', Nvws, ' computed')
 
     else:
 
         v_ij, z_ij = np.meshgrid(vs[1:], z, indexing='ij')
-        fpzs = -4*np.pi*np.trapezoid(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
+        try:    fpzs = -4*np.pi*np.trapezoid(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
+        except: fpzs = -4*np.pi*np.trapz(j1_z*xi_ij**2*v_ij, xi[1:], axis=0)
         if lz:
             l_ij, z_ij = np.meshgrid(ls[1:], z, indexing='ij')
-            lzs = 4*np.pi*np.trapezoid(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
+            try:    lzs = 4*np.pi*np.trapezoid(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
+            except: lzs = 4*np.pi*np.trapz(j0_z*xi_ij**2*l_ij, xi[1:], axis=0)
 
     if lz:
         return fpzs, lzs
