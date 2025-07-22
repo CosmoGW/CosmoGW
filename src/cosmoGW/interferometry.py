@@ -46,10 +46,16 @@ import astropy.units     as u
 import numpy  as np
 import pandas as pd
 import cosmoGW.cosmology as co
-import importlib
 
-dir0 = 'resources/detectors_sensitivity/'
-dir0 = ''
+## find the site-packages where cosmoGW is installed
+import sys
+paths = sys.path
+for path in paths:
+    if 'site-packages' in path:
+        pth = path
+        break
+HOME = pth + '/cosmoGW/'
+dir0 = HOME + 'resources/detectors_sensitivity/'
 
 # Reference values for LISA and Taiji interferometers
 L_LISA   = 2.5e6*u.km
@@ -86,8 +92,7 @@ def read_response_LISA_Taiji(dir0=dir0, TDI=True, interf='LISA'):
     """
 
     if TDI:
-        dirr = importlib.resources.open_binary('cosmoGW',
-                        dir0 + interf + '_response_f_TDI.csv')
+        dirr = dir0 + interf + '_response_f_TDI.csv'
         df   = pd.read_csv(dirr)
         fs   = np.array(df['frequency'])
         fs   = fs*u.Hz
@@ -96,8 +101,7 @@ def read_response_LISA_Taiji(dir0=dir0, TDI=True, interf='LISA'):
         DAEs = np.array(df['DAE'])
 
     else:
-        dirr = importlib.resources.open_binary('cosmoGW',
-                        dir0 + interf + '_response_f_X.csv')
+        dirr = dir0 + interf + '_response_f_X.csv'
         df   = pd.read_csv(dirr)
         fs   = np.array(df['frequency'])
         fs   = fs*u.Hz
@@ -204,8 +208,7 @@ def read_csv(file, dir0=dir0, a='f', b='Omega'):
         y -- second array of the file
     """
 
-    dirr = importlib.resources.open_binary('cosmoGW',
-                        dir0 + file + '.csv')
+    dirr = dir0 + file + '.csv'
     df   = pd.read_csv(dirr)
     x    = np.array(df[a])
     y    = np.array(df[b])
@@ -228,8 +231,7 @@ def read_detector_PLIS_Schmitz(dir0=dir0 + '/power-law-integrated_sensitivities/
     """
 
     frac  = SNR/np.sqrt(T)
-    dirr  = importlib.resources.open_binary('cosmoGW',
-                                            dir0 + 'plis_' + det + '.dat')
+    dirr  = dir0 + 'plis_' + det + '.dat'
     BBO   = pd.read_csv(dirrr, header=14, delimiter='\t',
                         names=['f', 'Omega (log)', 'hc (log)', 'Sh (log)'])
     f     = 10**np.array(BBO['f'])
@@ -254,8 +256,7 @@ def read_MAC(dir0=dir0 + '/LISA_Taiji/', M='MAC', V='V'):
              function (default 'V')
     """
 
-    dirr = importlib.resources.open_binary('cosmoGW',
-                                           dir0 + M + '_' + V + '.csv')
+    dirr = dir0 + M + '_' + V + '.csv'
     df   = pd.read_csv(dirr)
     f    = np.array(df['f'])
     MAC  = np.array(df['M'])
