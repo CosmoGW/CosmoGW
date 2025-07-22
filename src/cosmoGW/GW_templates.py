@@ -86,7 +86,15 @@ import cosmoGW.cosmology     as co
 import cosmoGW.GW_analytical as an
 import cosmoGW.GW_models     as mod
 import cosmoGW.hydro_bubbles as hb
-import importlib
+
+## find the site-packages where cosmoGW is installed
+import sys
+paths = sys.path
+for path in paths:
+    if 'site-packages' in path:
+        pth = path
+        break
+HOME = pth + '/cosmoGW/'
 
 # reference values
 cs2_ref    = hb.cs2_ref     # speed of sound squared
@@ -302,12 +310,8 @@ def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[],
             tst = True
 
         # take values from higgsless dataset
-        #dirr   = importlib.resources.open_binary('cosmoGW',
-        #                'resources/higgsless/parameters_fit_sims.csv')
-        dirr   = importlib.resources.open_binary('cosmoGW',
-                        'parameters_fit_sims.csv')
-
-        df     = pd.read_csv(dirr)
+        dirr = HOME + 'resources/higgsless/parameters_fit_sims.csv'
+        df   = pd.read_csv(dirr)
 
         if numerical:
             Omegas, Omnum, val_alphas, val_vws = \
@@ -615,10 +619,7 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
                 return 0
 
             # take values from higgsless dataset
-            #dirr     = importlib.resources.open_binary('cosmoGW',
-            #                'resources/higgsless/parameters_fit_sims.csv')
-            dirr     = importlib.resources.open_binary('cosmoGW',
-                            'parameters_fit_sims.csv')
+            dirr     = HOME + 'resources/higgsless/parameters_fit_sims.csv'
             df       = pd.read_csv(dirr)
 
             val_str  = 'k1'
@@ -807,10 +808,7 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_re
         # Higgsless simulations of Caprini:2024gyk and interpolate to
         # values of alpha and vws
 
-        #dirr    = importlib.resources.open_binary('cosmoGW',
-        #               'resources/higgsless/parameters_fit_sims.csv')
-        dirr    = importlib.resources.open_binary('cosmoGW',
-                       'parameters_fit_sims.csv')
+        dirr    = HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df      = pd.read_csv(dirr)
         val_str = 'curly_K_0_512'
         K       = interpolate_HL_vals(df, vws, alphas, quiet=quiet,
@@ -828,10 +826,7 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_re
     interpol_b = False
     if interpolate_HL_decay and model_decay == 'decay':
 
-        #dirr    = importlib.resources.open_binary('cosmoGW',
-        #            'resources/higgsless/parameters_fit_sims.csv')
-        dirr    = importlib.resources.open_binary('cosmoGW',
-                    'parameters_fit_sims.csv')
+        dirr    = HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df      = pd.read_csv(dirr)
 
         val_str = 'b'
