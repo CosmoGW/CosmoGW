@@ -39,6 +39,27 @@ arXiv:2201.05630.
 
 import astropy.units as u
 import numpy as np
+
+def find_path():
+
+    ## find the directory where cosmoGW is installed within sys.path
+    import sys
+    import os
+    found = False
+    paths = sys.path
+    for path in paths:
+      subdirs = os.walk(path)
+      subdirs = list(subdirs)
+      for j in subdirs:
+        if 'cosmoGW' in j[0]:
+            pth = j[0]
+            found = True
+            break
+      if found: break
+    return pth + '/'
+
+HOME = find_path()
+
 import cosmoGW.cosmology as co
 
 # reference values and constants (EWPT)
