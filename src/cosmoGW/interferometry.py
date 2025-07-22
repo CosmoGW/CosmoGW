@@ -47,14 +47,7 @@ import numpy  as np
 import pandas as pd
 import cosmoGW.cosmology as co
 
-## find the site-packages where cosmoGW is installed
-import sys
-paths = sys.path
-for path in paths:
-    if 'site-packages' in path:
-        pth = path
-        break
-HOME = pth + '/cosmoGW/'
+from cosmoGW.cosmoGW import HOME
 dir0 = HOME + 'resources/detectors_sensitivity/'
 
 # Reference values for LISA and Taiji interferometers
