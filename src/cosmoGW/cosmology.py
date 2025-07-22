@@ -51,9 +51,15 @@ import astropy.constants as const
 import astropy.units as u
 import pandas as pd
 import numpy  as np
-import importlib
 
-#import cosmoGW.spectra as sp
+## find the site-packages where cosmoGW is installed
+import sys
+paths = sys.path
+for path in paths:
+    if 'site-packages' in path:
+        pth = path
+        break
+HOME = pth + '/cosmoGW/'
 
 # reference values and constants
 Tref     = 100*u.GeV  # EWPT
@@ -313,8 +319,7 @@ def thermal_g(dir0='', T=Tref, s=0, file=True, Neff=Neff_ref):
         try:
             dirr = dir0 + 'T_gs.csv'
             if dir0 == '':
-                dirr = importlib.resources.open_binary('cosmoGW',
-                    'resources/cosmology/T_gs.csv')
+                dirr = HOME + '/resources/cosmology/T_gs.csv'
             df = pd.read_csv(dirr)
             Ts = np.array(df['T [GeV]'])
             if s == 0: gs = np.array(df['g_*'])
