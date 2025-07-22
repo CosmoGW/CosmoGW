@@ -87,14 +87,7 @@ import cosmoGW.GW_analytical as an
 import cosmoGW.GW_models     as mod
 import cosmoGW.hydro_bubbles as hb
 
-## find the site-packages where cosmoGW is installed
-import sys
-paths = sys.path
-for path in paths:
-    if 'site-packages' in path:
-        pth = path
-        break
-HOME = pth + '/cosmoGW/'
+HOME = cGW.HOME
 
 # reference values
 cs2_ref    = hb.cs2_ref     # speed of sound squared
@@ -652,7 +645,7 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
             if not quiet: data_warning(boxsize='%i and %i'%(bs_k1HL,bs_k2HL))
 
             S = an.smoothed_double_bPL(s, peaks1, peaks2, A=1., a=a_sw, b=b_sw,
-                                       c=c_sw, alp1=alp1_sw, alp2=alp2_sw)
+                                       c=c_sw, alp1=alp1_sw, alp2=alp2_sw, alpha2=True)
 
     else:
         print('Choose an available model in Sf_shape_sw for the sound wave',
@@ -858,7 +851,8 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_re
     if model_shape == ['sw_LISAold']:
 
         S  = Sf_shape_sw(s,  model=model_shape)
-        mu = np.trapezoid(S, np.log(s))
+        try:    mu = np.trapezoid(S, np.log(s))
+        except: mu = np.trapz(S, np.log(s))
         # normalized spectral shape
         S  = S/mu
         S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
@@ -868,7 +862,8 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_re
         Dw = abs(vws - cs)/vws
         S  = Sf_shape_sw(s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
                          alp1_sw=alp1_sw, alp2_sw=alp2_sw)
-        mu = np.trapezoid(S, np.log(s), axis=0)
+        try:    mu = np.trapezoid(S, np.log(s), axis=0)
+        except: mu = np.trapz(S, np.log(s), axis=0)
         S  = S/mu
         S0 = np.zeros((len(s), len(vws), len(alphas)))
         for i in range(0, len(alphas)):
@@ -900,7 +895,8 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True, a_sw=a_sw_re
                 bs_k1HL=bs_k1HL, bs_k2HL=bs_HL_eff, vws=vws, alphas=alphas, quiet=quiet,
                 interpolate_HL_n3=interpolate_HL_n3, corrRs=corrRs, cs2=cs2)
 
-        mu = np.trapezoid(S, np.log(s), axis=0)
+        try:    mu = np.trapezoid(S, np.log(s), axis=0)
+        except: mu = np.trapz(S, np.log(s), axis=0)
         S  = S/mu
 
         if not interpolate_HL_shape:
