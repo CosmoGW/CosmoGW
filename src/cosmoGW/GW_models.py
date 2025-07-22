@@ -262,6 +262,90 @@ def EPi_correlators(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
 
 ###########  FUNCTIONS FOR THE CONSTANT-IN-TIME MODEL ###########
 
+def Delta_cit(t, k, tini=1, tfin=1e4, expansion=True):
+
+    """
+    Function that computes the value of the function Delta(k, t) used in the
+    analytical calculations of the GW spectrum when assuming
+    a constant sourcing stress spectrum, i.e., Pi(k, t1, t2) = Pi(k)
+
+    Arguments:
+        k         -- array of wave numbers
+        t         -- array of times
+        tini      -- initial time of the turbulence sourcing (default 1)
+        tfin      -- final time of the turbulence sourcing
+        expansion -- option to include the expansion of the Universe
+                     during radiation domination (default is True)
+
+    Returns:
+        Delta     -- function Delta(k, t)
+    """
+
+    import scipy.special as spe
+
+    mult_t = isinstance(t, (list, tuple, np.ndarray))
+    mult_k = isinstance(k,  (list, tuple, np.ndarray))
+
+    if not mult_t: t = [t]
+    if not mult_k: k = [k]
+
+    tij, kij = np.meshgrid(t, k, indexing='ij')
+    cost     = np.cos(kij*tij)
+    sint     = np.sin(kij*tij)
+    tij[np.where(tij>tfin)] = tfin
+    if expansion:
+        si_t, ci_t       = spe.sici(kij*tij)
+        si_tini, ci_tini = spe.sici(kij*tini)
+    else:
+        ci_t    =  np.sin(kij*tij)/kij
+        ci_tini =  np.sin(kij*tini)/kij
+        si_t    = -np.cos(kij*tij)/kij
+        si_tini = -np.cos(kij*tini)/kij
+
+    aux1 = cost*(ci_t - ci_tini)
+    aux2 = sint*(si_t - si_tini)
+    D    = aux1 + aux2
+
+    if   not mult_t and not mult_k: D = D[0, 0]
+    elif not mult_t: D = D[0, :]
+    elif not mult_k: D = D[:, 0]
+
+    return D
+
+def Delta2_cit_aver(k, tini=1, tfin=1e4, expansion=True):
+
+    """
+    Function that computes the value of the function D(k, t) used in the
+    analytical calculations of the GW energy density spectrum when assuming
+    a constant sourcing stress spectrum, i.e., Pi(k, t1, t2) = Pi(k)
+
+    Arguments:
+        k         -- array of wave numbers
+        tini      -- initial time of the turbulence sourcing (default 1)
+        tfin      -- final time of the turbulence sourcing
+        expansion -- option to include the expansion of the Universe
+                     during radiation domination (default is True)
+
+    Returns:
+        D2 -- function D^2(k, t) averaged over t0
+    """
+
+    import scipy.special as spe
+
+    if expansion:
+        si_t, ci_t       = spe.sici(k*tfin)
+        si_tini, ci_tini = spe.sici(k*tini)
+    else:
+        ci_t    =  np.sin(k*tfin)/k
+        ci_tini =  np.sin(k*tini)/k
+        si_t    = -np.cos(k*tfin)/k
+        si_tini = -np.cos(k*tini)/k
+    aux1 = (ci_t - ci_tini)
+    aux2 = (si_t - si_tini)
+    D2   = .5*(aux1**2 + aux2**2)
+
+    return D2
+
 def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb, cs2=cs2_ref,
              expansion=True, tdecay='eddy', tp='magnetic'):
 
