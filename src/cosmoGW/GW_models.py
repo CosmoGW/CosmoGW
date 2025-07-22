@@ -502,8 +502,9 @@ def compute_kin_spec_ssm(z, vws, fp, l=[], sp='sum', type_n='exp', cs2=cs2_ref,
     funcT = np.zeros((len(vws), len(qbeta), len(TT)))
 
     for i in range(0, len(vws)):
-        funcT[i, :, :] = nu_T*TT_ij**6*np.interp(TT_ij*q_ij, z, A2[i, :])
-        Pv[i, :]       = np.trapezoid(funcT[i, :, :], TT, axis=1)
+        funcT[i, :, :]   = nu_T*TT_ij**6*np.interp(TT_ij*q_ij, z, A2[i, :])
+        try:    Pv[i, :] = np.trapezoid(funcT[i, :, :], TT, axis=1)
+        except: Pv[i, :] = np.trapz(funcT[i, :, :], TT, axis=1)
 
     if dens == False:
         Rstar_beta   = hb.Rstar_beta(vw=vws[i], cs2=cs2, corr=corr)
@@ -554,7 +555,8 @@ def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
         EK_ptilde = np.interp(ptilde, k, EK)
 
         Omm1   = (1 - z**2)**2*p/ptilde**3*EK_p*EK_ptilde
-        Omm[i] = np.trapezoid(Omm1, p)
+        try:    Omm[i] = np.trapezoid(Omm1, p)
+        except: Omm[i] = np.trapz(Omm1, p)
 
     return kp, Omm
 
@@ -633,11 +635,14 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
 
     Omm = np.zeros((l + 1, len(kp)))
     for i in range(0, l):
-        Pi_1 = np.trapezoid(EK_ptilde/ptilde**4*(1 - zij**2)**2*Delta_mn[i, :, :, :],
-                        z, axis=2)
+        try:    Pi_1 = np.trapezoid(EK_ptilde/ptilde**4*(1 - zij**2)**2*Delta_mn[i, :, :, :],
+                                    z, axis=2)
+        except: Pi_1 = np.trapz(EK_ptilde/ptilde**4*(1 - zij**2)**2*Delta_mn[i, :, :, :],
+                                z, axis=2)
         kij, EK_pij = np.meshgrid(kp, EK_p, indexing='ij')
         kij, pij    = np.meshgrid(kp, p, indexing='ij')
-        Omm[i, :]   = np.trapezoid(Pi_1*pij**2*EK_pij, p, axis=1)
+        try:    Omm[i, :]   = np.trapezoid(Pi_1*pij**2*EK_pij, p, axis=1)
+        except: Omm[i, :]   = np.trapz(Pi_1*pij**2*EK_pij, p, axis=1)
 
     return kp, Omm
 

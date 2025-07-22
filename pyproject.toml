@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cosmoGW"
-version = "0.0.17"
+version = "0.0.21"
 authors = [
   { name="Alberto Roper Pol", email="alberto.roperpol@unige.ch" },
 ]
@@ -18,7 +18,8 @@ dependencies = [
   "numpy",
   "pandas",
   "astropy",
-  "scipy"
+  "scipy",
+  "latex"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
