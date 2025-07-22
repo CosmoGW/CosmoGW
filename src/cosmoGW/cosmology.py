@@ -51,15 +51,7 @@ import astropy.constants as const
 import astropy.units as u
 import pandas as pd
 import numpy  as np
-
-## find the site-packages where cosmoGW is installed
-import sys
-paths = sys.path
-for path in paths:
-    if 'site-packages' in path:
-        pth = path
-        break
-HOME = pth + '/cosmoGW/'
+from cosmoGW.cosmoGW import HOME
 
 # reference values and constants
 Tref     = 100*u.GeV  # EWPT
@@ -646,8 +638,12 @@ def friedmann_solver(a, dir0='', a0=1., h0=h0_ref, OmL0=OmL0_ref,
         Om_as = np.interp(aas, a, Om_tot)
         fft   = 1/aas/np.sqrt(Om_as)
         ffeta = fft/aas
-        difft[i]   = np.trapezoid(fft, aas)
-        diffeta[i] = np.trapezoid(ffeta, aas)
+        try:
+            difft[i]   = np.trapezoid(fft, aas)
+            diffeta[i] = np.trapezoid(ffeta, aas)
+        except:
+            difft[i]   = np.trapz(fft, aas)
+            diffeta[i] = np.trapz(ffeta, aas)
 
     g0, g0s, T0, H0 = values_0(h0=h0)
     t   = difft/H0
