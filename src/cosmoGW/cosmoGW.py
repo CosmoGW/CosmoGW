@@ -51,21 +51,17 @@ def find_path():
       subdirs = os.walk(path)
       subdirs = list(subdirs)
       for j in subdirs:
-        if 'cosmoGW' in j[0]:
-            pth = j[0]
-            found = True
-            break
+        if not 'test' in j[0] and not 'env' in j[0]:
+            if 'cosmoGW' in j[0]:
+                pth = j[0]
+                found = True
+                break
       if found: break
     return pth + '/'
 
 HOME = find_path()
 
 import cosmoGW.cosmology as co
-
-# reference values and constants (EWPT)
-Tref     = 100*u.GeV      # EWPT
-gref     = 100            # EWPT
-Neff_ref = co.Neff_ref    # reference Neff = 3
 
 ########################## SGWB at present time ##########################
 
@@ -230,7 +226,7 @@ def Omega_A(A=1., fref=0, beta=0, h0=1.):
 
 ################ SGWB from the radiation-dominated era ################
 
-def shift_onlyOmGW_today(OmGW, g=gref, gS=0., d=1, h0=1., Neff=Neff_ref):
+def shift_onlyOmGW_today(OmGW, g=co.gref, gS=0., d=1, h0=1., Neff=co.Neff_ref):
 
     """
     Function that shifts the GW energy density spectrum from the time of
@@ -266,8 +262,8 @@ def shift_onlyOmGW_today(OmGW, g=gref, gS=0., d=1, h0=1., Neff=Neff_ref):
 
     return OmGW0
 
-def shift_frequency_today(k, g=gref, gS=0., T=Tref, d=1, kk=True,
-                          Neff=Neff_ref):
+def shift_frequency_today(k, g=co.gref, gS=0., T=co.Tref, d=1, kk=True,
+                          Neff=co.Neff_ref):
 
     """
     Function that transforms the normalized wave number at the time of
@@ -306,8 +302,8 @@ def shift_frequency_today(k, g=gref, gS=0., T=Tref, d=1, kk=True,
 
     return f
 
-def shift_OmGW_today(k, OmGW, g=gref, gS=0., T=Tref, d=1, h0=1.,
-                     kk=True, Neff=Neff_ref):
+def shift_OmGW_today(k, OmGW, g=co.gref, gS=0., T=co.Tref, d=1, h0=1.,
+                     kk=True, Neff=co.Neff_ref):
 
     """
     Function that shifts the GW energy density spectrum from the time of
@@ -347,7 +343,7 @@ def shift_OmGW_today(k, OmGW, g=gref, gS=0., T=Tref, d=1, h0=1.,
 
     return f, OmGW0
 
-def shift_hc_today(k, hc, g=gref, gS=0., T=Tref, d=1, kk=True, Neff=Neff_ref):
+def shift_hc_today(k, hc, g=co.gref, gS=0., T=co.Tref, d=1, kk=True, Neff=co.Neff_ref):
 
     """
     Function that shifts the characteristic amplitude spectrum from the time
