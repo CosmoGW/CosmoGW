@@ -995,11 +995,11 @@ def SNR(f, OmGW, fs, Oms, T=1.):
     Reference is RoperPol:2021xnd, appendix B (equation B.30).
 
     Arguments:
-        f -- frequency array of the GW signal
+        f    -- frequency array of the GW signal
         OmGW -- GW energy density spectrum of the GW signal
-        fs -- frequency array of the GW detector sensitivity
-        Oms -- GW energy density sensitivity of the GW detector
-        T -- duration of observations in years (default 1)
+        fs   -- frequency array of the GW detector sensitivity
+        Oms  -- GW energy density sensitivity of the GW detector
+        T    -- duration of observations in years (default 1)
 
     Returns:
         SNR -- SNR of the GW signal
