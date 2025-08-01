@@ -51,11 +51,11 @@ import cosmoGW.hydro_bubbles as hb
 import cosmoGW.GW_analytical as an
 
 # reference values
-cs2_ref    = hb.cs2_ref  # speed of sound squared
 Oms_ref    = 0.1         # reference source amplitude
                          # (fraction to radiation energy)
 lf_ref     = 0.01        # reference length scale of the source
                          # (normalized by the Hubble radius)
+beta_ref   = 100         # reference value of the nucleation rate beta/H_ast
 N_turb     = 2           # ratio between the effective time duration of
                          # the source and the eddy turnover time,
                          # based on the simulations of RoperPol:2022iel,
@@ -68,6 +68,9 @@ Np_ref     = 3000        # reference number of wave number discretization
 NTT_ref    = 5000        # reference number of lifetimes discretization
 dt0_ref    = 11          # dt0 = 11 is a numerical parameter of the fit
                          # provided in Caprini:2024gyk
+tini_ref   = 1.          # reference initial time of GW production, normalized
+                         # with the Hubble rate
+tfin_ref   = 1e4         # reference final time of GW production in cit model
 
 '''
     RoperPol:2022iel/RoperPol:2023dzg and RoperPol:2025b/RoperPol:2025b
@@ -262,7 +265,7 @@ def EPi_correlators(k, a=an.a_ref, b=an.b_ref, alp=an.alp_ref,
 
 ###########  FUNCTIONS FOR THE CONSTANT-IN-TIME MODEL ###########
 
-def Delta_cit(t, k, tini=1, tfin=1e4, expansion=True):
+def Delta_cit(t, k, tini=tini_ref, tfin=tfin_ref, expansion=True):
 
     """
     Function that computes the value of the function Delta(k, t) used in the
@@ -273,7 +276,7 @@ def Delta_cit(t, k, tini=1, tfin=1e4, expansion=True):
         k         -- array of wave numbers
         t         -- array of times
         tini      -- initial time of the turbulence sourcing (default 1)
-        tfin      -- final time of the turbulence sourcing
+        tfin      -- final time of the turbulence sourcing (default 1e4)
         expansion -- option to include the expansion of the Universe
                      during radiation domination (default is True)
 
@@ -285,9 +288,6 @@ def Delta_cit(t, k, tini=1, tfin=1e4, expansion=True):
 
     mult_t = isinstance(t, (list, tuple, np.ndarray))
     mult_k = isinstance(k,  (list, tuple, np.ndarray))
-
-    if not mult_t: t = [t]
-    if not mult_k: k = [k]
 
     tij, kij = np.meshgrid(t, k, indexing='ij')
     cost     = np.cos(kij*tij)
@@ -312,7 +312,7 @@ def Delta_cit(t, k, tini=1, tfin=1e4, expansion=True):
 
     return D
 
-def Delta2_cit_aver(k, tini=1, tfin=1e4, expansion=True):
+def Delta2_cit_aver(k, tini=tini_ref, tfin=tfin_ref, expansion=True):
 
     """
     Function that computes the value of the function D(k, t) used in the
@@ -346,7 +346,7 @@ def Delta2_cit_aver(k, tini=1, tfin=1e4, expansion=True):
 
     return D2
 
-def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb, cs2=cs2_ref,
+def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb, cs2=hb.cs2_ref,
              expansion=True, tdecay='eddy', tp='magnetic'):
 
     """
@@ -411,8 +411,8 @@ def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb, cs2=cs2_ref,
     mult_Oms = isinstance(Oms, (list, tuple, np.ndarray))
     mult_lf  = isinstance(lf,  (list, tuple, np.ndarray))
 
-    if not mult_Oms: Oms = [Oms]
-    if not mult_lf:  lf  = [lf]
+    # if not mult_Oms: Oms = [Oms]
+    # if not mult_lf:  lf  = [lf]
 
     s, Oms, lf = np.meshgrid(s, Oms, lf, indexing='ij')
 
@@ -431,11 +431,15 @@ def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb, cs2=cs2_ref,
 
     TGW = np.zeros_like(dtfin)
     if expansion:
-        TGW[s <  1/dtfin] = np.log(1 + dtfin*lf/2/np.pi)**2
-        TGW[s >= 1/dtfin] = np.log(1 + lf/2/np.pi/s)**2
+        inds = np.where(s <  1/dtfin)
+        TGW[inds] = (np.log(1 + dtfin*lf/2/np.pi)**2)[inds]
+        inds = np.where(s >= 1/dtfin)
+        TGW[inds] = (np.log(1 + lf/2/np.pi/s)**2)[inds]
     else:
-        TGW[s <  1/dtfin] = (dtfin*lf/2/np.pi)**2
-        TGW[s >= 1/dtfin] = (lf/2/np.pi/s)**2
+        inds = np.where(s <  1/dtfin)
+        TGW[inds] = (dtfin*lf/2/np.pi)[inds]**2
+        inds = np.where(s >= 1/dtfin)
+        TGW[inds] = (lf/2/np.pi/s)[inds]**2
 
 
     if not mult_Oms and not mult_lf: TGW = TGW[:, 0, 0]
@@ -452,7 +456,7 @@ f' and l functions need to be previously computed from the self-similar
 fluid perturbations induced by expanding bubbles using hydro_bubbles module
 '''
 
-def compute_kin_spec_ssm(z, vws, fp, l=[], sp='sum', type_n='exp', cs2=cs2_ref,
+def compute_kin_spec_ssm(z, vws, fp, l=[], sp='sum', type_n='exp', cs2=hb.cs2_ref,
                          min_qbeta=-4, max_qbeta=5, Nqbeta=Nk_ref,
                          min_TT=-1, max_TT=3, NTT=NTT_ref, corr=False,
                          dens=True, normbeta=True):
@@ -520,7 +524,7 @@ def compute_kin_spec_ssm(z, vws, fp, l=[], sp='sum', type_n='exp', cs2=cs2_ref,
     return qbeta, Pv
 
 def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
-                  cs2=cs2_ref):
+                  cs2=hb.cs2_ref):
 
     '''
     Function to compute GW spectrum using the approximation
@@ -562,8 +566,8 @@ def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
 
 def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
                                  plot=False, expansion=True, kstar=1.,
-                                 extend=False, largek=3, smallk=-3, tini=1,
-                                 cs2=cs2_ref, terms='all',
+                                 extend=False, largek=3, smallk=-3, tini=tini_ref,
+                                 cs2=hb.cs2_ref, terms='all',
                                  inds_m=[], inds_n=[], corr_Delta_0=False):
 
     """
@@ -646,7 +650,7 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
 
     return kp, Omm
 
-def compute_Delta_mn(t, k, p, ptilde, cs2=cs2_ref, m=1, n=1, tini=1.,
+def compute_Delta_mn(t, k, p, ptilde, cs2=hb.cs2_ref, m=1, n=1, tini=1.,
                      expansion=True):
 
     '''
@@ -692,7 +696,7 @@ def compute_Delta_mn(t, k, p, ptilde, cs2=cs2_ref, m=1, n=1, tini=1.,
 
 ########### FUNCTIONS FOR THE LOCALLY STATIONARY UETC ###########
 
-def K2int(dtfin, K0=1., dt0=dt0_ref, b=0., expansion=False, beta=100):
+def K2int(dtfin, K0=1., dt0=dt0_ref, b=0., expansion=False, beta=beta_ref):
 
     '''
     Function that returns the integrated kinetic energy density
