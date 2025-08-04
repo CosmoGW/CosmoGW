@@ -1,5 +1,5 @@
 """
-cosmoGW.py is a Python routine that contains functions relevant for
+GW_back.py is a Python routine that contains functions relevant for
 cosmological stochastic gravitational wave backgrounds (SGWB).
 
 Adapted from the original cosmoGW in GW_turbulence
@@ -9,7 +9,7 @@ created in Dec. 2021
 Currently part of the cosmoGW code:
 
 https://github.com/cosmoGW/cosmoGW/
-https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/cosmoGW.py
+https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_back.py
 
 Author:  Alberto Roper Pol
 Created: 01/12/2021 (GW_turbulence)
@@ -40,26 +40,27 @@ arXiv:2201.05630.
 import astropy.units as u
 import numpy as np
 
-def find_path():
+# def find_path():
 
-    ## find the directory where cosmoGW is installed within sys.path
-    import sys
-    import os
-    found = False
-    paths = sys.path
-    for path in paths:
-      subdirs = os.walk(path)
-      subdirs = list(subdirs)
-      for j in subdirs:
-        if not 'test' in j[0] and not 'env' in j[0]:
-            if 'cosmoGW' in j[0]:
-                pth = j[0]
-                found = True
-                break
-      if found: break
-    return pth + '/'
+#     ## find the directory where cosmoGW is installed within sys.path
+#     import sys
+#     import os
+#     found = False
+#     paths = sys.path
+#     for path in paths:
+#       subdirs = os.walk(path)
+#       subdirs = list(subdirs)
+#       for j in subdirs:
+#         if not 'test' in j[0] and not 'env' in j[0]:
+#             if 'cosmoGW' in j[0]:
+#                 pth = j[0]
+#                 found = True
+#                 break
+#       if found: break
+#     return pth + '/'
 
-HOME = find_path()
+# HOME = find_path()
+# print(HOME)
 
 import cosmoGW.cosmology as co
 

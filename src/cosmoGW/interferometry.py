@@ -47,8 +47,9 @@ import numpy  as np
 import pandas as pd
 import cosmoGW.cosmology as co
 
-from cosmoGW.cosmoGW import HOME
-dir0 = HOME + 'resources/detectors_sensitivity/'
+from cosmoGW import COSMOGW_HOME
+
+dir0 = COSMOGW_HOME + 'resources/detectors_sensitivity/'
 
 # Reference values for LISA and Taiji interferometers
 L_LISA   = 2.5e6*u.km

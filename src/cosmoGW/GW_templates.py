@@ -81,11 +81,13 @@ transitions," in preparation
 import numpy  as np
 import pandas as pd
 import matplotlib.pyplot     as plt
-import cosmoGW.cosmoGW       as cGW
+
+import cosmoGW.GW_back       as cGW
 import cosmoGW.cosmology     as co
 import cosmoGW.GW_analytical as an
 import cosmoGW.GW_models     as mod
 import cosmoGW.hydro_bubbles as hb
+from   cosmoGW import COSMOGW_HOME
 
 '''
 Reference values for turbulence template
@@ -285,7 +287,7 @@ def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=[],
             tst = True
 
         # take values from higgsless dataset
-        dirr = cGW.HOME + 'resources/higgsless/parameters_fit_sims.csv'
+        dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df   = pd.read_csv(dirr)
 
         if numerical:
@@ -595,7 +597,7 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_
                 return 0
 
             # take values from higgsless dataset
-            dirr     = cGW.HOME + 'resources/higgsless/parameters_fit_sims.csv'
+            dirr     = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
             df       = pd.read_csv(dirr)
 
             val_str  = 'k1'
@@ -783,7 +785,7 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=hb.cs2_ref, quiet=True, a_sw=a_sw
         # Higgsless simulations of Caprini:2024gyk and interpolate to
         # values of alpha and vws
 
-        dirr    = cGW.HOME + 'resources/higgsless/parameters_fit_sims.csv'
+        dirr    = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df      = pd.read_csv(dirr)
         val_str = 'curly_K_0_512'
         K       = interpolate_HL_vals(df, vws, alphas, quiet=quiet,
@@ -801,7 +803,7 @@ def OmGW_spec_sw(s, alphas, betas, vws=1., cs2=hb.cs2_ref, quiet=True, a_sw=a_sw
     interpol_b = False
     if interpolate_HL_decay and model_decay == 'decay':
 
-        dirr    = cGW.HOME + 'resources/higgsless/parameters_fit_sims.csv'
+        dirr    = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df      = pd.read_csv(dirr)
 
         val_str = 'b'
@@ -1271,7 +1273,7 @@ def OmGW_spec_turb_alphabeta(s, alphas, betas, vws=1., eps_turb=1., model_K0='Es
         # Higgsless simulations of Caprini:2024gyk and interpolate to
         # values of alpha and vws
 
-        dirr    = cGW.HOME + 'resources/higgsless/parameters_fit_sims.csv'
+        dirr    = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df      = pd.read_csv(dirr)
         val_str = 'curly_K_0_512'
         K       = interpolate_HL_vals(df, vws, alphas, quiet=quiet,

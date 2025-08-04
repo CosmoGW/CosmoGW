@@ -14,7 +14,9 @@ import cosmoGW.GW_templates   as tmp
 import cosmoGW.hydro_bubbles  as hb
 import cosmoGW.cosmology      as co
 import cosmoGW.interferometry as inte
-import cosmoGW.cosmoGW        as cGW
+import cosmoGW.GW_back        as cGW
+from cosmoGW import COSMOGW_HOME
+
 import astropy.units as u
 
 import unittest
@@ -100,7 +102,7 @@ class TestUnits(unittest.TestCase):
         K_xi   = hb.kappas_Esp(vws, alphas)*alphas/(1 + alphas)
         Oms_xi = hb.kappas_Esp(vws, alphas)*alphas/(1 + cs2)
 
-        dirr = cGW.HOME + 'resources/higgsless/parameters_fit_sims.csv'
+        dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df   = pd.read_csv(dirr)
 
         K0, K0num, _, _ = tmp.interpolate_HL_vals(df, vws, val_alphas, quiet=True, numerical=True,
@@ -144,7 +146,7 @@ class TestUnits(unittest.TestCase):
         dtfins = np.logspace(-6, 6, 100)
         cs2    = hb.cs2_ref
 
-        dirr = cGW.HOME + 'resources/higgsless/parameters_fit_sims.csv'
+        dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df   = pd.read_csv(dirr)
         
         b, bnum, val_alphas, val_vws = \
@@ -179,7 +181,7 @@ class TestUnits(unittest.TestCase):
         betas  = np.logspace(1, 3, 3)
         cs2    = hb.cs2_ref
 
-        dirr = cGW.HOME + 'resources/higgsless/parameters_fit_sims.csv'
+        dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df   = pd.read_csv(dirr)
         
         b, bnum, val_alphas, val_vws = \
@@ -219,7 +221,7 @@ class TestUnits(unittest.TestCase):
         vws    = np.array([0.36, 0.6, .76])
         Oms_xi = hb.kappas_Esp(vws, alphas)*alphas/(1 + cs2)
 
-        dirr = cGW.HOME + 'resources/higgsless/parameters_fit_sims.csv'
+        dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df   = pd.read_csv(dirr)
         
         b, _, _, _ = \

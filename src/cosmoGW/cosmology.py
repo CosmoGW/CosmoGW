@@ -51,7 +51,6 @@ import astropy.constants as const
 import astropy.units as u
 import pandas as pd
 import numpy  as np
-from cosmoGW.cosmoGW import HOME
 
 # reference values and constants
 Tref     = 100*u.GeV  # EWPT
@@ -65,6 +64,8 @@ H0_ref   = H0_ref.to(u.Hz)
 OmL0_ref = 0.6841
 OmM0_ref = 1. - OmL0_ref
 h0_ref   = 0.6732
+
+from cosmoGW import COSMOGW_HOME
 
 ######################### Values at present time #########################
 
@@ -311,7 +312,7 @@ def thermal_g(dir0='', T=Tref, s=0, file=True, Neff=Neff_ref):
         try:
             dirr = dir0 + 'T_gs.csv'
             if dir0 == '':
-                dirr = HOME + '/resources/cosmology/T_gs.csv'
+                dirr = COSMOGW_HOME + '/resources/cosmology/T_gs.csv'
             df = pd.read_csv(dirr)
             Ts = np.array(df['T [GeV]'])
             if s == 0: gs = np.array(df['g_*'])
