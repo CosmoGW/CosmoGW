@@ -5,16 +5,19 @@ def find_path():
     import os
     found = False
     paths = sys.path
+    pth = 'unkown'
     for path in paths:
       subdirs = os.walk(path)
       subdirs = list(subdirs)
       for j in subdirs:
-        if not 'test' in j[0] and not 'env' in j[0]:
+        if not 'test' in j[0]:
             if 'cosmoGW' in j[0]:
                 pth = j[0]
                 found = True
                 break
       if found: break
+    if pth == 'unkown': print('cosmoGW cannot be found, make sure you are',
+                             ' not using an environment named cosmoGW')
     return pth + '/'
 
 COSMOGW_HOME = find_path()
