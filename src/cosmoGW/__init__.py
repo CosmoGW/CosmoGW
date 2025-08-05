@@ -22,6 +22,15 @@ def find_path():
 
 COSMOGW_HOME = find_path()
 
+# take values from higgsless dataset
+import pandas as pd
+dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
+try:
+	df = pd.read_csv(dirr)
+	del(df)
+except:  print('cosmoGW cannot be found, make sure you are',
+                             ' not using an environment named cosmoGW')
+
 import cosmoGW.GW_back
 import cosmoGW.cosmology
 import cosmoGW.GW_analytical
