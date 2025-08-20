@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+setup.py
+src/cosmoGW/resources/cosmoGW.egg-info/PKG-INFO
+src/cosmoGW/resources/cosmoGW.egg-info/SOURCES.txt
+src/cosmoGW/resources/cosmoGW.egg-info/dependency_links.txt
+src/cosmoGW/resources/cosmoGW.egg-info/requires.txt
+src/cosmoGW/resources/cosmoGW.egg-info/top_level.txt
+src/cosmoGW/resources/cosmology/__init__.py
+src/cosmoGW/resources/higgsless/__init__.py
