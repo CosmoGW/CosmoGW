@@ -1195,7 +1195,7 @@ def fp_z(xi, vs, z, lz=False, ls=[], multi=True, quiet=False):
     j1_z[np.where(zxi_ij == 0)] = 0
 
     if lz:
-        if ls == []:
+        if len(ls) == 0:
             print('if lz is chosen you need to provide a l(xi) profile')
             lz = False
         j0_z = np.sin(zxi_ij)/zxi_ij
