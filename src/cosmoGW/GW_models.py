@@ -511,13 +511,14 @@ def compute_kin_spec_ssm(z, vws, fp, l=[], sp='sum', type_n='exp', cs2=hb.cs2_re
         except: Pv[i, :] = np.trapz(funcT[i, :, :], TT, axis=1)
 
     if dens == False:
-        Rstar_beta   = hb.Rstar_beta(vw=vws[i], cs2=cs2, corr=corr)
+        Rstar_beta   = hb.Rstar_beta(vws=vws, cs2=cs2, corr=corr)
         for i in range(0, len(vws)):
-            pref     = qbeta[i, :]**2/Rstar_beta[i]**4/(2*np.pi**2)
+            pref     = qbeta**2/Rstar_beta[i]**4/(2*np.pi**2)
             Pv[i, :] *= pref
 
     if normbeta == False:
-        if not dens: Rstar_beta = hb.Rstar_beta(vw=vws[i], cs2=cs2, corr=corr)
+        if not dens: Rstar_beta = hb.Rstar_beta(vws=vws, cs2=cs2, corr=corr)
+        vws_ij, qbeta = np.meshgrid(vws, qbeta, indexing='ij')
         for i in range(0, len(vws)):
             qbeta[i, :] *= Rstar_beta[i]
 
