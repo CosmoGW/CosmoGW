@@ -62,11 +62,14 @@ def save_fig(dirr='', name='fig', form='pdf', axes=True):
 
     if axes: axes_lines()
     plts = dirr + 'plots/'
-    try:
-        os.mkdir(plts)
-    except:
-        print('Not possible to create directory', plts)
+
+    if not os.path.isdir(plts):
+        try:
+            os.mkdir(plts)
+        except:
+            print('Not possible to create directory', plts)
+            plts = plts
 
     figg = name + '.' + form
-    print('Saving figure in', plts, figg)
+    print('Saving figure in %s%s'%(plts, figg))
     plt.savefig(plts + figg, bbox_inches='tight')
