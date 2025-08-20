@@ -2,6 +2,10 @@
 
 # -- Project information
 
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../src/cosmoGW'))
+
 project = 'CosmoGW'
 copyright = '2025, Alberto Roper Pol'
 author = 'Alberto Roper Pol'
