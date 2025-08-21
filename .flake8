@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 80
+extend-ignore = E741
+
+per-file-ignores =
+    src/cosmoGW/__init__.py: E402
