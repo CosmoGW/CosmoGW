@@ -11,36 +11,40 @@ Currently part of the cosmoGW code:
 https://github.com/cosmoGW/cosmoGW/
 https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_back.py
 
+To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
+
+    pip install cosmoGW
+
 Author
 ------
 Alberto Roper Pol
 
-Date
-----
+Dates
+-----
 Created: 01/12/2021 (GW_turbulence)
 
-Updated: 13/03/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
+Updated: 21/08/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
 
 References
 ----------
-Maggiore:1999vm  - M. Maggiore, "Gravitational wave experiments and
-early universe cosmology," Phys.Rept. 331 (2000) 283-367,
+Maggiore:1999vm  - M. Maggiore, "*Gravitational wave experiments and
+early universe cosmology,*" Phys.Rept. **331** (2000) 283-367,
 `arXiv:gr-qc/9909001 <https://arxiv.org/abs/gr-qc/9909001>`_.
 
 RoperPol:2018sap - A. Roper Pol, A. Brandenburg, T. Kahniashvili,
-A. Kosowsky, S. Mandal, "The timestep constraint in solving the
-gravitational wave equations sourced by hydromagnetic turbulence,"
-Geophys. Astrophys. Fluid Dynamics 114, 1, 130 (2020),
+A. Kosowsky, S. Mandal, "*The timestep constraint in solving the
+gravitational wave equations sourced by hydromagnetic turbulence,*"
+Geophys. Astrophys. Fluid Dynamics **114**, 1, 130 (2020),
 `arXiv:1807.05479 <https://arxiv.org/abs/1807.05479>`_.
 
 RoperPol:2021xnd - A. Roper Pol, S. Mandal, A. Brandenburg,
-T. Kahniashvili, "Polarization of gravitational waves from helical
-MHD turbulent sources," JCAP (2022) 04, 019,
+T. Kahniashvili, "*Polarization of gravitational waves from helical
+MHD turbulent sources,*" JCAP **04** (2022), 019,
 `arXiv:2107.05356 <https://arxiv.org/abs/2107.05356>`_.
 
 RoperPol:2022iel - A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,
-"The gravitational wave signal from primordial magnetic fields in the
-Pulsar Timing Array frequency band," Phys. Rev. D 105, 123502 (2022),
+*"*The gravitational wave signal from primordial magnetic fields in the
+Pulsar Timing Array frequency band,*" Phys. Rev. D **105**, 123502 (2022),
 `arXiv:2201.05630 <https://arxiv.org/abs/2201.05630>`_.
 """
 
@@ -227,7 +231,7 @@ def hc_Sf(f, Sf, d=1):
     f : array_like
         Frequency array (in units of frequency, e.g. Hz).
     Sf : array_like
-        Power spectral density Sf(f) (in units of 1/Hz^3).
+        Power spectral density :math:`S_f(f)` (in units of 1/Hz^3).
     d : int
         Option to convert from strain to power spectral density if set to -1
         (default 1).
@@ -256,14 +260,15 @@ def Omega_A(A=1., fref=0, beta=0, h0=1.):
     power law (PL), given the amplitude A of the characteristic strain, also
     expressed as a PL.
 
-    A is always given for the reference frequency of 1/(1 year) and is used in
+    A is always given for the reference frequency of :math:`f_{\rm yr} =
+    1/(1 {\rm yr})` and is used in
     the common process reported by PTA collaborations.
 
     The GW energy density and characteristic amplitude can be expressed as:
 
     .. math::
         \Omega_{\rm GW} = \Omega_{\rm ref} * (f/f_{\rm ref})^\beta
-        h_c = A * (f/fyr)^\alpha
+        h_c = A * (f/f_{\rm yr})^\alpha
 
     Parameters
     ----------
@@ -369,7 +374,7 @@ def shift_frequency_today(k, g=cosmology.gref, gS=0., T=cosmology.Tref, d=1,
     kk : bool
         If True, kf corresponds to :math:`k_\ast {\cal H}_\ast`, otherwise
         refers to the length in terms of the Hubble size
-        :math:`{\cal H}_\ast l_\ast = 2 \pi/(k_\ast/{\cal H}_\ast)`.
+        :math:`{\cal H}_\ast l_\ast = 2 \pi {\cal H}_\ast/k_\ast`.
     Neff : float
         Effective number of neutrino species (default is 3).
 
@@ -427,8 +432,8 @@ def shift_OmGW_today(k, OmGW, g=cosmology.gref, gS=0., T=cosmology.Tref, d=1,
         Hubble rate (default 1).
     kk : bool
         If True, kf corresponds to k_* HH_*, otherwise refers to the length in
-        terms of the Hubble size ..math::`{\cal H}_\\ast l_\\ast
-        = 2 \\pi/(k_\\ast/{\\cal H}_\\ast)`.
+        terms of the Hubble size :math:`{\cal H}_\ast l_\ast
+        = 2 \pi {\cal H}_\ast/k_\ast`.
     Neff : float
         Effective number of neutrino species (default is 3).
 
@@ -479,7 +484,7 @@ def shift_hc_today(k, hc, g=cosmology.gref, gS=0., T=cosmology.Tref,
     kk : bool
         If True, kf corresponds to :math:`k_* \mathcal{H}_*`.
         Otherwise, refers to the length in terms of the Hubble size,
-        i.e. :math:`\mathcal{H}_* l_* = 2\pi/(k_*/\mathcal{H}_*)`.
+        i.e. :math:`\mathcal{H}_* l_* = 2\pi {\cal H}_\ast/k_*`.
     Neff : float
         Effective number of neutrino species (default is 3).
 
@@ -488,7 +493,7 @@ def shift_hc_today(k, hc, g=cosmology.gref, gS=0., T=cosmology.Tref,
     f : array_like
         Shifted wave number to frequency as a present time observable (in Hz).
     hc0 : array_like
-        Shifted hc spectrum to present time.
+        Shifted :math:`h_c(f)` spectrum to present time.
 
     Reference
     ---------
