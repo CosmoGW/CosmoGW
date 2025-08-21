@@ -51,9 +51,9 @@ The main routines of cosmoGW are stored under `src/cosmoGW`:
 - [`GW_templates.py`](src/cosmoGW/GW_templates.py): Templates for GW backgrounds from different sources.
 - [`hydro_bubbles.py`](src/cosmoGW/hydro_bubbles.py): Fluid perturbations from bubbles in first-order phase transitions.
 - [`interferometry.py`](src/cosmoGW/interferometry.py): Response and sensitivity functions for GW detectors (LISA, Taiji).
-- `tests/`: Unit tests and example data.
-- `resources/`: Data files used in the code (numerical data, sensitivity curves, ...)
-- `tutorials/`: Tutorials showing how to use CosmoGW for different applications.
+- [`tests/`](tests/): Unit tests and example data.
+- [`resources/`](src/cosmoGW/resources/): Data files used in the code (numerical data, sensitivity curves, ...)
+- [`tutorials/`](tutorials/): Tutorials showing how to use CosmoGW for different applications.
 
 ---
 
