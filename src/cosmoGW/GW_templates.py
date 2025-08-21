@@ -545,7 +545,7 @@ def pref_GWB_sw(Oms=GW_models.Oms_ref, lf=GW_models.lf_ref, alpha=0,
                 'you need to give the value of alpha as input',
                 'for a correct result in pref_GWB_sw'
             )
-        alpha = np.zeros_like(Oms)
+            alpha = np.zeros_like(Oms)
 
     Gamma = (1. + cs2) / (1. + alpha)
     K = Gamma * Oms
@@ -690,15 +690,11 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref,
             alp1_sw = alp1_ssm
         if alp2_sw == 0:
             alp2_sw = alp2_ssm
-        S = GW_analytical.smoothed_double_bPL(
+        S = A * GW_analytical.smoothed_double_bPL(
             s, peak1, peak2, A=1., a=a_sw, b=b_sw, c=c_sw,
             alp1=alp1_sw, alp2=alp2_sw, alpha2=True
         )
 
-        if alp1_sw == 0:
-            alp1_sw = alp1_ssm
-        if alp2_sw == 0:
-            alp2_sw = alp2_ssm
         if not mult_Dw:
             S = S[:, 0]
 
@@ -1402,7 +1398,7 @@ def OmGW_spec_turb(s, Oms, lfs, N=GW_models.N_turb, cs2=hydro_bubbles.cs2_ref,
         \Omega_{\rm GW0} (f) = \Omega_{\rm GW} x F_{\rm GW, 0},
 
     where :math:`F_{\rm GW, 0}` is the redshift from the time of generation
-    to present time, computed in cosmoGW.py that depends on the degrees
+    to present time, computed in GW_back.py that depends on the degrees
     of freedom at the time of generation.
 
     Parameters
