@@ -2,7 +2,7 @@
 GW\_templates module
 -----------------------
 
-.. automodule:: cosmoGW.GW_templates
+.. automodule:: GW_templates
    :members:
    :show-inheritance:
    :undoc-members:

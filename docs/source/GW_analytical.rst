@@ -2,7 +2,7 @@
 GW\_analytical module
 -----------------------
 
-.. automodule:: cosmoGW.GW_analytical
+.. automodule:: GW_analytical
    :members:
    :show-inheritance:
    :undoc-members:

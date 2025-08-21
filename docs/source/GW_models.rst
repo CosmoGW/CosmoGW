@@ -2,7 +2,7 @@
 GW\_models module
 -----------------------
 
-.. automodule:: cosmoGW.GW_models
+.. automodule:: GW_models
    :members:
    :show-inheritance:
    :undoc-members:

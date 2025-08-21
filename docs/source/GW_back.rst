@@ -2,7 +2,7 @@
 GW\_back module
 -----------------------
 
-.. automodule:: cosmoGW.GW_back
+.. automodule:: GW_back
    :members:
    :show-inheritance:
    :undoc-members:
