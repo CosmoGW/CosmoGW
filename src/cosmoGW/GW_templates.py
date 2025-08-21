@@ -247,7 +247,9 @@ def interpolate_HL_vals(df, vws, alphas, value='Omega_tilde_int_extrap',
     df2 = df[columns]
     val_alphas = np.unique(df2['alpha'])
     val_vws = np.unique(df2['v_wall'])
+
     Omegas = np.zeros((len(val_vws), len(val_alphas))) - 1e30
+
     for i in range(0, len(val_alphas)):
         for j in range(0, len(val_vws)):
             Om = np.array(
