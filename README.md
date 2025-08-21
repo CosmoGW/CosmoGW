@@ -1,4 +1,4 @@
-# CosmoGW v 1.0 (August 2025)
+# CosmoGW v1.0
 
 **CosmoGW** is a Python package for the analysis and modeling of cosmological gravitational wave (GW) backgrounds from different sources in the early Universe, including analytical models, templates, and data analysis routines.
 
@@ -108,8 +108,6 @@ They are stored in `src/cosmoGW/resources`:
 
 ---
 
-<img src="https://img.icons8.com/ios-filled/50/000000/license.png" width="24" /> **License**
+<img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/License_icon.png" width="24" /> **License**
 
 This project is licensed under the MIT License.
-
----
