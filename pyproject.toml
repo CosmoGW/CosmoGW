@@ -19,7 +19,6 @@ dependencies = [
   "pandas",
   "astropy",
   "scipy",
-  "latex"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
