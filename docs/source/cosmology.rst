@@ -2,7 +2,7 @@
 cosmology module
 -----------------------
 
-.. automodule:: cosmology
+.. automodule:: cosmoGW.cosmology
    :members:
    :show-inheritance:
    :undoc-members:

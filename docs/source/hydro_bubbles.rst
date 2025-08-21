@@ -2,7 +2,7 @@
 hydro\_bubbles module
 -----------------------
 
-.. automodule:: hydro_bubbles
+.. automodule:: cosmoGW.hydro_bubbles
    :members:
    :show-inheritance:
    :undoc-members:
