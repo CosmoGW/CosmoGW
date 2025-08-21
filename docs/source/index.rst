@@ -25,4 +25,11 @@ Contents
    :maxdepth: 2
    :caption: Contents:
 
+   README
    cosmoGW
+   GW_analytical
+   GW_back
+   GW_models
+   cosmology
+   GW_templates
+   hydro_bubbles
