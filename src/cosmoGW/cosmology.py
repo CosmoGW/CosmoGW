@@ -131,13 +131,14 @@ def values_0(h0=1., neut=False, Neff=Neff_ref, ret_rad=False):
 
 
 def Hs_fact():
-    
+
     r"""
     Compute factor for Hubble rate at generation time (radiation era).
 
     The factor is given in units of Hz/:math:`{\rm MeV}^2`,
     such that the actual Hubble rate
-    is given after multiplying fact*:math:`\sqrt{g}*T^2`, being
+    is given after multiplying fact x :math:`\sqrt{g}`
+    x :math:`T^2`, being
     g the number of dof and
     T the temperature scale (in MeV).
 
@@ -219,8 +220,8 @@ def as_fact(Neff=Neff_ref):
     assuming adiabatic expansion of the universe.
 
     The factor is in units of MeV and the ratio is obtained by multiplying
-    fact*g^(-1/3)/T, being g the number of dof and T the temperature scale
-    (in MeV).
+    fact x :math:`g^{-1/3}/T`, being :math:`g` the number of dof
+    and :math:`T` the temperature scale (in MeV).
 
     Parameters
     ----------
@@ -230,7 +231,7 @@ def as_fact(Neff=Neff_ref):
     Returns
     -------
     fact : astropy.units.Quantity
-        Ratio to present-day scale factor, T0 g0s^(1/3).
+        Ratio to present-day scale factor, :math:`T_0 g_{0s}^{1/3}`.
 
     Reference
     ---------
@@ -275,7 +276,7 @@ def rho_radiation(g=gref, T=Tref):
     """
     Compute radiation energy density at a given epoch.
 
-   Parameters
+    Parameters
     ----------
     g : float
         Relativistic degrees of freedom (default 100).
@@ -448,7 +449,7 @@ def thermal_g(dir0='', T=Tref, s=0, file=True, Neff=Neff_ref):
     return g
 
 
-def RD_dofs(dir0='', Neff=Neff_ref, scalef=False):
+def RD_dofs(dir0='', Neff=Neff_ref):
     """
     Compute relativistic and adiabatic dofs during the RD era.
 
@@ -519,12 +520,14 @@ def dofs_vs_a(a, dir0='', Neff=Neff_ref):
 
 
 def Hs_from_a(a, dir0='', Neff=Neff_ref):
-    """
-    Compute Hubble rate during RD era from scale factor.
+
+    r"""
+    Compute Hubble rate during RD era from scale factor,
+    assuming adiabatic expansion:
 
     .. math ::
 
-        a^3 g_S T^3 = constant
+        a^3 g_S T^3 = {\rm \ constant}.
 
     Parameters
     ----------
@@ -532,7 +535,7 @@ def Hs_from_a(a, dir0='', Neff=Neff_ref):
         Array of scale factors
     dir0 : str, optional
         Directory where the file of dof is stored
-        ('/cosmology/' directory by default)
+        (resources/cosmology/ default).
     Neff : float, optional
         Effective number of neutrino species (default is 3)
 
@@ -568,7 +571,7 @@ def Omega_rad_dof(a, dir0='', Neff=Neff_ref):
         Array of scale factors
     dir0 : str, optional
         Directory where the file of dof is stored
-        ('/cosmology/' directory by default)
+        (resources/cosmology/ default)
     Neff : float, optional
         Effective number of neutrino species (default is 3)
 
@@ -596,8 +599,8 @@ def Omega_vs_a(a, dir0='', a0=1, h0=h0_ref, OmL0=OmL0_ref,
 
     .. math ::
 
-        \Omega (a) = \Omega_{R}^0 x a^{-4} + \Omega_{M}^0 x a^{-3} +
-        \Omega_{L}^0
+        \Omega (a) = \Omega_{R}^0 \times a^{-4} + \Omega_{M}^0
+        \times a^{-3} + \Omega_{L}^0
 
     Parameters
     ----------
@@ -731,6 +734,7 @@ def friedmann_solver(a, dir0='', a0=1., h0=h0_ref, OmL0=OmL0_ref,
         Cosmic time.
     eta : ndarray
         Conformal time.
+
     (other variables if return_all is True)
 
     References
@@ -819,7 +823,7 @@ def normalized_variables(a, eta, ap_a, app_a, dir0='', T=Tref, h0=h0_ref):
     h0 : float, optional
         Present Hubble rate scaling (default 0.6732).
 
-Returns
+    Returns
     -------
     a_n : ndarray
         Normalized scale factor a/a_*.
