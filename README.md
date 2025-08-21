@@ -1,123 +1,115 @@
 # CosmoGW v 1.0 (coming soon)
 
-CosmoGW is a python library that can be installed using pip from the
-project stored in [pypi](https://pypi.org/project/cosmoGW)
+**CosmoGW** is a Python package for the analysis and modeling of cosmological gravitational wave (GW) backgrounds from different sources in the early Universe, including analytical models, templates, and data analysis routines.
 
+v1.0 (August 2025) focuses on the production of GWs from sound waves and MHD turbulence from
+cosmological phase transitions. CosmoGW is an extension of [*GW_turbulence*](https://github.com/AlbertoRoper/GW_turbulence), created in December 2021, used for calculations of GWs produced by MHD turbulence.
+Other sources of GWs will be included in future versions, contact me if you are interested
+in contributing and becoming a developer.
+
+---
+
+<img src="https://img.icons8.com/ios-filled/50/000000/conference-call.png" width="24" /> **Contact**
+
+**Author:** Alberto Roper Pol  
+**Email:** alberto.roperpol@unige.ch  
+**GitHub:** [albertoroperpol](https://github.com/albertoroperpol)  
+
+If you use any of the cosmoGW results, please cite this [repository](https://github.com/cosmoGW/cosmoGW) and the relevant references listed in the routines.  
+Feel free to reach out for questions, issues, or collaboration!
+I would also love to hear about your interest for this project and your work, so feel free to reach out for questions, issues, or collaboration!
+
+---
+
+<img src="https://img.icons8.com/ios-filled/50/000000/download.png" width="24" /> **Installation**
+
+CosmoGW is a python library that can be installed using pip from [PyPI](https://pypi.org/project/cosmoGW):
+
+```sh
 pip install cosmoGW
+```
 
-cosmoGW contains functions for the study of cosmological gravitational wave (GW)
-backgrounds from different sources in the early Universe, focusing on the
-production of GWs from sound waves and MHD turbulence from cosmological phase
-transitions.
+Or directly from GitHub (last version but not necessarily stable):
 
-It corresponds to an extension of the original [*GW_turbulence*](https://github.com/AlbertoRoper/GW_turbulence)
-code previously used for calculations of GWs produced by MHD turbulence.
+```sh
+pip install git+https://github.com/cosmoGW/cosmoGW.git
+```
 
-* Author: Alberto Roper Pol (alberto.roperpol@unige.ch)
-* Created: 01/12/2021 (GW_turbulence)
-* Updated: 13/03/2025 
+**Requirements:**  
+Python >= 3.8, numpy, scipy, matplotlib, astropy, pandas
 
-The project includes state-of-the-art GW models developed by the community, postprocessing calculations,
-numerical computations, plotting routines, and detector sensitivities.
+---
 
-If you use any of the cosmoGW results, please cite this [repository](https://github.com/cosmoGW/cosmoGW) and the
-relevant reference/s listed in the routines, corresponding to the original published work.
+<img src="https://img.icons8.com/ios-filled/50/000000/code-file.png" width="24" /> **File Structure**
 
-I would also love to hear about your interest for this project and your work, so consider reaching out to me for
-any issues related to the code, questions or discussion: alberto.roperpol@unige.ch.
+The main routines of cosmoGW are stored under `src/cosmoGW`:
 
-Some of the routines use results from large-scale numerical simulations conducted with the open-source
-[Pencil Code](https://github.com/pencil-code); see
+- [`cosmology.py`](src/cosmoGW/cosmology.py): Cosmological calculations.
+- [`GW_analytical.py`](src/cosmoGW/GW_analytical.py): Analytical calculations and mathematical functions.
+- [`GW_back.py`](src/cosmoGW/GW_back.py): Functions for cosmological GW backgrounds.
+- [`GW_models.py`](src/cosmoGW/GW_models.py): Theoretical and numerical models for sources of GWs.
+- [`GW_templates.py`](src/cosmoGW/GW_templates.py): Templates for GW backgrounds from different sources.
+- [`hydro_bubbles.py`](src/cosmoGW/hydro_bubbles.py): Fluid perturbations from bubbles in first-order phase transitions.
+- [`interferometry.py`](src/cosmoGW/interferometry.py): Response and sensitivity functions for GW detectors (LISA, Taiji).
+- `tests/`: Unit tests and example data.
+- `resources/`: Data files used in the code (numerical data, sensitivity curves, ...)
+- `tutorials/`: Tutorials showing how to use CosmoGW for different applications.
 
-[Pencil Code Collaboration], *The Pencil Code, a modular MPI code for partial differential equations and particles:
-multipurpose and multiuser-maintained,* J. Open Source Softw. **6**, 2807 (2021), 
-[arXiv:2009.08231](https://arxiv.org/abs/2009.08231), [DOI:10.21105/joss.02807](https://joss.theoj.org/papers/10.21105/joss.02807).
+---
 
-In particular, if you use any of the results that involve Pencil Code simulations, please cite the
-[Pencil Code paper](https://joss.theoj.org/papers/10.21105/joss.02807) and the
-[code](https://github.com/pencil-code), as well as the original work.
+<img src="https://img.icons8.com/ios-filled/50/000000/book.png" width="24" /> **Documentation**
 
-## Routines
+Comprehensive documentation is available at [Read the Docs](https://cosmogw-manual.readthedocs.io/).
 
-The main routines of cosmoGW are stored under src/cosmoGW:
+- **API Reference:** Detailed documentation for all modules and functions.
+- **Tutorials:** Step-by-step guides and example workflows.
+- **Theory:** Background information and mathematical details.
 
-* [**GW_back.py**](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_back.py): functions relevant for cosmological stochastic gravitational wave backgrounds (SGWB).
-* [**cosmology.py**](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/cosmology.py): functions relevant for cosmological calculations, including a Friedmann
-  solver (see tutorial on Friedmann equations in [cosmology.ipnyb](cosmology/cosmology.ipynb)) that can generate the solution
-  files being read in some Pencil Code simulations (see tutorial [cosmology_PC.ipnyb](cosmology/cosmology_PC.ipynb)).
-* [**cosmoMF.py**](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/cosmoMF.py): functions relevant for cosmological magnetic fields like bounds from different experiments,
-  observations or projected sensitivities, and expectations from theory, among others. Coming soon!
-* [**GW_analytical.py**](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_analytical.py): contains analytical calculations and useful mathematical functions
-* [**GW_models.py**](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_analytical.py): models to describe the GW background produced from magnetic and velocity field perturbations in the primordial plasma, e.g., induced by a first-order phase transition. It includes models to describe the GW background from MHD turbulence, from sound waves, and from non-linear compressional motion.
-* [**GW_templates.py**](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_templates.py): contains templates to describe the GW background from different sources
-* [**hydro_bubbles.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/GW_models.py): functions to compute fluid perturbations induced by the expansion of
-  bubbles in first-order phase transitions
-* [**interferometry.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/interferometry.py): functions to compute the response and sensitivity functions of interferometer
-  space-based GW detectors (e.g., LISA and Taiji) to the detection of SGWBs (see tutorial on LISA interferometry in
-  [interferometry.ipynb](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/interferometry/interferometry.ipynb)) energy density and polarization, including the space-based network
-  LISA-Taiji to detect polarization.
-* [**reading.py**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/reading.py): functions to read the output files of a specific set of runs (project)
-  of the Pencil Code.
-* [**spectra.py**](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/spectra.py): contains description for specific spectral templates, postprocessing routines for
-  numerical spectra, and other mathematical routines.
+To build the documentation locally:
 
-## Resources
+```sh
+cd docs
+make html
+```
 
-Some data files are available in cosmoGW that are useful in some of the projects.
-They are stored in src/cosmoGW/resources
+---
 
-* [**cosmology**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/resources/cosmology): includes files relevant for the cosmological evolution of the Universe and
-  contains a tutorial on solving Friedmann equations.
-* [**interferometry**](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/interferometry): includes files relevant for space-based GW interferometry calculations
-  and contains a tutorial on computing the response functions, sensitivities and power law sensitivities to SGWB energy density
-  and polarization.
-* [**detector_sensitivity**](https://github.com/cosmoGW/cosmoGW/resources/detector_sensitivity): includes the sensitivity of various detectors (ground-based, space-based,
-  and pulsar timing arrays, among others), see the [README](detector_sensitivity/README.md) file for info and references.
-* [**higgsless**](https://github.com/cosmoGW/cosmoGW/src/cosmoGW/resources/higgsless): contains data sets of the simulations conducted using the Higgsless approach to model the dynamics of first-order phase transitions.
+<img src="https://img.icons8.com/ios-filled/50/000000/education.png" width="24" /> **Tutorials**
 
-## Tutorials
+Tutorials and example notebooks are available in the [`tutorials/`](tutorials/) directory:
 
-* [**GWs_sound-waves**](https://github.com/cosmoGW/cosmoGW/tutorials/GWs_sound-waves)
+- [**GWs_sound-waves**](https://github.com/cosmoGW/cosmoGW/tutorials/GWs_sound-waves)
 
-## Projects
+---
 
-Particular projects with Jupyter notebooks are available under projects
+<img src="https://img.icons8.com/ios-filled/50/000000/test-passed.png" width="24" /> **Tests**
 
-* [**GWs_from_PTs**](https://github.com/cosmoGW/cosmoGW/projects/GWs_from_PTs): contains tutorials related to the production of GWs (self-similar profiles
-  calculation for now, but more coming soon!)
+Unit tests are provided in the `tests/` directory.
 
-## Publications
+To run all tests (from cosmoGW directory):
 
-The work of the following publications can be reproduced using CosmoGW:
+```sh
+pytest
+```
 
-* [RoperPol:2019wvy]: *Numerical Simulations of Gravitational Waves from Early-Universe Turbulence,* A. Roper Pol, S. Mandal, A. Brandenburg,
-  T. Kahaniashvili, A. Kosowsky, *Phys. Rev. D* **102** (2020) 8, 083512, [arXiv:1903.08585](https://arxiv.org/abs/1903.08585).
-  Datasets produced using Pencil Code are publicly available at [doi:10.5281/zenodo.3692072](https://zenodo.org/records/3692072).
-  Direct access to Pencil Code files is also available in
-  [brandenb/projects/GW/](http://norlx65.nordita.org/~brandenb/projects/GW/).
-  
-* [RoperPol:2021xnd]: *Polarization of gravitational waves from helical MHD turbulent sources,* A. Roper Pol, S. Mandal, A. Brandenburg,
-  T. Kahniashvili, *J. Cosmol. Astropart. Phys.* **04** (2022) 04, 019, [arXiv:2107.05356](https://arxiv.org/abs/2107.05356).
-  Datasets produced using Pencil Code are publicly available at
-  [doi:10.5281/zenodo.5525504](https://zenodo.org/records/5525504).
-  
-* [RoperPol:2022iel]: *Gravitational wave signal from primordial magnetic fields in the Pulsar Timing Array frequency band,* A. Roper Pol,
-  C. Caprini, A. Neronov, D. Semikoz, *Phys. Rev. D* **105** (2022) 12, 123502, [arXiv:2201.05630](https://arxiv.org/abs/2201.05630).
-  Datasets produced using Pencil Code are publicly available at
-  [doi:10.5281/zenodo.5782752](https://zenodo.org/records/5782752).
+Make sure all required test data files are present in the `tests` directory.
 
-* [He:2022qcs]: *Modified propagation of gravitational waves from the early radiation era,* Y. He, A. Roper Pol, A. Brandenburg, *J. Cosmol.
-  Astropart. Phys.* **06** (2023) 025, [arXiv:2212.06082](https://arxiv.org/abs/2212.06082).
-  Datasets produced using Pencil Code are publicly available at [doi:10.5281/zenodo.5525504](https://zenodo.org/records/5525504).
-  Direct access to Pencil Code files is also available in
-  [brandenb/projects/Horndeski/](http://norlx65.nordita.org/~brandenb/projects/Horndeski/).
+---
 
-* [RoperPol:2023bqa]: *LISA and γ-ray telescopes as multi-messenger probes of a first-order cosmological phase transition,* A. Roper Pol,
-  A. Neronov, C. Caprini, T. Boyer, D. Semikoz, *submitted to Astron. Astrophys.*,
-  [arXiv:2307.10744](https://arxiv.org/abs/2307.10744).
+<img src="https://img.icons8.com/ios-filled/50/000000/database.png" width="24" /> **Resources**
 
-* [RoperPol:2023dzg]: *Characterization of the gravitational wave spectrum from sound waves within the sound shell model,* A. Roper Pol,
-  S. Procacci, C. Caprini, *Phys. Rev. D* **109** (2024) 6, 063531, [arXiv:2308.12943](https://arxiv.org/abs/2308.12943).
+Some data files are available in cosmoGW that are useful in some of the projects.  
+They are stored in `src/cosmoGW/resources`:
 
-* [Caprini:2024gyk]: *Gravitational waves from decaying sources in strong phase transitions,* A. Roper Pol, I. Stomberg, C. Caprini, R. Jinno,
-  T. Konstandin, H. Rubira, *J. High Energy Phys.* **07** (2025) 217, [arXiv:2409.03651](https://arxiv.org/abs/2409.03651).
+- [`cosmology`](src/cosmoGW/resources/cosmology): Cosmological evolution files and Friedmann equation tutorial.
+- [`interferometry`](src/cosmoGW/resources/interferometry): Space-based GW interferometry calculations and tutorials.
+- [`detector_sensitivity`](src/cosmoGW/resources/detector_sensitivity): Sensitivity of various detectors; see the [README](src/cosmoGW/resources/detector_sensitivity/README.md).
+- [`higgsless`](src/cosmoGW/resources/higgsless): Data sets from Higgsless simulations of phase transitions.
+
+---
+
+<img src="https://img.icons8.com/ios-filled/50/000000/license.png" width="24" /> **License**
+
+This project is licensed under the MIT License.
+
+---
