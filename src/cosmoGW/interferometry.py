@@ -28,42 +28,43 @@ To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
 
 Author
 ------
-Alberto Roper Pol
+- **Alberto Roper Pol**
+  (`alberto.roperpol@unige.ch <mailto:alberto.roperpol@unige.ch>`_)
 
 Dates
 -----
-Created: 01/05/2022
-
-Updated: 01/11/2023 (preparation of cosmoGW code, included tutorial)
-
-Updated: 21/08/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
+- Created: **01/05/2022**
+- Updated: **21/08/2025**
+  (release **cosmoGW 1.0**: https://pypi.org/project/cosmoGW)
 
 References
 ----------
+- [**Caprini:2019pxz**]: C. Caprini, D. Figueroa, R. Flauger, G. Nardini,
+  M. Peloso, M. Pieroni, A. Ricciardone, G. Tassinato,
+  "*Reconstructing the spectral shape of a stochastic gravitational wave
+  background with LISA,*" JCAP **11** (2019),
+  017, `arXiv:1906.09244 <https://arxiv.org/abs/1906.09244>`_.
 
-Caprini:2019pxz  - C. Caprini, D. Figueroa, R. Flauger, G. Nardini, M. Peloso,
-M. Pieroni, A. Ricciardone, G. Tassinato, "*Reconstructing the spectral shape
-of a stochastic gravitational wave background with LISA,*" JCAP **11** (2019),
-017, `arXiv:1906.09244 <https://arxiv.org/abs/1906.09244>`_.
+- [**Schmitz:2020syl**]: K. Schmitz "*New Sensitivity Curves for
+  Gravitational-Wave Signals from Cosmological Phase Transitions,*"
+  JHEP **01**, 097 (2021),
+  `arXiv:2002.04615 <https://arxiv.org/abs/2002.04615>`_.
 
-Schmitz:2020syl  - K. Schmitz "*New Sensitivity Curves for
-Gravitational-Wave Signals from Cosmological Phase Transitions,*"
-JHEP **01**, 097 (2021), `arXiv:2002.04615 <https://arxiv.org/abs/2002.04615>`_.
+- [**Orlando:2020oko**]: G. Orlando, M. Pieroni, A. Ricciardone, "*Measuring
+  Parity Violation in the Stochastic Gravitational Wave Background with the
+  LISA-Taiji network,*" JCAP **03**, 069 (2021),
+  `arXiv:2011.07059 <https://arxiv.org/abs/2011.07059>`_.
 
-Orlando:2020oko  - G. Orlando, M. Pieroni, A. Ricciardone, "*Measuring
-Parity Violation in the Stochastic Gravitational Wave Background with the
-LISA-Taiji network,*" JCAP **03**, 069 (2021),
-`arXiv:2011.07059 <https://arxiv.org/abs/2011.07059>`_.
+- [**RoperPol:2021xnd**]: A. Roper Pol, S. Mandal, A. Brandenburg,
+  T. Kahniashvili, "Polarization of gravitational waves from helical MHD
+  turbulent sources," JCAP **04** (2022), 019,
+  `arXiv:2107.05356 <https://arxiv.org/abs/2107.05356>`_.
 
-RoperPol:2021xnd - A. Roper Pol, S. Mandal, A. Brandenburg, T. Kahniashvili,
-"Polarization of gravitational waves from helical MHD turbulent sources,"
-JCAP **04** (2022), 019, `arXiv:2107.05356 <https://arxiv.org/abs/2107.05356>`_.
-
-RoperPol:2022iel - A. Roper Pol, C. Caprini, A. Neronov,
-D. Semikoz, "The gravitational wave signal from primordial
-magnetic fields in the Pulsar Timing Array frequency band,"
-Phys. Rev. D **105**, 123502 (2022),
-`arXiv:2201.05630 <https://arxiv.org/abs/2201.05630>`_.
+- [**RoperPol:2022iel**]: A. Roper Pol, C. Caprini, A. Neronov,
+  D. Semikoz, "The gravitational wave signal from primordial
+  magnetic fields in the Pulsar Timing Array frequency band,"
+  Phys. Rev. D **105**, 123502 (2022),
+  `arXiv:2201.05630 <https://arxiv.org/abs/2201.05630>`_.
 """
 
 import astropy.constants as const

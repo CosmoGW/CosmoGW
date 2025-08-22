@@ -11,9 +11,16 @@ Currently part of the cosmoGW code:
 https://github.com/cosmoGW/cosmoGW/
 https://github.com/cosmoGW/cosmoGW/blob/development/src/cosmoGW/plot_sets.py
 
-Author: Alberto Roper Pol
-Created: 01/01/2021 (GW_turbulence)
-Updated: 13/03/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
+Author
+------
+- **Alberto Roper Pol**
+  (`alberto.roperpol@unige.ch <mailto:alberto.roperpol@unige.ch>`_)
+
+Dates
+-----
+- Created: **01/01/2021** (*GW_turbulence*)
+- Updated: **13/03/2025**
+  (release **cosmoGW 1.0**: https://pypi.org/project/cosmoGW)
 """
 
 import matplotlib.pyplot as plt

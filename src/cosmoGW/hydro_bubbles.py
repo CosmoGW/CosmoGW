@@ -18,43 +18,46 @@ To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
 
 Author
 ------
-Alberto Roper Pol
+- **Alberto Roper Pol**
+  (`alberto.roperpol@unige.ch <mailto:alberto.roperpol@unige.ch>`_)
 
 Dates
 -----
-Created: 01/02/2023
-
-Updated: 21/08/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
+- Created: **01/02/2023**
+- Updated: **21/08/2025**
+  (release **cosmoGW 1.0**: https://pypi.org/project/cosmoGW)
 
 Contributors
 ------------
-Antonino Midiri, Simona Procacci
+- **Antonino Midiri**, **Simona Procacci**
 
 References
 ----------
+- [**RoperPol:2025a**]: A. Roper Pol, S. Procacci, A. S. Midiri,
+  C. Caprini, "*Irrotational fluid perturbations from first-order phase
+  transitions,*" in preparation
 
-Appendix A of RoperPol:2025a - A. Roper Pol, S. Procacci, A. S. Midiri,
-C. Caprini, "*Irrotational fluid perturbations from first-order phase
-transitions,*" in preparation
+- [**Espinosa:2010hh**]: J. R. Espinosa, T. Konstandin, J. M. No, G. Servant,
+  "*Energy Budget of Cosmological First-order Phase Transitions,*"
+  JCAP **06** (2010) 028, `arXiv:1004.4187 <https://arxiv.org/abs/1004.4187>`_.
 
-Espinosa:2010hh - J. R. Espinosa, T. Konstandin, J. M. No, G. Servant,
-"*Energy Budget of Cosmological First-order Phase Transitions,*"
-JCAP **06** (2010) 028, `arXiv:1004.4187 <https://arxiv.org/abs/1004.4187>`_.
+- [**Hindmarsh:2016lnk**]: M. Hindmarsh, "*Sound shell model for acoustic
+  gravitational wave production at a first-order phase transition in
+  the early Universe,*" Phys. Rev. Lett. **120** (2018) 7, 071301,
+  `arXiv:1608.04735 <https://arxiv.org/abs/1608.04735>`_.
 
-Hindmarsh:2016lnk - M. Hindmarsh, "*Sound shell model for acoustic gravitational
-wave production at a first-order phase transition in the early Universe,*"
-Phys. Rev. Lett. **120** (2018) 7, 071301,
-`arXiv:1608.04735 <https://arxiv.org/abs/1608.04735>`_.
+- [**Hindmarsh:2019phv**]: M. Hindmarsh, M. Hijazi, "*Gravitational waves from
+  first order cosmological phase transitions in the Sound Shell Model,*"
+  JCAP **12** (2019) 062,
+  `arXiv:1909.10040 <https://arxiv.org/abs/1909.10040>`_.
 
-Hindmarsh:2019phv - M. Hindmarsh, M. Hijazi, "*Gravitational waves from
-first order cosmological phase transitions in the Sound Shell Model,*"
-JCAP **12** (2019) 062, `arXiv:1909.10040 <https://arxiv.org/abs/1909.10040>`_.
+- [**RoperPol:2023dzg**]: A. Roper Pol, S. Procacci, C. Caprini,
+  "*Characterization of the gravitational wave spectrum from sound waves within
+  the sound shell model,*" Phys. Rev. D **109**, 063531 (2024),
+  `arXiv:2308.12943 <https://arxiv.org/abs/2308.12943>`_.
 
-RoperPol:2023dzg - A. Roper Pol, S. Procacci, C. Caprini,
-"*Characterization of the gravitational wave spectrum from sound waves within
-the sound shell model,*" Phys. Rev. D **109**, 063531 (2024),
-`arXiv:2308.12943 <https://arxiv.org/abs/2308.12943>`_.
-
+Comments
+--------
 The solutions are based in the 1D hydrodynamic descriptions
 of Espinosa:2010hh and Hindmarsh:2019phv.
 

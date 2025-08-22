@@ -18,18 +18,94 @@ To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
 
 Author
 ------
-Alberto Roper Pol
+- **Alberto Roper Pol**
+  (`alberto.roperpol@unige.ch <mailto:alberto.roperpol@unige.ch>`_)
 
 Dates
 -----
-Created: 01/12/2022
+- Created: **01/12/2022**
+- Updated: **31/08/2024**
+- Updated: **21/08/2025**
+  (release **cosmoGW 1.0**: https://pypi.org/project/cosmoGW)
 
-Updated: 31/08/2024
+References
+----------
+- [**Espinosa:2010hh**]: J. R. Espinosa, T. Konstandin, J. M. No, G. Servant,
+  "*Energy Budget of Cosmological First-order Phase Transitions,*"
+  JCAP **06** (2010), 028, `arXiv:1004.4187 <https://arxiv.org/abs/1004.4187>`_.
 
-Updated: 21/08/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
+- [**Hindmarsh:2017gnf**]: M. Hindmarsh, S. J. Huber, K. Rummukainen,
+  D. J. Weir, "*Shape of the acoustic gravitational wave
+  power spectrum from a first order phase transition,*"
+  Phys.Rev.D **96** (2017) 10, 103520, Phys.Rev.D **101** (2020) 8,
+  089902 (erratum), `arXiv:1704.05871 <https://arxiv.org/abs/1704.05871>`_.
 
-Reference values for turbulence template
-(based on RoperPol:2023bqa and RoperPol:2022iel)
+- [**Hindmarsh:2019phv**]: M. Hindmarsh, M. Hijazi, "*Gravitational waves from
+  first order cosmological phase transitions in the Sound Shell Model,*"
+  JCAP **12** (2019) 062,
+  `arXiv:1909.10040 <https://arxiv.org/abs/1909.10040>`_.
+
+- [**Caprini:2019egz**]: [LISA CosWG], "*Detecting gravitational
+  waves from cosmological phase transitions with LISA: an update,*"
+  JCAP **03** (2020) 024,
+  `arXiv:1910.13125 <https://arxiv.org/abs/1910.13125>`_.
+
+- [**Hindmarsh:2020hop**]: M. Hindmarsh, M. Lueben, J. Lumma,
+  M. Pauly, "*Phase transitions in the early universe,*"
+  SciPost Phys. Lect. Notes **24** (2021), 1,
+  `arXiv:2008.09136 <https://arxiv.org/abs/2008.09136>`_.
+
+- [**Jinno:2022mie**]: R. Jinno, T. Konstandin, H. Rubira, I. Stomberg,
+  "*Higgsless simulations of cosmological phase transitions and
+  gravitational waves,*" JCAP **02**, 011 (2023),
+  `arXiv:2209.04369 <https://arxiv.org/abs/2209.04369>`_.
+
+- [**RoperPol:2022iel**]: A. Roper Pol, C. Caprini, A. Neronov,
+  D. Semikoz, "*The gravitational wave signal from primordial
+  magnetic fields in the Pulsar Timing Array frequency band,*"
+  Phys. Rev. D **105**, 123502 (2022),
+  `arXiv:2201.05630 <https://arxiv.org/abs/2201.05630>`_.
+
+- [**RoperPol:2023bqa**]: A. Roper Pol, A. Neronov, C. Caprini, T. Boyer,
+  D. Semikoz, "*LISA and γ-ray telescopes as multi-messenger probes of a
+  first-order cosmological phase transition,*"
+  `arXiv:2307.10744 <https://arxiv.org/abs/2307.10744>`_ (2023)
+
+- [**EPTA:2023xxk**]: [EPTA and InPTA Collaborations], "*The second data
+  release from the European Pulsar Timing Array - IV. Implications
+  for massive black holes, dark matter, and the early Universe,*"
+  Astron. Astrophys. **685**, A94 (2024),
+  `arXiv:2306.16227 <https://arxiv.org/abs/2306.16227>`_
+
+- [**RoperPol:2023dzg**]: A. Roper Pol, S. Procacci, C. Caprini,
+  "*Characterization of the gravitational wave spectrum from sound waves within
+  the sound shell model,*" Phys. Rev. D **109**, 063531 (2024),
+  `arXiv:2308.12943 <https://arxiv.org/abs/2308.12943>`_.
+
+- [**Caprini:2024gyk**]: A. Roper Pol, I. Stomberg, C. Caprini, R. Jinno,
+  T. Konstandin, H. Rubira, "*Gravitational waves from first-order
+  phase transitions: from weak to strong,*" JHEP **07** (2025) 217,
+  `arXiv:2409.03651 <https://arxiv.org/abs/2409.03651>`_.
+
+- [**Caprini:2024hue**]: E. Madge, C. Caprini, R. Jinno, M. Lewicki,
+  M. Merchand, G. Nardini, M. Pieroni, A. Roper Pol, V. Vaskonen,
+  "*Gravitational waves from first-order phase transitions in LISA:
+  reconstruction pipeline and physics interpretation,*"
+  JCAP **10** (2024) 020,
+  `arXiv:2403.03723 <https://arxiv.org/abs/2403.03723>`_.
+
+- [**RoperPol:2025b**]: A. Roper Pol, A. Midiri, M. Salomé, C. Caprini,
+  "*Modeling the gravitational wave spectrum from slowly decaying sources in the
+  early Universe: constant-in-time and coherent-decay models,*" in preparation
+
+- [**RoperPol:2025a**]: A. Roper Pol, S. Procacci, A. S. Midiri,
+  C. Caprini, "*Irrotational fluid perturbations from first-order phase
+  transitions,*" in preparation
+
+Comments
+--------
+Reference values for turbulence template are
+based on RoperPol:2023bqa and RoperPol:2022iel.
 Template used in Caprini:2024hue for LISA and in EPTA:2023xxk
 
 Note that the values used for a_turb, b_turb, bPi_vort, fPi
@@ -51,80 +127,6 @@ Hence, the values are considered for the former :math:`\zeta`
 (this choice yields different coefficients).
 However, the final result is not affected by this choice.
 See RoperPol:2025b for details
-
-References
-----------
-
-Espinosa:2010hh - J. R. Espinosa, T. Konstandin, J. M. No, G. Servant,
-"*Energy Budget of Cosmological First-order Phase Transitions,*"
-JCAP **06** (2010), 028, `arXiv:1004.4187 <https://arxiv.org/abs/1004.4187>`_.
-
-Hindmarsh:2017gnf - M. Hindmarsh, S. J. Huber, K. Rummukainen,
-D. J. Weir, "*Shape of the acoustic gravitational wave
-power spectrum from a first order phase transition,*"
-Phys.Rev.D **96** (2017) 10, 103520, Phys.Rev.D **101** (2020) 8,
-089902 (erratum), `arXiv:1704.05871 <https://arxiv.org/abs/1704.05871>`_.
-
-Hindmarsh:2019phv - M. Hindmarsh, M. Hijazi, "*Gravitational waves from
-first order cosmological phase transitions in the Sound Shell Model,*"
-JCAP **12** (2019) 062, `arXiv:1909.10040 <https://arxiv.org/abs/1909.10040>`_.
-
-Caprini:2019egz   - [LISA CosWG], "*Detecting gravitational
-waves from cosmological phase transitions with LISA: an update,*"
-JCAP **03** (2020) 024,
-`arXiv:1910.13125 <https://arxiv.org/abs/1910.13125>`_.
-
-Hindmarsh:2020hop - M. Hindmarsh, M. Lueben, J. Lumma,
-M. Pauly, "*Phase transitions in the early universe,*"
-SciPost Phys. Lect. Notes **24** (2021), 1,
-`arXiv:2008.09136 <https://arxiv.org/abs/2008.09136>`_.
-
-Jinno:2022mie     - R. Jinno, T. Konstandin, H. Rubira, I. Stomberg,
-"*Higgsless simulations of cosmological phase transitions and
-gravitational waves,*" JCAP **02**, 011 (2023),
-`arXiv:2209.04369 <https://arxiv.org/abs/2209.04369>`_.
-
-RoperPol:2022iel  - A. Roper Pol, C. Caprini, A. Neronov,
-D. Semikoz, "*The gravitational wave signal from primordial
-magnetic fields in the Pulsar Timing Array frequency band,*"
-Phys. Rev. D **105**, 123502 (2022),
-`arXiv:2201.05630 <https://arxiv.org/abs/2201.05630>`_.
-
-RoperPol:2023bqa  - A. Roper Pol, A. Neronov, C. Caprini, T. Boyer,
-D. Semikoz, "*LISA and γ-ray telescopes as multi-messenger probes of a
-first-order cosmological phase transition,*"
-`arXiv:2307.10744 <https://arxiv.org/abs/2307.10744>`_ (2023)
-
-EPTA:2023xxk      - [EPTA and InPTA Collaborations], "*The second data
-release from the European Pulsar Timing Array - IV. Implications
-for massive black holes, dark matter, and the early Universe,*"
-Astron. Astrophys. **685**, A94 (2024),
-`arXiv:2306.16227 <https://arxiv.org/abs/2306.16227>`_
-
-RoperPol:2023dzg  - A. Roper Pol, S. Procacci, C. Caprini,
-"*Characterization of the gravitational wave spectrum from sound waves within
-the sound shell model,*" Phys. Rev. D **109**, 063531 (2024),
-`arXiv:2308.12943 <https://arxiv.org/abs/2308.12943>`_.
-
-Caprini:2024gyk   - A. Roper Pol, I. Stomberg, C. Caprini, R. Jinno,
-T. Konstandin, H. Rubira, "*Gravitational waves from first-order
-phase transitions: from weak to strong,*" JHEP **07** (2025) 217,
-`arXiv:2409.03651 <https://arxiv.org/abs/2409.03651>`_.
-
-Caprini:2024hue   - E. Madge, C. Caprini, R. Jinno, M. Lewicki,
-M. Merchand, G. Nardini, M. Pieroni, A. Roper Pol, V. Vaskonen,
-"*Gravitational waves from first-order phase transitions in LISA:
-reconstruction pipeline and physics interpretation,*"
-JCAP **10** (2024) 020,
-`arXiv:2403.03723 <https://arxiv.org/abs/2403.03723>`_.
-
-RoperPol:2025b    - A. Roper Pol, A. Midiri, M. Salomé, C. Caprini,
-"*Modeling the gravitational wave spectrum from slowly decaying sources in the
-early Universe: constant-in-time and coherent-decay models,*" in preparation
-
-RoperPol:2025a    - A. Roper Pol, S. Procacci, A. S. Midiri,
-C. Caprini, "*Irrotational fluid perturbations from first-order phase
-transitions,*" in preparation
 """
 
 import numpy as np

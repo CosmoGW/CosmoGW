@@ -21,52 +21,52 @@ To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
 
 Author
 ------
-Alberto Roper Pol
+- **Alberto Roper Pol**
+  (`alberto.roperpol@unige.ch <mailto:alberto.roperpol@unige.ch>`_)
 
 Dates
 -----
-Created: 01/12/2021
-
-Updated: 31/08/2024
-
-Updated: 21/08/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
+- Created: **01/12/2021**
+- Updated: **31/08/2024**
+- Updated: **21/08/2025**
+  (release **cosmoGW 1.0**: https://pypi.org/project/cosmoGW)
 
 Contributors
 ------------
-Antonino Midiri, Madeline Salomé
+- **Antonino Midiri**, **Madeline Salomé**
 
 References
 ----------
+- [**RoperPol:2022iel**]: A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,
+  "*The gravitational wave signal from primordial magnetic fields in the
+  Pulsar Timing Array frequency band*," Phys. Rev. D **105**, 123502 (2022),
+  `arXiv:2201.05630 <https://arxiv.org/abs/2201.05630>`_
 
-RoperPol:2022iel - A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,
-"*The gravitational wave signal from primordial magnetic fields in the
-Pulsar Timing Array frequency band*," Phys. Rev. D **105**, 123502 (2022),
-`arXiv:2201.05630 <https://arxiv.org/abs/2201.05630>`_
+- [**RoperPol:2023bqa**]: A. Roper Pol, A. Neronov, C. Caprini, T. Boyer,
+  D. Semikoz, "*LISA and γ-ray telescopes as multi-messenger probes of a
+  first-order cosmological phase transition,*"
+  `arXiv:2307.10744 <https://arxiv.org/abs/2307.10744>`_ (2023)
 
-RoperPol:2023bqa - A. Roper Pol, A. Neronov, C. Caprini, T. Boyer,
-D. Semikoz, "*LISA and γ-ray telescopes as multi-messenger probes of a
-first-order cosmological phase transition,*" `arXiv:2307.10744
-<https://arxiv.org/abs/2307.10744>`_ (2023)
+- [**RoperPol:2023dzg**]: A. Roper Pol, S. Procacci, C. Caprini,
+  *"Characterization of the gravitational wave spectrum from sound waves within
+  the sound shell model,*" Phys. Rev. D **109**, 063531 (2024),
+  `arXiv:2308.12943 <https://arxiv.org/abs/2308.12943>`_
 
-RoperPol:2023dzg - A. Roper Pol, S. Procacci, C. Caprini,
-*"Characterization of the gravitational wave spectrum from sound waves within
-the sound shell model,*" Phys. Rev. D **109**, 063531 (2024),
-`arXiv:2308.12943 <https://arxiv.org/abs/2308.12943>`_
+- [**Caprini:2024gyk**]: A. Roper Pol, I. Stomberg, C. Caprini, R. Jinno,
+  T. Konstandin, H. Rubira, "*Gravitational waves from first-order
+  phase transitions: from weak to strong,*" JHEP **07** (2025) 217,
+  `arXiv:2409.03651 <https://arxiv.org/abs/2409.03651>`_.
 
-Caprini:2024gyk  - A. Roper Pol, I. Stomberg, C. Caprini, R. Jinno,
-T. Konstandin, H. Rubira, "*Gravitational waves from first-order
-phase transitions: from weak to strong,*" JHEP **07** (2025) 217,
-`arXiv:2409.03651 <https://arxiv.org/abs/2409.03651>`_.
+- [**Caprini:2024hue**]: E. Madge, C. Caprini, R. Jinno, M. Lewicki,
+  M. Merchand, G. Nardini, M. Pieroni, A. Roper Pol, V. Vaskonen,
+  *"Gravitational waves from first-order phase transitions in LISA:
+  reconstruction pipeline and physics interpretation,*"
+  JCAP **10** (2024), 020,
+  `arXiv:2403.03723 <https://arxiv.org/abs/2403.03723>`_.
 
-Caprini:2024hue  - E. Madge, C. Caprini, R. Jinno, M. Lewicki,
-M. Merchand, G. Nardini, M. Pieroni, A. Roper Pol, V. Vaskonen,
-*"Gravitational waves from first-order phase transitions in LISA:
-reconstruction pipeline and physics interpretation,*"
-JCAP **10** (2024), 020, `arXiv:2403.03723 <https://arxiv.org/abs/2403.03723>`_.
-
-RoperPol:2025b   - A. Roper Pol, A. Midiri, M. Salomé, C. Caprini,
-"Modeling the gravitational wave spectrum from slowly decaying sources in the
-early Universe: constant-in-time and coherent-decay models," in preparation
+- [**RoperPol:2025b**]: A. Roper Pol, A. Midiri, M. Salomé, C. Caprini,
+  "Modeling the gravitational wave spectrum from slowly decaying sources in the
+  early Universe: constant-in-time and coherent-decay models," in preparation
 """
 
 import numpy as np

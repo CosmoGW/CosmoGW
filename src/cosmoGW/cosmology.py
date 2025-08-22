@@ -11,51 +11,55 @@ Currently part of the cosmoGW code:
 https://github.com/cosmoGW/cosmoGW/
 https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/cosmology.py
 
+.. note::
+   For full documentation, visit `Read the Docs
+   <https://cosmogw-manual.readthedocs.io/en/latest/cosmology.html>`_
+
 To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
 
     pip install cosmoGW
 
 Author
 ------
-- Alberto Roper Pol
+- **Alberto Roper Pol**
+  (`alberto.roperpol@unige.ch <mailto:alberto.roperpol@unige.ch>`_)
 
 Dates
 -----
-- Created: 27/11/2022 (GW_turbulence)
-- Updated: 21/08/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
+- Created: **27/11/2022** (*GW_turbulence*)
+- Updated: **21/08/2025** (release **cosmoGW 1.0**:
+  https://pypi.org/project/cosmoGW)
 
 References
 ----------
+ - [**RoperPol:2018sap**]: A. Roper Pol, A. Brandenburg, T. Kahniashvili,
+   A. Kosowsky, S. Mandal, "*The timestep constraint in solving the
+   gravitational wave equations sourced by hydromagnetic turbulence,*".
+   Geophys. Astrophys. Fluid Dynamics **114**, 1, 130 (2020),
+   `arXiv:1807.05479 <https://arxiv.org/abs/1807.05479>`_.
 
-- RoperPol:2018sap - A. Roper Pol, A. Brandenburg, T. Kahniashvili,
-A. Kosowsky, S. Mandal, "*The timestep constraint in solving the
-gravitational wave equations sourced by hydromagnetic turbulence,*"
-Geophys. Astrophys. Fluid Dynamics **114**, 1, 130 (2020),
-`arXiv:1807.05479 <https://arxiv.org/abs/1807.05479>`_.
+ - [**RoperPol:2019wvy**]: A. Roper Pol, S. Mandal, A. Brandenburg,
+   T. Kahniashvili, A. Kosowsky, "*Numerical simulations of gravitational
+   waves from early-universe turbulence,*" Phys. Rev. D **102**, 083512 (2020),
+   `arXiv:1903.08585 <https://arxiv.org/abs/1903.08585>`_.
 
-- RoperPol:2019wvy - A. Roper Pol, S. Mandal, A. Brandenburg,
-T. Kahniashvili, A. Kosowsky, "*Numerical simulations of gravitational
-waves from early-universe turbulence,*" Phys. Rev. D **102**, 083512 (2020),
-`arXiv:1903.08585 <https://arxiv.org/abs/1903.08585>`_.
+ - [**RoperPol:2022iel**]: A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,
+   "*The gravitational wave signal from primordial magnetic fields in the
+   Pulsar Timing Array frequency band,*" Phys. Rev. D **105**, 123502 (2022),
+   `arXiv:2201.05630 <https://arxiv.org/abs/2201.05630>`_.
 
-- RoperPol:2022iel - A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,
-"*The gravitational wave signal from primordial magnetic fields in the
-Pulsar Timing Array frequency band,*" Phys. Rev. D **105**, 123502 (2022),
-`arXiv:2201.05630 <https://arxiv.org/abs/2201.05630>`_.
+ - [**He:2022qcs**]: Y. He, A. Roper Pol, A. Brandenburg,
+   "*Modified propagation of gravitational waves from the early
+   radiation era,*" JCAP **06** (2023), 025,
+   `arXiv:2212.06082 <https://arxiv.org/abs/2212.06082>`_.
 
-- He:2022qcs       - Y. He, A. Roper Pol, A. Brandenburg,
-"*Modified propagation of gravitational waves from the early
-radiation era,*" JCAP **06** (2023), 025,
-`arXiv:2212.06082 <https://arxiv.org/abs/2212.06082>`_.
+ - [**Planck:2018vyg**]: [Planck], "*Planck 2018 results. VI.
+   Cosmological parameters,*" Astron. Astrophys. **641** (2020) A6,
+   Astron. Astrophys. **652** (2021) C4 (erratum),
+   `arXiv:1807.06209 <https://arxiv.org/abs/1807.06209>`_.
 
-- Planck:2018vyg   - [Planck], "*Planck 2018 results. VI.
-Cosmological parameters,*" Astron. Astrophys. **641** (2020) A6,
-Astron. Astrophys. **652** (2021) C4 (erratum),
-`arXiv:1807.06209 <https://arxiv.org/abs/1807.06209>`_.
-
-- Rasanen - Lecture notes on Cosmology by Syksy Räsänen
-(https://www.mv.helsinki.fi/home/syrasane/cosmo/)
-
+ - [**Rasanen**]: Lecture notes on Cosmology by Syksy Räsänen
+   (https://www.mv.helsinki.fi/home/syrasane/cosmo/)
 """
 
 import astropy.constants as const

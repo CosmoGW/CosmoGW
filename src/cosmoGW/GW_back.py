@@ -21,34 +21,35 @@ To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
 
 Author
 ------
-Alberto Roper Pol
+- **Alberto Roper Pol** \
+(`alberto.roperpol@unige.ch <mailto:alberto.roperpol@unige.ch>`_)
 
 Dates
 -----
-Created: 01/12/2021 (GW_turbulence)
-
-Updated: 21/08/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
+- Created: **01/12/2021** (*GW_turbulence*)
+- Updated: **21/08/2025** \
+    (release **cosmoGW 1.0**: https://pypi.org/project/cosmoGW)
 
 References
 ----------
-Maggiore:1999vm  - M. Maggiore, "*Gravitational wave experiments and
-early universe cosmology,*" Phys.Rept. **331** (2000) 283-367,
+- [**Maggiore:1999vm**]: M. Maggiore, "*Gravitational wave experiments and\
+early universe cosmology,*" Phys.Rept. **331** (2000) 283-367,\
 `arXiv:gr-qc/9909001 <https://arxiv.org/abs/gr-qc/9909001>`_.
 
-RoperPol:2018sap - A. Roper Pol, A. Brandenburg, T. Kahniashvili,
-A. Kosowsky, S. Mandal, "*The timestep constraint in solving the
-gravitational wave equations sourced by hydromagnetic turbulence,*"
-Geophys. Astrophys. Fluid Dynamics **114**, 1, 130 (2020),
+- [**RoperPol:2018sap**]: A. Roper Pol, A. Brandenburg, T. Kahniashvili,\
+A. Kosowsky, S. Mandal, "*The timestep constraint in solving the\
+gravitational wave equations sourced by hydromagnetic turbulence,*"\
+Geophys. Astrophys. Fluid Dynamics **114**, 1, 130 (2020),\
 `arXiv:1807.05479 <https://arxiv.org/abs/1807.05479>`_.
 
-RoperPol:2021xnd - A. Roper Pol, S. Mandal, A. Brandenburg,
-T. Kahniashvili, "*Polarization of gravitational waves from helical
-MHD turbulent sources,*" JCAP **04** (2022), 019,
+- [**RoperPol:2021xnd**]: A. Roper Pol, S. Mandal, A. Brandenburg,\
+T. Kahniashvili, "*Polarization of gravitational waves from helical\
+MHD turbulent sources,*" JCAP **04** (2022), 019,\
 `arXiv:2107.05356 <https://arxiv.org/abs/2107.05356>`_.
 
-RoperPol:2022iel - A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,
-*"*The gravitational wave signal from primordial magnetic fields in the
-Pulsar Timing Array frequency band,*" Phys. Rev. D **105**, 123502 (2022),
+- [**RoperPol:2022iel**]: A. Roper Pol, C. Caprini, A. Neronov, D. Semikoz,\
+"*The gravitational wave signal from primordial magnetic fields in the\
+Pulsar Timing Array frequency band,*" Phys. Rev. D **105**, 123502 (2022),\
 `arXiv:2201.05630 <https://arxiv.org/abs/2201.05630>`_.
 """
 
