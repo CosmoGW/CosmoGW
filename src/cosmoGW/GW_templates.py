@@ -817,13 +817,8 @@ def _shape_sw_HLnew(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, strength,
     Caprini:2024gyk.
     Uses Dw = xi_shell/max(vw, cs).
     '''
-    # smoothness parameters
-    if alp1_sw == 0:
-        alp1_sw = alp1_HL
-    if alp2_sw == 0:
-        alp2_sw = alp2_HL
-    if not interpolate_HL:
-        # peak positions
+
+    def _get_peaks_HLnew(strength, Dw):
         peak1 = 0.4
         if strength == 'weak':
             peak2 = 0.5 / Dw
@@ -831,16 +826,18 @@ def _shape_sw_HLnew(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, strength,
             peak2 = 1.
         else:
             peak2 = 0.5
+        return peak1, peak2
+    
+    def _compute_shape_HLnew(s, peak1, peak2, a_sw, b_sw, c_sw,
+                             alp1_sw, alp2_sw):
         return GW_analytical.smoothed_double_bPL(
             s, peak1, peak2, A=1., a=a_sw, b=b_sw,
             c=c_sw, alp1=alp1_sw, alp2=alp2_sw, alpha2=True
         )
-    else:
-        if len(vws) == 0 or len(alphas) == 0:
-            print('To use interpolate_HL in Sf_shape_sw, '
-                  'give values of vws and alphas')
-            return 0
-        # take values from higgsless dataset
+
+    def _interpolate_peaks_and_shape_HLnew(s, vws, alphas, bs_k1HL, bs_k2HL,
+                                           quiet, corrRs, cs2,
+                                           interpolate_HL_n3):
         dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df = pd.read_csv(dirr)
         val_str = 'k1'
@@ -870,11 +867,35 @@ def _shape_sw_HLnew(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, strength,
             c_sw = -interpolate_HL_vals(
                 df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k2HL
             )
+        else:
+            c_sw = None
         if not quiet:
             _data_warning(boxsize=f'{bs_k1HL} and {bs_k2HL}')
-        return GW_analytical.smoothed_double_bPL(
-            s, peaks1, peaks2, A=1., a=a_sw, b=b_sw, c=c_sw,
-            alp1=alp1_sw, alp2=alp2_sw, alpha2=True
+        return peaks1, peaks2, s, c_sw
+
+    # smoothness parameters
+    if alp1_sw == 0:
+        alp1_sw = alp1_HL
+    if alp2_sw == 0:
+        alp2_sw = alp2_HL
+    if not interpolate_HL:
+        # peak positions
+        peak1, peak2 = _get_peaks_HLnew(strength, Dw)
+        return _compute_shape_HLnew(
+            s, peak1, peak2, a_sw, b_sw, c_sw, alp1_sw, alp2_sw
+        )
+    else:
+        if len(vws) == 0 or len(alphas) == 0:
+            print('To use interpolate_HL in Sf_shape_sw, '
+                  'give values of vws and alphas')
+            return 0
+        # take values from higgsless dataset
+        peaks1, peaks2, s, c_sw = _interpolate_peaks_and_shape_HLnew(
+            s, vws, alphas, bs_k1HL, bs_k2HL, quiet,
+            corrRs, cs2, interpolate_HL_n3
+        )
+        return _compute_shape_HLnew(
+            s, peaks1, peaks2, a_sw, b_sw, c_sw, alp1_sw, alp2_sw
         )
 
 
@@ -1032,7 +1053,9 @@ def OmGW_spec_sw(
         interpolate_HL_n3, corrRs, cs2, quiet
     )
 
-    OmGW, freqs = _assemble_spectrum(s, vws, alphas, betas, ampl, pref, S, cs2, corrRs)
+    OmGW, freqs = _assemble_spectrum(
+        s, vws, alphas, betas, ampl, pref, S, cs2, corrRs
+    )
 
     if redshift:
         freqs, OmGW = GW_back.shift_OmGW_today(
