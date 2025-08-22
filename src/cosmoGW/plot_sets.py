@@ -29,6 +29,7 @@ plt.rcParams.update({'axes.labelsize': 'x-large',
                      'ytick.labelsize': 'x-large',
                      'legend.fontsize': 'x-large'})
 
+
 def axes_lines(ax=[], both=True):
 
     """
@@ -36,13 +37,15 @@ def axes_lines(ax=[], both=True):
     plots.
     """
 
-    if ax == []: ax = plt.gca()
+    if ax == []:
+        ax = plt.gca()
     ax.tick_params(axis='y', direction='in', length=12)
     ax.tick_params(axis='x', direction='in', length=12, pad=10)
     ax.tick_params(which='minor', direction='in', length=6)
     if both:
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_ticks_position('both')
+
 
 def save_fig(dirr='', name='fig', form='pdf', axes=True):
 
@@ -60,16 +63,17 @@ def save_fig(dirr='', name='fig', form='pdf', axes=True):
 
     import os
 
-    if axes: axes_lines()
+    if axes:
+        axes_lines()
     plts = dirr + 'plots/'
 
     if not os.path.isdir(plts):
         try:
             os.mkdir(plts)
-        except:
+        except Exception:
             print('Not possible to create directory', plts)
             plts = plts
 
     figg = name + '.' + form
-    print('Saving figure in %s%s'%(plts, figg))
+    print('Saving figure in %s%s' % (plts, figg))
     plt.savefig(plts + figg, bbox_inches='tight')
