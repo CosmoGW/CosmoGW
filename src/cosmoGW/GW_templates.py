@@ -1068,30 +1068,6 @@ def OmGW_spec_sw(
     freqs = reshape_output_3d(freqs, True, mult_vws, mult_beta)
     OmGW = reshape_output_3d(OmGW, mult_vws, mult_alpha, mult_beta)
 
-    # if not mult_vws:
-    #     if not mult_beta:
-    #         freqs = freqs[:, 0, 0]
-    #         if not mult_alpha:
-    #             OmGW = OmGW[:, 0, 0, 0]
-    #         else:
-    #             OmGW = OmGW[:, 0, :, 0]
-    #     else:
-    #         freqs = freqs[:, 0, :]
-    #         if not mult_alpha:
-    #             OmGW = OmGW[:, 0, 0, :]
-    #         else:
-    #             OmGW = OmGW[:, 0, :, :]
-    # else:
-    #     if not mult_beta:
-    #         freqs = freqs[:, :, 0]
-    #         if not mult_alpha:
-    #             OmGW = OmGW[:, :, 0, 0]
-    #         else:
-    #             OmGW = OmGW[:, :, :, 0]
-    #     else:
-    #         if not mult_alpha:
-    #             OmGW = OmGW[:, :, 0, :]
-
     return freqs, OmGW
 
 
@@ -1185,66 +1161,85 @@ def _compute_spectral_shape(
     Compute the spectral shape for the given model and parameters,
     called from :func:`OmGW_spec_sw`.
     '''
+
     if not quiet:
         print('Computing spectral shape using model ', model_shape)
 
     if model_shape == ['sw_LISAold']:
-        S = Sf_shape_sw(s, model=model_shape)
-        mu = safe_trapezoid(S, np.log(s))
-        S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
+        return _spectral_shape_LISAold(s, vws, alphas)
 
-    elif model_shape in ['sw_HL', 'sw_SSM']:
-        Dw = abs(vws - cs) / vws
-        S = Sf_shape_sw(
-            s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
-            alp1_sw=alp1_sw, alp2_sw=alp2_sw
+    if model_shape in ['sw_HL', 'sw_SSM']:
+        return _spectral_shape_HL_SSM(s, vws, alphas, cs, a_sw, b_sw, c_sw, alp1_sw, alp2_sw)
+
+    if model_shape in ['sw_LISA', 'sw_HLnew']:
+        return _spectral_shape_LISA_HLnew(
+            s, vws, alphas, cs, a_sw, b_sw, c_sw, alp1_sw, alp2_sw,
+            strength, interpolate_HL_shape, bs_k1HL, bs_HL_eff,
+            interpolate_HL_n3, corrRs, cs2, quiet, model_shape
         )
-        mu = safe_trapezoid(S, np.log(s), axis=0)
-        S = S / mu
-        S0 = np.zeros((len(s), len(vws), len(alphas)))
-        for i in range(len(alphas)):
-            S0[:, :, i] = S
-        S = S0
 
-    elif model_shape in ['sw_LISA', 'sw_HLnew']:
-        # in some models, Dw is required to be computed for the array
-        # of vws and alphas
-        Dw_2d = True
-        if model_shape == 'sw_HLnew':
-            if strength != 'weak' or interpolate_HL_shape:
-                Dw_2d = False
-        if Dw_2d:
-            if not quiet:
-                print('Computing sound-shell thickness')
-            _, _, _, _, _, _, xi_shocks, _ = \
-                hydro_bubbles.compute_profiles_vws_multalp(
+    print('Choose an available model for model_shape in OmGW_spec_sw')
+    print('Available models are sw_LISA, sw_HL, sw_HLnew, sw_SSM, sw_LISAold')
+    return 0
+
+
+def _spectral_shape_LISAold(s, vws, alphas):
+    S = Sf_shape_sw(s, model=['sw_LISAold'])
+    mu = safe_trapezoid(S, np.log(s))
+    S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
+    return S / mu
+
+
+def _spectral_shape_HL_SSM(s, vws, alphas, cs, a_sw, b_sw, c_sw,
+                           alp1_sw, alp2_sw):
+    Dw = abs(vws - cs) / vws
+    S = Sf_shape_sw(
+        s, model=['sw_HL'], Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
+        alp1_sw=alp1_sw, alp2_sw=alp2_sw
+    )
+    mu = safe_trapezoid(S, np.log(s), axis=0)
+    S = S / mu
+    S0 = np.zeros((len(s), len(vws), len(alphas)))
+    for i in range(len(alphas)):
+        S0[:, :, i] = S
+    return S0
+
+
+def _spectral_shape_LISA_HLnew(
+    s, vws, alphas, cs, a_sw, b_sw, c_sw, alp1_sw, alp2_sw,
+    strength, interpolate_HL_shape, bs_k1HL, bs_HL_eff,
+    interpolate_HL_n3, corrRs, cs2, quiet, model_shape
+):
+    Dw_2d = True
+    if model_shape == 'sw_HLnew':
+        if strength != 'weak' or interpolate_HL_shape:
+            Dw_2d = False
+    if Dw_2d:
+        if not quiet:
+            print('Computing sound-shell thickness')
+        _, _, _, _, _, _, xi_shocks, _ = \
+            hydro_bubbles.compute_profiles_vws_multalp(
                     alphas, vws=vws
-                )
-            Dw = np.zeros((len(vws), len(alphas)))
-            for i in range(len(alphas)):
-                vw_max = np.maximum(vws, cs)
-                vw_min = np.minimum(vws, cs)
-                Dw[:, i] = (xi_shocks[:, i] - vw_min) / vw_max
-        else:
-            Dw = 0.
-        S = Sf_shape_sw(
-            s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
-            alp1_sw=alp1_sw, alp2_sw=alp2_sw, strength=strength,
-            interpolate_HL=interpolate_HL_shape,
-            bs_k1HL=bs_k1HL, bs_k2HL=bs_HL_eff, vws=vws, alphas=alphas,
-            quiet=quiet, interpolate_HL_n3=interpolate_HL_n3,
-            corrRs=corrRs, cs2=cs2
-        )
-        mu = safe_trapezoid(S, np.log(s), axis=0)
-        if not interpolate_HL_shape:
-            if strength != 'weak':
-                S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
+            )
+        Dw = np.zeros((len(vws), len(alphas)))
+        for i in range(len(alphas)):
+            vw_max = np.maximum(vws, cs)
+            vw_min = np.minimum(vws, cs)
+            Dw[:, i] = (xi_shocks[:, i] - vw_min) / vw_max
     else:
-        print('Choose an available model for model_shape in OmGW_spec_sw')
-        print('Available models are sw_LISA, sw_HL, sw_HLnew, sw_SSM, '
-              'sw_LISAold')
-        return 0
-
+        Dw = 0.
+    S = Sf_shape_sw(
+        s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
+        alp1_sw=alp1_sw, alp2_sw=alp2_sw, strength=strength,
+        interpolate_HL=interpolate_HL_shape,
+        bs_k1HL=bs_k1HL, bs_k2HL=bs_HL_eff, vws=vws, alphas=alphas,
+        quiet=quiet, interpolate_HL_n3=interpolate_HL_n3,
+        corrRs=corrRs, cs2=cs2
+    )
+    mu = safe_trapezoid(S, np.log(s), axis=0)
+    if not interpolate_HL_shape:
+        if strength != 'weak':
+            S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
     return S / mu
 
 
