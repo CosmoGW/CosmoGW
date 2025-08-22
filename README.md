@@ -60,7 +60,7 @@ The main routines of cosmoGW are stored under `src/cosmoGW`:
 - [`cosmology.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/cosmology.py): Cosmological calculations.
 - [`GW_analytical.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_analytical.py): Analytical calculations and mathematical functions.
 - [`GW_back.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_back.py): Functions for cosmological GW backgrounds.
-- [`GW_models.py`](shttps://github.com/cosmoGW/cosmoGW/blob/main/rc/cosmoGW/GW_models.py): Theoretical and numerical models for sources of GWs.
+- [`GW_models.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_models.py): Theoretical and numerical models for sources of GWs.
 - [`GW_templates.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_templates.py): Templates for GW backgrounds from different sources.
 - [`hydro_bubbles.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/hydro_bubbles.py): Fluid perturbations from bubbles in first-order phase transitions.
 - [`interferometry.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/interferometry.py): Response and sensitivity functions for GW detectors (LISA, Taiji).
@@ -100,9 +100,9 @@ by loading the notebooks from GitHub.
 When using Colab, latex needs to be installed, together with CosmoGW, for plotting routines.
 For the installation, uncomment and execute the first cell of the tutorials:
 
-```python
-!pip instal cosmoGW
-!sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
+```bash
+pip install cosmoGW
+sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
 ```
 
 ---
