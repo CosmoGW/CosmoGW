@@ -68,7 +68,7 @@ import matplotlib.pyplot as plt
 from cosmoGW.utils import (
     cs2_ref, Nxi_ref, vw_def, alpha_def, vw_hyb, alpha_hyb, vw_det, alpha_det,
     tol_ref, it_ref, Nvws_ref, Nxi2_ref, cols_ref,
-    safe_trapezoid
+    safe_trapezoid, reshape_output
 )
 
 
@@ -144,12 +144,8 @@ def type_nucleation(vw, alp, cs2=cs2_ref):
     ty[vw < cs] = 'def'
     ty[vw > v_cj] = 'det'
 
-    if not mult_alp and not mult_vw:
-        ty = ty[0, 0]
-    elif not mult_alp:
-        ty = ty[:, 0]
-    elif not mult_vw:
-        ty = ty[0, :]
+    ty = reshape_output(ty, mult_vw, mult_alp)
+
     return ty
 
 
@@ -1383,12 +1379,7 @@ def kappas_Esp(vw, alp, cs2=cs2_ref):
     )
     kappa[ty == 'hyb'] = kappa_hyb[ty == 'hyb']
 
-    if not mult_alp and not mult_vw:
-        kappa = kappa[0, 0]
-    elif not mult_alp:
-        kappa = kappa[:, 0]
-    elif not mult_vw:
-        kappa = kappa[0, :]
+    kappa = reshape_output(kappa, mult_vw, mult_alp)
 
     return kappa
 

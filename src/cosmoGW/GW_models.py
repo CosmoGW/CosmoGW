@@ -86,7 +86,8 @@ import matplotlib.pyplot as plt
 from cosmoGW import hydro_bubbles
 from cosmoGW.utils import (
     a_ref, b_ref, alp_ref, tini_ref, tfin_ref, cs2_ref, N_turb, lf_ref, Oms_ref,
-    beta_ref, dt0_ref, Np_ref, Nk_ref, Nkconv_ref, NTT_ref, safe_trapezoid
+    beta_ref, dt0_ref, Np_ref, Nk_ref, Nkconv_ref, NTT_ref,
+    safe_trapezoid, reshape_output
 )
 
 
@@ -341,13 +342,7 @@ def Delta_cit(t, k, tini=tini_ref, tfin=tfin_ref, expansion=True):
     aux1 = cost * (ci_t - ci_tini)
     aux2 = sint * (si_t - si_tini)
     D = aux1 + aux2
-
-    if not mult_t and not mult_k:
-        D = D[0, 0]
-    elif not mult_t:
-        D = D[0, :]
-    elif not mult_k:
-        D = D[:, 0]
+    D = reshape_output(D, mult_t, mult_k)
 
     return D
 
@@ -504,12 +499,7 @@ def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb,
         inds = np.where(s >= 1 / dtfin)
         TGW[inds] = (lf / 2 / np.pi / s)[inds] ** 2
 
-    if not mult_Oms and not mult_lf:
-        TGW = TGW[:, 0, 0]
-    elif not mult_Oms:
-        TGW = TGW[:, 0, :]
-    elif not mult_lf:
-        TGW = TGW[:, :, 0]
+    TGW = reshape_output(TGW, mult_Oms, mult_lf)
 
     return TGW
 
