@@ -193,6 +193,64 @@ def _data_warning(boxsize=20):
     print('Values out of this range should be taken with care')
 
 
+def _fill_grid(df2, val_vws, val_alphas, value):
+    '''
+    Function to read variable values from the DataFrame and fill a grid
+    used in :func:`interpolate_HL_vals`.
+    '''
+    Omegas = np.full((len(val_vws), len(val_alphas)), -1e30)
+    for i, alpha in enumerate(val_alphas):
+        for j, vw in enumerate(val_vws):
+            Om = np.array(df2[value][(df2.v_wall == vw) & (df2.alpha == alpha)])
+            if len(Om) > 0:
+                Omegas[j, i] = Om[0]
+                if value == 'curly_K_0_512':
+                    Omegas[j, i] *= (1 + alpha) / alpha
+    return Omegas
+
+
+def _interpolate_vws(Omegas, vws, val_vws):
+    '''
+    Interpolate Omega values to arbitrary wall velocities
+    used in :func:`interpolate_HL_vals`.
+    '''
+    Omss = np.zeros((len(vws), Omegas.shape[1]))
+    for i in range(Omegas.shape[1]):
+        inds = np.where(Omegas[:, i] > -1e30)[0]
+        Omss[:, i] = np.interp(vws, val_vws[inds], Omegas[inds, i])
+        inds2 = np.where(Omegas[:, i] == -1e30)[0]
+        Omegas[inds2, i] = np.interp(
+            val_vws[inds2], val_vws[inds], Omegas[inds, i]
+        )
+    return Omss, Omegas
+
+
+def _interpolate_alphas(Omss, alphas, val_alphas, vws, value):
+    '''
+    Interpolate Omega values to arbitrary alpha values
+    used in :func:`interpolate_HL_vals`.
+    '''
+    mult_alpha = isinstance(alphas, (list, tuple, np.ndarray))
+    if mult_alpha:
+        Omsss = np.zeros((len(vws), len(alphas)))
+        for i in range(len(vws)):
+            Omsss[i, :] = np.interp(
+                np.log10(alphas), np.log10(val_alphas), Omss[i, :]
+            )
+        if value == 'curly_K_0_512':
+            _, alpsij = np.meshgrid(vws, alphas, indexing='ij')
+            Omsss *= alpsij / (1 + alpsij)
+    else:
+        Omsss = np.zeros(len(vws))
+        for i in range(len(vws)):
+            Omsss[i] = np.interp(
+                np.log10(alphas), np.log10(val_alphas), Omss[i, :]
+            )
+        if value == 'curly_K_0_512':
+            Omsss *= alphas / (1 + alphas)
+    return Omsss
+
+
 def interpolate_HL_vals(df, vws, alphas, value='Omega_tilde_int_extrap',
                         boxsize=40, numerical=False, quiet=False):
 
@@ -247,61 +305,19 @@ def interpolate_HL_vals(df, vws, alphas, value='Omega_tilde_int_extrap',
     Caprini:2024gyk
     """
 
-    mult_alpha = isinstance(alphas, (list, tuple, np.ndarray))
     columns = df.box_size == boxsize
     df2 = df[columns]
     val_alphas = np.unique(df2['alpha'])
     val_vws = np.unique(df2['v_wall'])
 
-    Omegas = np.zeros((len(val_vws), len(val_alphas))) - 1e30
-
-    for i in range(0, len(val_alphas)):
-        for j in range(0, len(val_vws)):
-            Om = np.array(
-                df2[value][(df2.v_wall == val_vws[j]) *
-                           (df2.alpha == val_alphas[i])]
-            )
-            if (len(Om) > 0):
-                Omegas[j, i] = Om[0]
-                # for curly_K0 we interpolate
-                # kappa0 = curly_K0/alpha*(1 + alpha)
-                if value == 'curly_K_0_512':
-                    Omegas[j, i] *= (1 + val_alphas[i])/val_alphas[i]
-
+    # construct Omegas from numerical data
+    Omegas = _fill_grid(df2, val_vws, val_alphas, value)
     # interpolate for all values of vws for the 3 values of alpha
-    Omss = np.zeros((len(vws), len(val_alphas)))
-    for i in range(0, len(val_alphas)):
-        inds = np.where(Omegas[:, i] > -1e30)[0]
-        Omss[:, i] = np.interp(vws, val_vws[inds], Omegas[inds, i])
-        inds2 = np.where(Omegas[:, i] == -1e30)[0]
-        Omegas[inds2, i] = np.interp(
-            val_vws[inds2], val_vws[inds], Omegas[inds, i]
-        )
-
-    # interpolate for all values of alpha
-    if mult_alpha:
-        Omsss = np.zeros((len(vws), len(alphas)))
-        for i in range(0, len(vws)):
-            Omsss[i, :] = np.interp(
-                np.log10(alphas), np.log10(val_alphas), Omss[i, :]
-            )
-
-        # for curly_K0 we interpolate kappa0 = curly_K0/alpha*(1 + alpha)
-        if value == 'curly_K_0_512':
-            _, alpsij = np.meshgrid(val_vws, val_alphas, indexing='ij')
-            Omegas *= alpsij / (1 + alpsij)
-            _, alpsij = np.meshgrid(vws, alphas, indexing='ij')
-            Omsss *= alpsij / (1 + alpsij)
-    else:
-        Omsss = np.zeros(len(vws))
-        for i in range(0, len(vws)):
-            Omsss[i] = np.interp(
-                np.log10(alphas), np.log10(val_alphas), Omss[i, :]
-            )
-        # for curly_K0 we interpolate kappa0 = curly_K0/alpha*(1 + alpha)
-        if value == 'curly_K_0_512':
-            Omsss *= alphas / (1 + alphas)
-            Omegas *= val_alphas / (1 + val_alphas)
+    Omss, Omegas = _interpolate_vws(Omegas, vws, val_vws)
+    Omsss = _interpolate_alphas(Omss, alphas, val_alphas, vws, value)
+    if value == 'curly_K_0_512':
+        _, alpsij = np.meshgrid(val_vws, val_alphas, indexing='ij')
+        Omegas *= alpsij / (1 + alpsij)
 
     if not quiet:
         _data_warning(boxsize=boxsize)
