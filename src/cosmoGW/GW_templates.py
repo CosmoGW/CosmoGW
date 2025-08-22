@@ -675,7 +675,8 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref,
 
 def _prepare_Dw(s, Dw, model, strength, interpolate_HL):
     '''
-    Prepare sound-shell thickness for the models where it is required.
+    Prepare sound-shell thickness for the models where it is required,
+    called from :func:`Sf_shape_sw`.
     '''
     mult_Dw = isinstance(Dw, (list, tuple, np.ndarray))
     Dw_2d = False
@@ -701,7 +702,9 @@ def _prepare_Dw(s, Dw, model, strength, interpolate_HL):
 
 def _shape_sw_LISAold(s):
     '''
-    Shape function for the LISA old model.
+    Shape function for the LISA old model, called from
+    :func:`Sf_shape_sw`.
+
     Reference for sound waves based on simulations of Hindmarsh:2017gnf
     is Caprini:2019egz (equation 30) with only one peak.
     '''
@@ -712,7 +715,9 @@ def _shape_sw_LISAold(s):
 
 def _shape_sw_SSM(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, mult_Dw):
     '''
-    Shape function for the Sound Shell Model (sw_SSM).
+    Shape function for the Sound Shell Model (sw_SSM), called from
+    :func:`Sf_shape_sw`.
+
     Reference for sound waves based on Sound Shell Model (sw_SSM) is
     RoperPol:2023bqa, equation 6, based on the results presented in
     Hindmarsh:2019phv, equation 5.7.
@@ -748,7 +753,9 @@ def _shape_sw_SSM(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, mult_Dw):
 
 def _shape_sw_HL(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, mult_Dw):
     '''
-    Shape function for the Higgsless (sw_HL) model.
+    Shape function for the Higgsless (sw_HL) model, called from
+    :func:`Sf_shape_sw`.
+
     Reference for sound waves based on Higgsless (sw_HL) simulations is
     RoperPol:2023bqa, equation 6, based on the results presented in
     Hindmarsh:2019phv, equation 5.7.
@@ -777,7 +784,9 @@ def _shape_sw_HL(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, mult_Dw):
 def _shape_sw_LISA(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw):
 
     '''
-    Shape function for the LISA model.
+    Shape function for the LISA model, called from
+    :func:`Sf_shape_sw`.
+
     Reference for sound waves based on Higgsless simulations is
     Caprini:2024hue (equation 2.8), based on the results presented in
     Jinno:2022mie, see updated results and discussion in Caprini:2024gyk.
@@ -801,7 +810,9 @@ def _shape_sw_HLnew(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, strength,
                     interpolate_HL, bs_k1HL, bs_k2HL, vws, alphas, quiet,
                     interpolate_HL_n3, corrRs, cs2):
     '''
-    Shape function for the Higgsless (sw_HLnew) model.
+    Shape function for the Higgsless (sw_HLnew) model, called from
+    :func:`Sf_shape_sw`.
+
     Reference for sound waves based on updated HL results (sw_HLnew)
     Caprini:2024gyk.
     Uses Dw = xi_shell/max(vw, cs).
@@ -976,56 +987,120 @@ def OmGW_spec_sw(
     """
 
     cs = np.sqrt(cs2)
-    mult_alpha = isinstance(alphas, (list, tuple, np.ndarray))
-    mult_beta = isinstance(betas, (list, tuple, np.ndarray))
-    mult_vws = isinstance(vws, (list, tuple, np.ndarray))
-
-    if not mult_alpha:
-        alphas = np.array([alphas])
-    if not mult_vws:
-        vws = np.array([vws])
-    if not mult_beta:
-        betas = np.array([betas])
+    alphas, betas, vws, mult_alpha, mult_beta, mult_vws = \
+        _prepare_inputs(alphas, betas, vws)
 
     # Computing ampl_GWB
-
     if model_efficiency == 'higgsless' and not quiet:
         print('Computing the OmGW efficiency')
         _data_warning(boxsize=bs_HL_eff)
-
     ampl = ampl_GWB_sw(
         model=model_efficiency, OmGW_sw=OmGW_tilde,
         vws=vws, alphas=alphas, bs_HL=bs_HL_eff, quiet=True
     )
 
     # Computing pref_GWB
-
-    # Kinetic energy density
-
     if not quiet:
         print('Computing the kinetic energy density using the model',
               model_K0)
         if model_K0 == 'higgsless':
             _data_warning(boxsize=bs_HL_eff)
 
+    # Kinetic energy density K = rho_kin/rho_total = kappa alpha/(1 + alpha),
+    # where kappa is the efficiency in converting vacuum to kinetic energy.
+    # Oms_sw = v_f^2 = kappa alpha/(1 + cs2)
+    K, Oms_sw = _compute_kinetic_energy(
+        model_K0, vws, alphas, cs2, bs_HL_eff, quiet
+    )
+
+    # Decay rate
+    interpol_b = False
+    if interpolate_HL_decay and model_decay == 'decay':
+        b = _compute_decay_b(vws, alphas, bs_HL_eff, quiet)
+        interpol_b = True
+
+    # prefactor GWB of sound waves
+    pref = _compute_prefactor(
+        vws, alphas, betas, Oms_sw, model_decay, Nsh, b, expansion,
+        cs2, corrRs, interpol_b
+    )
+
+    # Computing the spectral shape and sound-shell thickness
+    S = _compute_spectral_shape(
+        s, vws, alphas, cs, a_sw, b_sw, c_sw, alp1_sw, alp2_sw,
+        model_shape, strength, interpolate_HL_shape, bs_k1HL, bs_HL_eff,
+        interpolate_HL_n3, corrRs, cs2, quiet
+    )
+
+    OmGW, freqs = _assemble_spectrum(s, vws, alphas, betas, ampl, pref, S, cs2, corrRs)
+
+    if redshift:
+        freqs, OmGW = GW_back.shift_OmGW_today(
+            freqs, OmGW, g=gstar, gS=gS, T=T, h0=h0, kk=False, Neff=Neff
+        )
+
+    freqs = reshape_output_3d(freqs, True, mult_vws, mult_beta)
+    OmGW = reshape_output_3d(OmGW, mult_vws, mult_alpha, mult_beta)
+
+    # if not mult_vws:
+    #     if not mult_beta:
+    #         freqs = freqs[:, 0, 0]
+    #         if not mult_alpha:
+    #             OmGW = OmGW[:, 0, 0, 0]
+    #         else:
+    #             OmGW = OmGW[:, 0, :, 0]
+    #     else:
+    #         freqs = freqs[:, 0, :]
+    #         if not mult_alpha:
+    #             OmGW = OmGW[:, 0, 0, :]
+    #         else:
+    #             OmGW = OmGW[:, 0, :, :]
+    # else:
+    #     if not mult_beta:
+    #         freqs = freqs[:, :, 0]
+    #         if not mult_alpha:
+    #             OmGW = OmGW[:, :, 0, 0]
+    #         else:
+    #             OmGW = OmGW[:, :, :, 0]
+    #     else:
+    #         if not mult_alpha:
+    #             OmGW = OmGW[:, :, 0, :]
+
+    return freqs, OmGW
+
+
+def _prepare_inputs(alphas, betas, vws):
+    '''
+    Prepare the inputs for the GW calculation called
+    from :func:`OmGW_spec_sw`.
+    '''
+    mult_alpha = isinstance(alphas, (list, tuple, np.ndarray))
+    mult_beta = isinstance(betas, (list, tuple, np.ndarray))
+    mult_vws = isinstance(vws, (list, tuple, np.ndarray))
+    if not mult_alpha:
+        alphas = np.array([alphas])
+    if not mult_vws:
+        vws = np.array([vws])
+    if not mult_beta:
+        betas = np.array([betas])
+    return alphas, betas, vws, mult_alpha, mult_beta, mult_vws
+
+
+def _compute_kinetic_energy(model_K0, vws, alphas, cs2, bs_HL_eff, quiet):
+    '''
+    Compute the kinetic energy density for the given model and parameters,
+    called from :func:`OmGW_spec_sw`.
+    '''
+    # compute kappa, K and Oms following the bag equation of
+    # state as in Espinosa:2010hh
     if model_K0 == 'Espinosa':
-
-        # compute kappa, K and Oms following the bag equation of
-        # state as in Espinosa:2010hh
-
-        # kappa: efficiency in converting vacuum to kinetic energy
-        # K = rho_kin/rho_total = kappa alpha/(1 + alpha)
-        # Oms_sw = v_f^2 = kappa alpha/(1 + cs2)
         kap = hydro_bubbles.kappas_Esp(vws, alphas, cs2=cs2)
         K = kap * alphas / (1 + alphas)
         Oms_sw = kap * alphas / (1 + cs2)
-
+    # compute K and Oms directly from the numerical results of the
+    # Higgsless simulations of Caprini:2024gyk and interpolate to
+    # values of alpha and vws
     elif model_K0 == 'higgsless':
-
-        # compute K and Oms directly from the numerical results of the
-        # Higgsless simulations of Caprini:2024gyk and interpolate to
-        # values of alpha and vws
-
         dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df = pd.read_csv(dirr)
         val_str = 'curly_K_0_512'
@@ -1034,55 +1109,65 @@ def OmGW_spec_sw(
         )
         kap = K * (1 + alphas) / alphas
         Oms_sw = kap * alphas / (1 + cs2)
-
     else:
         print('Choose an available model for K0 in OmGW_spec_sw')
         print('Available models are Espinosa and higgsless')
-        return 0
+        return 0, 0
+    return K, Oms_sw
 
-    # Decay rate
 
-    interpol_b = False
-    if interpolate_HL_decay and model_decay == 'decay':
-        dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
-        df = pd.read_csv(dirr)
-        val_str = 'b'
-        b = interpolate_HL_vals(
-            df, vws, alphas, quiet=quiet, value=val_str, boxsize=bs_HL_eff
-        )
-        interpol_b = True
+def _compute_decay_b(vws, alphas, bs_HL_eff, quiet):
+    '''
+    Compute the decay parameter b when interpolate_HL_decay is True
+    and model_decay is 'decay', called from :func:`OmGW_spec_sw`.
+    '''
+    dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
+    df = pd.read_csv(dirr)
+    return interpolate_HL_vals(
+        df, vws, alphas, quiet=quiet, value='b', boxsize=bs_HL_eff
+    )
 
-    # prefactor GWB of sound waves
 
+def _compute_prefactor(vws, alphas, betas, Oms_sw, model_decay, Nsh,
+                       b, expansion, cs2, corrRs, interpol_b):
+    '''
+    Compute the prefactor for the gravitational wave background,
+    called from :func:`OmGW_spec_sw`.
+    '''
     pref = np.zeros((len(vws), len(alphas), len(betas)))
-    for i in range(0, len(vws)):
+    for i in range(len(vws)):
         # Fluid length scale R_star x beta
         lf = hydro_bubbles.Rstar_beta(vws[i], cs2=cs2, corr=corrRs) / betas
-        for j in range(0, len(alphas)):
-            for l in range(0, len(betas)):
+        for j in range(len(alphas)):
+            for l in range(len(betas)):
                 b_ij = b[i, j] if interpol_b else b
                 pref[i, j, l] = pref_GWB_sw(
                     Oms=Oms_sw[i, j], lf=lf[l], alpha=alphas[j],
                     model=model_decay, Nshock=Nsh, b=b_ij,
                     expansion=expansion, beta=betas[l], cs2=cs2
                 )
+    return pref
 
-    # Computing the spectral shape
 
-    # sound-shell thickness and spectral shape
+def _compute_spectral_shape(
+    s, vws, alphas, cs, a_sw, b_sw, c_sw, alp1_sw, alp2_sw,
+    model_shape, strength, interpolate_HL_shape, bs_k1HL, bs_HL_eff,
+    interpolate_HL_n3, corrRs, cs2, quiet
+):
 
+    '''
+    Compute the spectral shape for the given model and parameters,
+    called from :func:`OmGW_spec_sw`.
+    '''
     if not quiet:
         print('Computing spectral shape using model ', model_shape)
 
     if model_shape == ['sw_LISAold']:
-
         S = Sf_shape_sw(s, model=model_shape)
         mu = safe_trapezoid(S, np.log(s))
-        S = S / mu
         S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
 
     elif model_shape in ['sw_HL', 'sw_SSM']:
-
         Dw = abs(vws - cs) / vws
         S = Sf_shape_sw(
             s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
@@ -1096,7 +1181,6 @@ def OmGW_spec_sw(
         S = S0
 
     elif model_shape in ['sw_LISA', 'sw_HLnew']:
-
         # in some models, Dw is required to be computed for the array
         # of vws and alphas
         Dw_2d = True
@@ -1115,10 +1199,8 @@ def OmGW_spec_sw(
                 vw_max = np.maximum(vws, cs)
                 vw_min = np.minimum(vws, cs)
                 Dw[:, i] = (xi_shocks[:, i] - vw_min) / vw_max
-
         else:
             Dw = 0.
-
         S = Sf_shape_sw(
             s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
             alp1_sw=alp1_sw, alp2_sw=alp2_sw, strength=strength,
@@ -1128,18 +1210,19 @@ def OmGW_spec_sw(
             corrRs=corrRs, cs2=cs2
         )
         mu = safe_trapezoid(S, np.log(s), axis=0)
-        S = S / mu
-
         if not interpolate_HL_shape:
             if strength != 'weak':
                 S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
-
     else:
         print('Choose an available model for model_shape in OmGW_spec_sw')
         print('Available models are sw_LISA, sw_HL, sw_HLnew, sw_SSM, '
               'sw_LISAold')
         return 0
 
+    return S / mu
+
+
+def _assemble_spectrum(s, vws, alphas, betas, ampl, pref, S, cs2, corrRs):
     OmGW = np.zeros((len(s), len(vws), len(alphas), len(betas)))
     freqs = np.zeros((len(s), len(vws), len(betas)))
     for i in range(len(vws)):
@@ -1148,37 +1231,7 @@ def OmGW_spec_sw(
             freqs[:, i, l] = s / lf[l]
             for j in range(len(alphas)):
                 OmGW[:, i, j, l] = 3 * ampl[i, j] * pref[i, j, l] * S[:, i, j]
-
-    if redshift:
-        freqs, OmGW = GW_back.shift_OmGW_today(
-            freqs, OmGW, g=gstar, gS=gS, T=T, h0=h0, kk=False, Neff=Neff
-        )
-
-    if not mult_vws:
-        if not mult_beta:
-            freqs = freqs[:, 0, 0]
-            if not mult_alpha:
-                OmGW = OmGW[:, 0, 0, 0]
-            else:
-                OmGW = OmGW[:, 0, :, 0]
-        else:
-            freqs = freqs[:, 0, :]
-            if not mult_alpha:
-                OmGW = OmGW[:, 0, 0, :]
-            else:
-                OmGW = OmGW[:, 0, :, :]
-    else:
-        if not mult_beta:
-            freqs = freqs[:, :, 0]
-            if not mult_alpha:
-                OmGW = OmGW[:, :, 0, 0]
-            else:
-                OmGW = OmGW[:, :, :, 0]
-        else:
-            if not mult_alpha:
-                OmGW = OmGW[:, :, 0, :]
-
-    return freqs, OmGW
+    return OmGW, freqs
 
 
 # TURBULENCE
