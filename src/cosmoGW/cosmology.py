@@ -298,7 +298,7 @@ def rho_radiation(g=gref, T=Tref):
     return rho_rad
 
 
-def check_Hubble_Hz(H, func=''):
+def _check_Hubble_Hz(H, func=''):
     """
     Ensure Hubble rate is in Hz units.
 
@@ -344,7 +344,7 @@ def rho_critical(H=H0_ref):
     ---------
     RoperPol:2019wvy, eq. 3
     """
-    H = check_Hubble_Hz(H, func='rho_critical')
+    H = _check_Hubble_Hz(H, func='rho_critical')
     rho_c = 3 * H ** 2 * const.c ** 2 / 8 / np.pi / const.G
     rho_c = rho_c.to(u.GeV / u.m ** 3)
     return rho_c

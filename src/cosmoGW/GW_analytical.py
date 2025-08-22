@@ -77,7 +77,7 @@ b_ref = 2/3    # Kolmogorov spectrum k^(-2/3)
 alp_ref = 2    # reference smoothness of broken power-law transition
 
 
-def check_slopes(a, b, dlogk=True):
+def _check_slopes(a, b, dlogk=True):
     r"""
         Check the slopes used in power spectra to ensure
         that the integral over k or log k is converging.
@@ -188,7 +188,7 @@ def smoothed_bPL(k, A=1., a=a_ref, b=b_ref, kpeak=1., alp=alp_ref, norm=True,
     spec : ndarray
         Spectrum array.
     """
-    conv = check_slopes(a, b, dlogk=dlogk)
+    conv = _check_slopes(a, b, dlogk=dlogk)
     if not conv:
         return 0*k**0
 
