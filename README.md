@@ -2,10 +2,13 @@
 
 **CosmoGW** is a Python package for the analysis and modeling of cosmological gravitational wave (GW) backgrounds from different sources in the early Universe, including analytical models, templates, and data analysis routines.
 
-v1.0 (August 2025) focuses on the production of GWs from sound waves and MHD turbulence from
-cosmological phase transitions. CosmoGW is an extension of [*GW_turbulence*](https://github.com/AlbertoRoper/GW_turbulence), created in December 2021, used for calculations of GWs produced by MHD turbulence.
+**v1.0 (August 2025)** focuses on the production of GWs from *sound waves* and *MHD turbulence* from
+cosmological phase transitions.
+
 Other sources of GWs will be included in future versions, contact me if you are interested
 in contributing and becoming a developer.
+
+**CosmoGW** is an extension of [*GW_turbulence*](https://github.com/AlbertoRoper/GW_turbulence), created in December 2021, used for calculations of GWs produced by MHD turbulence.
 
 ---
 
@@ -15,7 +18,9 @@ in contributing and becoming a developer.
 **Email:** alberto.roperpol@unige.ch  
 **GitHub:** [albertoroperpol](https://github.com/AlbertoRoper)  
 
-If you use any of the cosmoGW results, please cite this [repository](https://github.com/cosmoGW/cosmoGW) and the relevant references listed in the routines.  
+If you use any of the cosmoGW results, please cite this [repository](https://github.com/cosmoGW/cosmoGW),
+the [manual] (coming soon) and the relevant references listed in the routines.
+
 Feel free to reach out for questions, issues, or collaboration!
 I would also love to hear about your interest for this project and your work, so feel free to reach out for questions, issues, or collaboration!
 
@@ -23,7 +28,7 @@ I would also love to hear about your interest for this project and your work, so
 
 <img src="https://img.icons8.com/ios-filled/50/000000/download.png" width="24" /> **Installation**
 
-CosmoGW is a python library that can be installed using pip from [PyPI](https://pypi.org/project/cosmoGW):
+CosmoGW is a Python package that can be installed using pip from [PyPI](https://pypi.org/project/cosmoGW):
 
 ```sh
 pip install cosmoGW
@@ -38,22 +43,31 @@ pip install git+https://github.com/cosmoGW/cosmoGW.git
 **Requirements:**  
 Python >= 3.8, numpy, scipy, matplotlib, astropy, pandas
 
+To use the plotting routines available in the tutorials and in
+:func:[`plot_sets.py`](src/cosmoGW/plot_sets.py), make sure to install latex for Python:
+
+```bash
+sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
+```
+
+
 ---
 
 <img src="https://img.icons8.com/ios-filled/50/000000/code-file.png" width="24" /> **File Structure**
 
 The main routines of cosmoGW are stored under `src/cosmoGW`:
 
-- [`cosmology.py`](src/cosmoGW/cosmology.py): Cosmological calculations.
-- [`GW_analytical.py`](src/cosmoGW/GW_analytical.py): Analytical calculations and mathematical functions.
-- [`GW_back.py`](src/cosmoGW/GW_back.py): Functions for cosmological GW backgrounds.
-- [`GW_models.py`](src/cosmoGW/GW_models.py): Theoretical and numerical models for sources of GWs.
-- [`GW_templates.py`](src/cosmoGW/GW_templates.py): Templates for GW backgrounds from different sources.
-- [`hydro_bubbles.py`](src/cosmoGW/hydro_bubbles.py): Fluid perturbations from bubbles in first-order phase transitions.
-- [`interferometry.py`](src/cosmoGW/interferometry.py): Response and sensitivity functions for GW detectors (LISA, Taiji).
-- [`tests/`](tests/): Unit tests and example data.
-- [`resources/`](src/cosmoGW/resources/): Data files used in the code (numerical data, sensitivity curves, ...)
-- [`tutorials/`](tutorials/): Tutorials showing how to use CosmoGW for different applications.
+- [`cosmology.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/cosmology.py): Cosmological calculations.
+- [`GW_analytical.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_analytical.py): Analytical calculations and mathematical functions.
+- [`GW_back.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_back.py): Functions for cosmological GW backgrounds.
+- [`GW_models.py`](shttps://github.com/cosmoGW/cosmoGW/blob/main/rc/cosmoGW/GW_models.py): Theoretical and numerical models for sources of GWs.
+- [`GW_templates.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_templates.py): Templates for GW backgrounds from different sources.
+- [`hydro_bubbles.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/hydro_bubbles.py): Fluid perturbations from bubbles in first-order phase transitions.
+- [`interferometry.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/interferometry.py): Response and sensitivity functions for GW detectors (LISA, Taiji).
+- [`utils.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/utils.py): Utility functions and reference values for CosmoGW.
+- [`tests/`](https://github.com/cosmoGW/cosmoGW/blob/main/tests/): Unit tests and example data.
+- [`resources/`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/): Data files used in the code (numerical data, sensitivity curves, ...)
+- [`tutorials/`](https://github.com/cosmoGW/cosmoGW/blob/main/tutorials/): Tutorials showing how to use CosmoGW for different applications.
 
 ---
 
@@ -76,16 +90,18 @@ make html
 
 <img src="https://img.icons8.com/ios-filled/50/000000/education.png" width="24" /> **Tutorials**
 
-Tutorials and example notebooks are available in the [`tutorials/`](tutorials/) directory:
+Tutorials and example notebooks are available in the [`tutorials/`](https://github.com/cosmoGW/cosmoGW/blob/main/tutorials/) directory:
 
-- [**GWs_sound-waves**](https://github.com/cosmoGW/cosmoGW/tutorials/GWs_sound-waves)
+- [**GWs_sound-waves**](https://github.com/cosmoGW/cosmoGW/blob/main/tutorials/GWs_sound-waves)
 
 These tutorials can be run from Google Colab by loading the notebooks from GitHub.
-When using Colab, latex needs to be installed for plotting routines.
-To do so, uncomment and execute the first cell of the tutorials:
 
-```bash
-sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
+When using Colab, latex needs to be installed, together with CosmoGW, for plotting routines.
+For the installation, uncomment and execute the first cell of the tutorials:
+
+```python
+!pip instal cosmoGW
+!sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
 ```
 
 ---
@@ -106,13 +122,14 @@ Make sure all required test data files are present in the `tests` directory.
 
 <img src="https://img.icons8.com/ios-filled/50/000000/database.png" width="24" /> **Resources**
 
-Some data files are available in cosmoGW that are useful in some of the projects.  
+Data files are available in cosmoGW that are required by some of the libraries.
+
 They are stored in `src/cosmoGW/resources`:
 
-- [`cosmology`](src/cosmoGW/resources/cosmology): Cosmological evolution files and Friedmann equation tutorial.
-- [`interferometry`](src/cosmoGW/resources/interferometry): Space-based GW interferometry calculations and tutorials.
-- [`detector_sensitivity`](src/cosmoGW/resources/detector_sensitivity): Sensitivity of various detectors; see the [README](src/cosmoGW/resources/detector_sensitivity/README.md).
-- [`higgsless`](src/cosmoGW/resources/higgsless): Data sets from Higgsless simulations of phase transitions.
+- [`cosmology`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/cosmology): Cosmological evolution files and Friedmann equation tutorial.
+- [`interferometry`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/interferometry): Space-based GW interferometry calculations and tutorials.
+- [`detector_sensitivity`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/detector_sensitivity): Sensitivity of various detectors; see the [README](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/detector_sensitivity/README.md).
+- [`higgsless`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/higgsless): Data sets from Higgsless simulations of phase transitions.
 
 ---
 
