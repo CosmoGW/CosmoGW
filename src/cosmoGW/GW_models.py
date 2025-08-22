@@ -99,10 +99,11 @@ tini_ref = 1.         # Initial time of GW production (normalized)
 tfin_ref = 1e4        # Final time of GW production in cit model
 
 
-def Integ(p, tildep, z, k=0.0, tp="vort", hel=False):
+def _Integ(p, tildep, z, k=0.0, tp="vort", hel=False):
 
     r"""
-    Integrand for the anisotropic stress integral in EPi_correlators.
+    Integrand for the anisotropic stress integral in
+    :func:`EPi_correlators`.
 
     Parameters
     ----------
@@ -149,6 +150,84 @@ def Integ(p, tildep, z, k=0.0, tp="vort", hel=False):
             Integ = 0.5 / p / tildep**4 * z * (k - p * z)
 
     return Integ
+
+
+def _get_funcs(model, a, b, alp, norm, kk, EK_p):
+    '''
+    Define the zeta_P times zeta_Ptilde function in funcs based on
+    the input model, used in :func:`EPi_correlators`.
+    '''
+    # functions following a smoothed broken power law
+    if model == "dbpl":
+        A = (a + b) ** (1 / alp) if norm else 1.0
+        alp2 = alp * (a + b)
+        c, d = (a, b) if norm else (1.0, 1.0)
+
+        def funcs(p, tildep):
+            zeta_P = A * p**a / (d + c * p**alp2) ** (1 / alp)
+            zeta_Ptilde = A * tildep**a / (d + c * tildep**alp2) ** (1 / alp)
+            return zeta_P * zeta_Ptilde
+        return funcs
+    # functions interpolate the input numerical data
+    elif model == "input":
+        if len(kk) == 0 or len(EK_p) == 0:
+            raise ValueError('For input model, provide kk and EK_p')
+
+        def funcs(p, tildep):
+            zeta_P = np.interp(p, kk, EK_p)
+            zeta_Ptilde = np.interp(tildep, kk, EK_p)
+            return zeta_P * zeta_Ptilde
+        return funcs
+    else:
+        raise ValueError("Model must be 'dbpl' or 'input'")
+
+
+def _integrate_over_zeta(k, tps, funcs, dlogk, hel):
+    '''
+    Integrate zeta_P times zeta_Ptilde over z, used in
+    :func:`EPi_correlators`.
+    '''
+    pis = np.zeros((len(tps), len(k)))
+    for j, tp in enumerate(tps):
+        def f(p, z, kp):
+            tildep = np.sqrt(p**2 + kp**2 - 2 * p * kp * z)
+            II = funcs(p, tildep) * _Integ(p, tildep, z, k=kp, tp=tp, hel=hel)
+            if not dlogk:
+                II *= p * tildep
+            return II
+        for i, kp in enumerate(k):
+            pis[j, i], _ = integrate.nquad(
+                f, [[0, np.inf], [-1.0, 1.0]], args=(kp,)
+            )
+    return pis
+
+
+def _integrate_over_ptilde(k, tps, funcs, dlogk, hel):
+    '''
+    Integrate zeta_P times zeta_Ptilde over ptilde, used in
+    :func:`EPi_correlators`.
+    '''
+    pis = np.zeros((len(tps), len(k)))
+    for j, tp in enumerate(tps):
+        for i, kp in enumerate(k):
+            def f(p, tildep):
+                z = (p**2 + kp**2 - tildep**2) / (2 * p * kp)
+                II = (
+                    funcs(p, tildep)
+                    * _Integ(p, tildep, z, k=kp, tp=tp, hel=hel)
+                    * tildep / p / kp
+                )
+                if not dlogk:
+                    II *= p * tildep
+                return II
+
+            def bounds_p():
+                return [0, np.inf]
+
+            def bounds_tildep(p):
+                return [abs(kp - p), kp + p]
+            pis[j, i], _ = integrate.nquad(f, [bounds_tildep, bounds_p])
+    return pis
 
 
 def EPi_correlators(
@@ -205,140 +284,24 @@ def EPi_correlators(
     if EK_p is None:
         EK_p = []
 
-    # define zeta_P times zeta_Ptilde function in funcs based on
-    # the inpute model
+    funcs = _get_funcs(model, a, b, alp, norm, kk, EK_p)
 
-    if model == "dbpl":
-        A = (a + b) ** (1 / alp)
-        alp2 = alp * (a + b)
-        if norm:
-            c = a
-            d = b
-        else:
-            c = 1.0
-            d = 1.0
-            A = 1.0
-
-        # functions following a smoothed broken power law
-        def funcs(p, tildep):
-            zeta_P = A * p**a / (d + c * p**alp2) ** (1 / alp)
-            zeta_Ptilde = A * tildep**a / (d + c * tildep**alp2) ** (1 / alp)
-            return zeta_P * zeta_Ptilde
-
-    elif model == "input":
-
-        if len(kk) == 0 or len(EK_p) == 0:
-            print('For using input model provide kk and EK')
-            return 0.
-
-        # functions interpolate the input numerical data
-        def funcs(p, tildep):
-            zeta_P = np.interp(p, kk, EK_p)
-            zeta_Ptilde = np.interp(p, kk, EK_p)
-            return zeta_P * zeta_Ptilde
-
-    else:
-        print("A model needs to be selected: dpbl or input")
-        return 0.0
-
-    # compute all components (vort, comp, mix, hel)
     if tp == "all":
         tps = ['vort', 'comp'] if hel else ['vort', 'comp', 'mix', 'hel']
-        pis = np.zeros((len(tps), len(k)))
-        for j in range(0, len(tps)):
-            # integrate over p and z
-            if zeta:
-                def f(p, z, kp):
-                    tildep = np.sqrt(p**2 + kp**2 - 2 * p * kp * z)
-                    II = funcs(p, tildep) * Integ(
-                        p, tildep, z, k=kp, tp=tps[j], hel=hel
-                    )
-                    if not dlogk:
-                        II *= p * tildep
-                    return II
-
-                for i in range(0, len(k)):
-                    kp = k[i]
-                    pis[j, i], _ = integrate.nquad(
-                        f, [[0, np.inf], [-1.0, 1.0]], args=(kp,)
-                    )
-
-            # integrate over p and ptilde
-            else:
-                for i in range(0, len(k)):
-                    kp = k[i]
-
-                    def f(p, tildep):
-                        z = (p**2 + kp**2 - tildep**2) / 2 / p / kp
-                        II = (
-                            funcs(p, tildep)
-                            * Integ(p, tildep, z, k=kp, tp=tps[j], hel=hel)
-                            * tildep / p / kp
-                        )
-                        if not dlogk:
-                            II *= p * tildep
-                        return II
-
-                    def bounds_p():
-                        return [0, np.inf]
-
-                    def bounds_tildep(p):
-                        return [abs(kp - p), kp + p]
-
-                    pis[j, i], _ = integrate.nquad(f, [bounds_tildep, bounds_p])
-
-        return pis
-
-    # compute the chosen component in tp
-    else:
-
-        pi = np.zeros(len(k))
-
         # integrate over p and z
         if zeta:
-
-            def f(p, z, kp):
-                tildep = np.sqrt(p**2 + kp**2 - 2 * p * kp * z)
-                II = funcs(p, tildep) * Integ(
-                    p, tildep, z, k=kp, tp=tp, hel=hel
-                )
-                if not dlogk:
-                    II *= p * tildep
-                return II
-
-            for i in range(0, len(k)):
-                kp = k[i]
-                pi[i], _ = integrate.nquad(
-                    f, [[0, np.inf], [-1.0, 1.0]], args=(kp,)
-                )
-
-        # integrate over p and ptilde
+            return _integrate_over_zeta(k, tps, funcs, dlogk, hel)
         else:
-            for i in range(0, len(k)):
-                kp = k[i]
-
-                def f(p, tildep):
-                    z = (p**2 + kp**2 - tildep**2) / 2 / p / kp
-                    II = (
-                        funcs(p, tildep)
-                        * Integ(p, tildep, z, k=kp, tp=tp, hel=hel)
-                        * tildep
-                        / p
-                        / kp
-                    )
-                    if not dlogk:
-                        II *= p * tildep
-                    return II
-
-                def bounds_p():
-                    return [0, np.inf]
-
-                def bounds_tildep(p):
-                    return [abs(kp - p), kp + p]
-
-                pi[i], _ = integrate.nquad(f, [bounds_tildep, bounds_p])
-
-        return pi
+            return _integrate_over_ptilde(k, tps, funcs, dlogk, hel)
+    else:
+        if tp in ['vort', 'comp', 'mix', 'hel']:
+            tps = np.array([tp])
+        else:
+            raise ValueError("tp must be 'vort', 'comp', 'mix', 'hel' or 'all'")
+        if zeta:
+            return _integrate_over_zeta(k, tps, funcs, dlogk, hel)[0, :]
+        else:
+            return _integrate_over_ptilde(k, tps, funcs, dlogk, hel)[0, :]
 
 
 #  FUNCTIONS FOR THE CONSTANT-IN-TIME MODEL
@@ -447,7 +410,8 @@ def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb,
 
     r"""
     Compute the logarithmic envelope of the GW template in the
-    constant-in-time model for the unequal time correlator.
+    constant-in-time model for the unequal time correlator,
+    :math:`{\cal T}_{\rm GW}`.
 
     It is obtained from integrating the Green's function in the
     constant-in-time model, validated in RoperPol:2022iel
@@ -643,7 +607,7 @@ def compute_kin_spec_ssm(z, vws, fp, l=None, sp="sum", type_n="exp",
         funcT[i, :, :] = nu_T * TT_ij**6 * np.interp(
             TT_ij * q_ij, z, A2[i, :]
         )
-        Pv[i, :] = safe_trapezoid(funcT[i, :, :], TT, axis=1)
+        Pv[i, :] = _safe_trapezoid(funcT[i, :, :], TT, axis=1)
 
     if not dens:
         Rstar_beta = hydro_bubbles.Rstar_beta(vws=vws, cs2=cs2, corr=corr)
@@ -725,7 +689,7 @@ def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
         EK_ptilde = np.interp(ptilde, k, EK)
 
         Omm1 = (1 - z**2) ** 2 * p / ptilde**3 * EK_p * EK_ptilde
-        Omm[i] = safe_trapezoid(Omm1, p)
+        Omm[i] = _safe_trapezoid(Omm1, p)
 
     return kp, Omm
 
@@ -839,13 +803,13 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
 
     Omm = np.zeros((l + 1, len(kp)))
     for i in range(0, l):
-        Pi_1 = safe_trapezoid(
+        Pi_1 = _safe_trapezoid(
             EK_ptilde / ptilde**4 * (1 - zij**2) ** 2 * Delta_mn[i, :, :, :],
             z, axis=2
         )
         kij, EK_pij = np.meshgrid(kp, EK_p, indexing="ij")
         kij, pij = np.meshgrid(kp, p, indexing="ij")
-        Omm[i, :] = safe_trapezoid(Pi_1 * pij**2 * EK_pij, p, axis=1)
+        Omm[i, :] = _safe_trapezoid(Pi_1 * pij**2 * EK_pij, p, axis=1)
 
     return kp, Omm
 
@@ -992,25 +956,9 @@ def K2int(dtfin, K0=1.0, dt0=dt0_ref, b=0.0, expansion=False, beta=beta_ref):
     return K2int
 
 
-def safe_trapezoid(y, x, axis=-1):
+def _safe_trapezoid(y, x, axis=-1):
     """
     Safely compute the trapezoidal integral of y with respect to x.
-
-    Uses numpy.trapezoid (Numpy>=1.20.0) or trapz function (older versions).
-
-    Parameters
-    ----------
-    y : np.ndarray
-        Array to integrate.
-    x : np.ndarray
-        Array of integration variable.
-    axis : int, optional
-        Axis along which to integrate (default: -1).
-
-    Returns
-    -------
-    float or np.ndarray
-        Result of the integration.
     """
     try:
         return np.trapezoid(y, x, axis=axis)
