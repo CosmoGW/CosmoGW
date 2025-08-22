@@ -366,33 +366,28 @@ def _thermal_g_piecewise(T, s, g0, g0s):
     T = check_temperature_MeV(T, func='thermal_g')
     T = T.value
     if not isinstance(T, (list, tuple, np.ndarray)):
-        len_T = 1
         T = [T]
-    else:
-        len_T = len(T)
-    g = np.zeros(len_T)
-    for i in range(len_T):
-        if T[i] < 0.1:
-            g[i] = g0 if s == 0 else g0s
-        elif T[i] < 0.5:
-            g[i] = 7.25
-        elif T[i] <= 100:
-            g[i] = 10.75
-        elif T[i] <= 150:
-            g[i] = 17.25
-        elif T[i] < 1e3:
-            g[i] = 61.75
-        elif T[i] < 4e3:
-            g[i] = 75.75
-        elif T[i] < 8e4:
-            g[i] = 86.25
-        elif T[i] < 1.7e5:
-            g[i] = 96.25
-        else:
-            g[i] = 106.75
-    if len_T == 1:
-        g = g[0]
+    g = np.array([_piecewise_g_value(t, s, g0, g0s) for t in T])
+    if len(g) == 1:
+        return g[0]
     return g
+
+
+def _piecewise_g_value(T, s, g0, g0s):
+    thresholds = [
+        (0.1, g0 if s == 0 else g0s),
+        (0.5, 7.25),
+        (100, 10.75),
+        (150, 17.25),
+        (1e3, 61.75),
+        (4e3, 75.75),
+        (8e4, 86.25),
+        (1.7e5, 96.25),
+    ]
+    for threshold, value in thresholds:
+        if T < threshold:
+            return value
+    return 106.75
 
 
 def RD_dofs(dir0='', Neff=Neff_ref):
