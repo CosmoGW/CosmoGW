@@ -13,7 +13,7 @@ in contributing and becoming a developer.
 
 **Author:** Alberto Roper Pol  
 **Email:** alberto.roperpol@unige.ch  
-**GitHub:** [albertoroperpol](https://github.com/albertoroperpol)  
+**GitHub:** [albertoroperpol](https://github.com/AlbertoRoper)  
 
 If you use any of the cosmoGW results, please cite this [repository](https://github.com/cosmoGW/cosmoGW) and the relevant references listed in the routines.  
 Feel free to reach out for questions, issues, or collaboration!
@@ -80,6 +80,14 @@ Tutorials and example notebooks are available in the [`tutorials/`](tutorials/) 
 
 - [**GWs_sound-waves**](https://github.com/cosmoGW/cosmoGW/tutorials/GWs_sound-waves)
 
+These tutorials can be run from Google Colab by loading the notebooks from GitHub.
+When using Colab, latex needs to be installed for plotting routines.
+To do so, uncomment and execute the first cell of the tutorials:
+
+```bash
+sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
+```
+
 ---
 
 <img src="https://img.icons8.com/ios-filled/50/000000/test-passed.png" width="24" /> **Tests**
@@ -108,6 +116,6 @@ They are stored in `src/cosmoGW/resources`:
 
 ---
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/License_icon.png" width="24" /> **License**
+**License**
 
 This project is licensed under the MIT License.
