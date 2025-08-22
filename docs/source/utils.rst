@@ -1,15 +1,43 @@
 utils
 -----------------------
 
-.. automodule:: cosmoGW.utils
-   :members:
-   :show-inheritance:
-   :undoc-members:
+utils.py contains reference values and utility functions for array
+reshaping and other common operations used throughout the cosmoGW package.
+
+https://github.com/cosmoGW/cosmoGW/
+https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/utils.py
+
+.. note::
+   For full documentation, visit `Read the Docs
+   <https://cosmogw-manual.readthedocs.io/en/latest/utils.html>`_.
+
+These functions are designed to be imported and reused in multiple modules
+(e.g., GW_models.py, GW_templates.py, hydro_bubbles.py, etc.) to keep code DRY
+and maintainable.
+
+Example usage::
+
+    from cosmoGW.utils import reshape_output
+
+Author
+------
+- **Alberto Roper Pol**
+  (`alberto.roperpol@unige.ch <mailto:alberto.roperpol@unige.ch>`_)
+
+Dates
+-----
+- Created: **21/08/2025**
+  (release **cosmoGW 1.0**: https://pypi.org/project/cosmoGW)
+
+References
+----------
+Used in cosmoGW scientific routines for output reshaping
+and general utilities.
 
 .. _utils_reference_values:
 
 Reference Values in ``cosmoGW.utils``
-====================================
+=====================================
 
 The following reference values are defined in ``cosmoGW.utils``
 and are used throughout the cosmoGW codebase for cosmological and
@@ -24,7 +52,7 @@ phase transitions, cosmology, turbulence, and source modeling.
      - Value
      - Description
    * - Tref
-     - 100 * u.GeV
+     - 100 GeV
      - Electroweak phase transition temperature
    * - gref
      - 100
@@ -33,16 +61,16 @@ phase transitions, cosmology, turbulence, and source modeling.
      - 3
      - Reference effective neutrino number
    * - T0K
-     - 2.72548 * u.K
+     - 2.72548 K
      - CMB temperature
    * - H0_ref
-     - 100 * u.km / u.s / u.Mpc (converted to Hz)
+     - 100 km / s / Mpc (converted to Hz)
      - Hubble constant
    * - OmL0_ref
      - 0.6841
      - Cosmological constant density parameter
    * - OmM0_ref
-     - 1. - OmL0_ref
+     - 0.316
      - Matter density parameter
    * - h0_ref
      - 0.6732
@@ -57,7 +85,7 @@ phase transitions, cosmology, turbulence, and source modeling.
      - 2
      - Smoothness of broken power-law transition
    * - alp_turb
-     - 6 / 17
+     - 6/17
      - von Karman smoothness parameter
    * - bPi_vort
      - 3
@@ -76,13 +104,13 @@ phase transitions, cosmology, turbulence, and source modeling.
      - Normalized amplitude (sound waves)
    * - a_sw_ref
      - 3
-     - Low frequency slope (f^3)
+     - Low frequency slope (:math:`f^3``)
    * - b_sw_ref
      - 1
      - Intermediate frequency slope (f)
    * - c_sw_ref
      - 3
-     - High frequency slope (f^-3)
+     - High frequency slope (:math:`f^{-3}`)
    * - alp1_sw_ref
      - 1.5
      - Used in RoperPol:2023bqa
@@ -93,7 +121,7 @@ phase transitions, cosmology, turbulence, and source modeling.
      - 4
      - Used in Hindmarsh:2019phv
    * - alp2_ssm
-     - 2.
+     - 2.0
      - Used in Hindmarsh:2019phv
    * - alp1_HL
      - 3.6
@@ -102,10 +130,10 @@ phase transitions, cosmology, turbulence, and source modeling.
      - 2.4
      - Found in Caprini:2024gyk
    * - alp1_LISA
-     - 2.
+     - 2.0
      - Used in Caprini:2024hue
    * - alp2_LISA
-     - 4.
+     - 4.0
      - Used in Caprini:2024hue
    * - Oms_ref
      - 0.1
@@ -135,13 +163,13 @@ phase transitions, cosmology, turbulence, and source modeling.
      - 11
      - Numerical parameter for fit (Caprini:2024gyk)
    * - tini_ref
-     - 1.
+     - 1.0
      - Initial time of GW production (normalized)
    * - tfin_ref
      - 1e4
      - Final time of GW production in cit model
    * - cs2_ref
-     - 1 / 3.
+     - 1/3.
      - Speed of sound squared
    * - Nxi_ref
      - 10000
@@ -150,13 +178,13 @@ phase transitions, cosmology, turbulence, and source modeling.
      - 10
      - Discretization in xi out of profiles
    * - Nvws_ref
-     - 20.
+     - 20
      - Discretization in vwall
    * - tol_ref
      - 1e-5
      - Tolerance on shooting algorithm
    * - it_ref
-     - 30.
+     - 30
      - Number of iterations
    * - vw_def
      - 0.5
@@ -174,3 +202,9 @@ phase transitions, cosmology, turbulence, and source modeling.
 .. note::
    These values are available in ``cosmoGW.utils`` and can be
    imported for use in your own calculations and models.
+
+
+.. automodule:: cosmoGW.utils
+   :members:
+   :show-inheritance:
+   :undoc-members:

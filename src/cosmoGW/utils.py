@@ -1,35 +1,3 @@
-r"""
-utils.py contains reference values and utility functions for array
-reshaping and other common operations used throughout the cosmoGW package.
-
-https://github.com/cosmoGW/cosmoGW/
-https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/utils.py
-
-.. note::
-   For full documentation, visit `Read the Docs
-   <https://cosmogw-manual.readthedocs.io/en/latest/utils.html>`_.
-
-These functions are designed to be imported and reused in multiple modules
-(e.g., GW_models.py, GW_templates.py, hydro_bubbles.py, etc.) to keep code DRY
-and maintainable.
-
-Example usage:
-    from cosmoGW.utils import reshape_output
-
-Author
-------
-Alberto Roper Pol
-
-Dates
------
-Created: 21/08/2025 (release cosmoGW 1.0: https://pypi.org/project/cosmoGW)
-
-References
-----------
-Used in cosmoGW scientific routines for output reshaping
-and general utilities.
-"""
-
 import numpy as np
 import astropy.units as u
 import pandas as pd
@@ -67,12 +35,12 @@ c_sw_ref = 3         # high frequency slope f^(-3)
 # first and second peak smoothness parameters (GW_templates)
 alp1_sw_ref = 1.5  # used in RoperPol:2023bqa
 alp2_sw_ref = 0.5  # used in RoperPol:2023bqa
-alp1_ssm = 4       # used in Hindmarsh:2019phv
-alp2_ssm = 2.      # used in Hindmarsh:2019phv
+alp1_ssm = 4.0     # used in Hindmarsh:2019phv
+alp2_ssm = 2.0     # used in Hindmarsh:2019phv
 alp1_HL = 3.6      # found in Caprini:2024gyk
 alp2_HL = 2.4      # found in Caprini:2024gyk
-alp1_LISA = 2.     # used in Caprini:2024hue
-alp2_LISA = 4.     # used in Caprini:2024hue
+alp1_LISA = 2.0    # used in Caprini:2024hue
+alp2_LISA = 4.0     # used in Caprini:2024hue
 
 # Reference values for models (GW_models)
 Oms_ref = 0.1         # Source amplitude (fraction to radiation energy)
@@ -84,17 +52,17 @@ Nkconv_ref = 1000     # Wave number discretization for convolution
 Np_ref = 3000         # Wave number discretization for convolution
 NTT_ref = 5000        # Lifetimes discretization
 dt0_ref = 11          # Numerical parameter for fit (Caprini:2024gyk)
-tini_ref = 1.         # Initial time of GW production (normalized)
+tini_ref = 1.0        # Initial time of GW production (normalized)
 tfin_ref = 1e4        # Final time of GW production in cit model
 
 
 # Reference values for hydro_bubbles
-cs2_ref = 1 / 3.   # speed of sound squared
+cs2_ref = 1.0 / 3  # speed of sound squared
 Nxi_ref = 10000    # reference discretization in xi
 Nxi2_ref = 10      # reference discretization in xi out of the profiles
-Nvws_ref = 20.     # reference discretization in vwall
+Nvws_ref = 20      # reference discretization in vwall
 tol_ref = 1e-5     # reference tolerance on shooting algorithm
-it_ref = 30.       # reference number of iterations
+it_ref = 30        # reference number of iterations
 
 # Reference values for a deflagration
 vw_def = 0.5
