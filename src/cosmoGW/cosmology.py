@@ -322,29 +322,7 @@ def thermal_g(dir0='', T=Tref, s=0, file=True, Neff=Neff_ref):
     g0, g0s, _, _ = values_0(neut=True, Neff=Neff)
     if file:
         try:
-            dirr = dir0 + 'T_gs.csv'
-            if dir0 == '':
-                dirr = COSMOGW_HOME + '/resources/cosmology/T_gs.csv'
-            df = pd.read_csv(dirr)
-            Ts = np.array(df['T [GeV]'])
-            if s == 0:
-                gs = np.array(df['g_*'])
-            if s == 1:
-                gs = np.array(df['gS'])
-            T = T.to(u.GeV)
-            g = np.interp(T.value, np.sort(Ts), np.sort(gs))
-            T = check_temperature_MeV(T, func='thermal_g')
-            if not isinstance(T.value, (list, tuple, np.ndarray)):
-                if T.value < 0.1:
-                    if s == 0:
-                        g = g0
-                    if s == 1:
-                        g = g0s
-            else:
-                if s == 0:
-                    g[T.value < 0.1] = g0
-                if s == 1:
-                    g[T.value < 0.1] = g0s
+            return _thermal_g_from_file(dir0, T, s, g0, g0s)
         except Exception:
             file = False
             print(
@@ -353,35 +331,67 @@ def thermal_g(dir0='', T=Tref, s=0, file=True, Neff=Neff_ref):
             )
             print('using piecewise approximated function to approximate g')
     if not file:
-        T = check_temperature_MeV(T, func='thermal_g')
-        T = T.value
-        if not isinstance(T, (list, tuple, np.ndarray)):
-            len_T = 1
-            T = [T]
+        return _thermal_g_piecewise(T, s, g0, g0s)
+    return None
+
+
+def _thermal_g_from_file(dir0, T, s, g0, g0s):
+    '''
+    Read thermal degrees of freedom from a CSV file.
+    '''
+    dirr = dir0 + 'T_gs.csv'
+    if dir0 == '':
+        dirr = COSMOGW_HOME + '/resources/cosmology/T_gs.csv'
+    df = pd.read_csv(dirr)
+    Ts = np.array(df['T [GeV]'])
+    gs = np.array(df['g_*']) if s == 0 else np.array(df['gS'])
+    T = T.to(u.GeV)
+    g = np.interp(T.value, np.sort(Ts), np.sort(gs))
+    T = check_temperature_MeV(T, func='thermal_g')
+    if not isinstance(T.value, (list, tuple, np.ndarray)):
+        if T.value < 0.1:
+            g = g0 if s == 0 else g0s
+    else:
+        if s == 0:
+            g[T.value < 0.1] = g0
+        if s == 1:
+            g[T.value < 0.1] = g0s
+    return g
+
+
+def _thermal_g_piecewise(T, s, g0, g0s):
+    '''
+    Compute thermal degrees of freedom using a piecewise function.
+    '''
+    T = check_temperature_MeV(T, func='thermal_g')
+    T = T.value
+    if not isinstance(T, (list, tuple, np.ndarray)):
+        len_T = 1
+        T = [T]
+    else:
+        len_T = len(T)
+    g = np.zeros(len_T)
+    for i in range(len_T):
+        if T[i] < 0.1:
+            g[i] = g0 if s == 0 else g0s
+        elif T[i] < 0.5:
+            g[i] = 7.25
+        elif T[i] <= 100:
+            g[i] = 10.75
+        elif T[i] <= 150:
+            g[i] = 17.25
+        elif T[i] < 1e3:
+            g[i] = 61.75
+        elif T[i] < 4e3:
+            g[i] = 75.75
+        elif T[i] < 8e4:
+            g[i] = 86.25
+        elif T[i] < 1.7e5:
+            g[i] = 96.25
         else:
-            len_T = len(T)
-        g = np.zeros(len_T)
-        for i in range(0, len_T):
-            if T[i] < 0.1:
-                g[i] = g0 if s == 0 else g0s
-            elif T[i] < 0.5:
-                g[i] = 7.25
-            elif T[i] <= 100:
-                g[i] = 10.75
-            elif T[i] <= 150:
-                g[i] = 17.25
-            elif T[i] < 1e3:
-                g[i] = 61.75
-            elif T[i] < 4e3:
-                g[i] = 75.75
-            elif T[i] < 8e4:
-                g[i] = 86.25
-            elif T[i] < 1.7e5:
-                g[i] = 96.25
-            else:
-                g[i] = 106.75
-        if len_T == 1:
-            g = g[0]
+            g[i] = 106.75
+    if len_T == 1:
+        g = g[0]
     return g
 
 
