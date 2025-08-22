@@ -645,21 +645,49 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref,
     if alphas is None:
         alphas = []
 
+    # Prepare sound-shell thickness for the models where it is
+    # required
+    mult_Dw, Dw_2d, s, Dw = _prepare_Dw(s, Dw, model, strength, interpolate_HL)
+
+    if model == 'sw_LISAold':
+        return _shape_sw_LISAold(s)
+    elif model == 'sw_SSM':
+        return _shape_sw_SSM(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, mult_Dw)
+    elif model == 'sw_HL':
+        return _shape_sw_HL(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, mult_Dw)
+    elif model == 'sw_LISA':
+        return _shape_sw_LISA(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw)
+    elif model == 'sw_HLnew':
+        return _shape_sw_HLnew(
+            s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, strength,
+            interpolate_HL, bs_k1HL, bs_k2HL, vws, alphas, quiet,
+            interpolate_HL_n3, corrRs, cs2
+        )
+    else:
+        print(
+            'Choose an available model in Sf_shape_sw for the sound wave '
+            'spectral shape.'
+        )
+        print('Available models are sw_LISAold, sw_SSM, sw_HL, sw_LISA, '
+              'sw_HLnew')
+        return 0
+
+
+def _prepare_Dw(s, Dw, model, strength, interpolate_HL):
+    '''
+    Prepare sound-shell thickness for the models where it is required.
+    '''
     mult_Dw = isinstance(Dw, (list, tuple, np.ndarray))
-    # in some models, Dw can be a 0, 1, or 2d input (vw, alpha) dependence
     Dw_2d = False
     if model == 'sw_LISA':
         Dw_2d = True
-    if model == 'sw_HLnew':
-        if strength == 'weak' and not interpolate_HL:
-            Dw_2d = True
-
+    if model == 'sw_HLnew' and strength == 'weak' and not interpolate_HL:
+        Dw_2d = True
     if Dw_2d:
-        # sound-shell thickness Dw needs to be used as an input
         NDw = len(np.shape(Dw))
         if NDw == 1:
             s, Dw = np.meshgrid(s, Dw, indexing='ij')
-        if NDw == 2:
+        elif NDw == 2:
             s0 = np.zeros((len(s), np.shape(Dw)[0], np.shape(Dw)[1]))
             Dw0 = np.zeros((len(s), np.shape(Dw)[0], np.shape(Dw)[1]))
             for i in range(np.shape(Dw)[0]):
@@ -668,183 +696,175 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref,
                     Dw0[:, i, j] = Dw[i, j]
             s = s0
             Dw = Dw0
+    return mult_Dw, Dw_2d, s, Dw
 
-    if model == 'sw_LISAold':
 
-        # Reference for sound waves based on simulations of Hindmarsh:2017gnf
-        # is Caprini:2019egz (equation 30) with only one peak
-        peak1 = 2 * np.pi / 10
-        s = peak1 * s
-        S = s ** 3 * (7 / (4 + 3 * s ** 2)) ** (7 / 2)
+def _shape_sw_LISAold(s):
+    '''
+    Shape function for the LISA old model.
+    Reference for sound waves based on simulations of Hindmarsh:2017gnf
+    is Caprini:2019egz (equation 30) with only one peak.
+    '''
+    peak1 = 2 * np.pi / 10
+    s = peak1 * s
+    return s ** 3 * (7 / (4 + 3 * s ** 2)) ** (7 / 2)
 
-    elif model == 'sw_SSM':
 
-        # Reference for sound waves based on Sound Shell Model (sw_SSM) is
-        # RoperPol:2023bqa, equation 6, based on the results presented in
-        # Hindmarsh:2019phv, equation 5.7
-        # Uses Dw = |vw - cs|/max(vw, cs)
+def _shape_sw_SSM(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, mult_Dw):
+    '''
+    Shape function for the Sound Shell Model (sw_SSM).
+    Reference for sound waves based on Sound Shell Model (sw_SSM) is
+    RoperPol:2023bqa, equation 6, based on the results presented in
+    Hindmarsh:2019phv, equation 5.7.
+    Uses Dw = |vw - cs|/max(vw, cs)
+    '''
 
-        # if not mult_Dw: Dw = [Dw]
-        s, Dw = np.meshgrid(s, Dw, indexing='ij')
-        # uses a different slope at large frequencies to adapt the result
-        # at intermediate ones
-        if c_sw == 3:
-            c_sw = 4
-        # takes a different slope at small frequencies
-        if a_sw == 3:
-            a_sw = 9
-        # amplitude such that S = 1 at s = 1/Dw
-        m = (9 * Dw ** 4 + 1) / (Dw ** 4 + 1)
-        A = Dw ** 9 * (1 + Dw ** (-4)) ** 2 * (5 / (5 - m)) ** (5 / 2)
+    s, Dw = np.meshgrid(s, Dw, indexing='ij')
+    # different slope at large frequencies to adapt the result
+    # at intermediate ones
+    if c_sw == 3:
+        c_sw = 4
+    # takes a different slope at small frequencies
+    if a_sw == 3:
+        a_sw = 9
+    m = (9 * Dw ** 4 + 1) / (Dw ** 4 + 1)
+    # amplitude such that S = 1 at s = 1/Dw
+    A = Dw ** 9 * (1 + Dw ** (-4)) ** 2 * (5 / (5 - m)) ** (5 / 2)
+    # peak positions
+    peak1 = 1.
+    peak2 = np.sqrt((5 - m) / m) / Dw
+    if alp1_sw == 0:
+        alp1_sw = alp1_ssm
+    if alp2_sw == 0:
+        alp2_sw = alp2_ssm
+    S = A * GW_analytical.smoothed_double_bPL(
+        s, peak1, peak2, A=1., a=a_sw, b=b_sw, c=c_sw,
+        alp1=alp1_sw, alp2=alp2_sw, alpha2=True
+    )
+    if not mult_Dw:
+        S = S[:, 0]
+    return S
+
+
+def _shape_sw_HL(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, mult_Dw):
+    '''
+    Shape function for the Higgsless (sw_HL) model.
+    Reference for sound waves based on Higgsless (sw_HL) simulations is
+    RoperPol:2023bqa, equation 6, based on the results presented in
+    Hindmarsh:2019phv, equation 5.7.
+    Uses Dw = |vw - cs|/max(vw, cs)
+    '''
+
+    s, Dw = np.meshgrid(s, Dw, indexing='ij')
+    # amplitude such that S = 1 at s = 1/Dw
+    A = 16 * (1 + Dw ** (-3)) ** (2 / 3) * Dw ** 3
+    # peak positions
+    peak1 = 1.
+    peak2 = np.sqrt(3) / Dw
+    if alp1_sw == 0:
+        alp1_sw = alp1_sw_ref
+    if alp2_sw == 0:
+        alp2_sw = alp2_sw_ref
+    S = A*GW_analytical.smoothed_double_bPL(
+        s, peak1, peak2, A=1., a=a_sw, b=b_sw,
+        c=c_sw, alp1=alp1_sw, alp2=alp2_sw
+    )
+    if not mult_Dw:
+        S = S[:, 0]
+    return S
+
+
+def _shape_sw_LISA(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw):
+
+    '''
+    Shape function for the LISA model.
+    Reference for sound waves based on Higgsless simulations is
+    Caprini:2024hue (equation 2.8), based on the results presented in
+    Jinno:2022mie, see updated results and discussion in Caprini:2024gyk.
+    Uses Dw = xi_shell/max(vw, cs)
+    '''
+    # smoothness parameters
+    if alp1_sw == 0:
+        alp1_sw = alp1_LISA
+    if alp2_sw == 0:
+        alp2_sw = alp2_LISA
+    # peak positions
+    peak1 = 0.2
+    peak2 = 0.5 / Dw
+    return GW_analytical.smoothed_double_bPL(
+        s, peak1, peak2, A=1., a=a_sw, b=b_sw,
+        c=c_sw, alp1=alp1_sw, alp2=alp2_sw, alpha2=True
+    )
+
+
+def _shape_sw_HLnew(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, strength,
+                    interpolate_HL, bs_k1HL, bs_k2HL, vws, alphas, quiet,
+                    interpolate_HL_n3, corrRs, cs2):
+    '''
+    Shape function for the Higgsless (sw_HLnew) model.
+    Reference for sound waves based on updated HL results (sw_HLnew)
+    Caprini:2024gyk.
+    Uses Dw = xi_shell/max(vw, cs).
+    '''
+    # smoothness parameters
+    if alp1_sw == 0:
+        alp1_sw = alp1_HL
+    if alp2_sw == 0:
+        alp2_sw = alp2_HL
+    if not interpolate_HL:
         # peak positions
-        peak1 = 1.
-        peak2 = np.sqrt((5 - m) / m) / Dw
-        if alp1_sw == 0:
-            alp1_sw = alp1_ssm
-        if alp2_sw == 0:
-            alp2_sw = alp2_ssm
-        S = A * GW_analytical.smoothed_double_bPL(
-            s, peak1, peak2, A=1., a=a_sw, b=b_sw, c=c_sw,
-            alp1=alp1_sw, alp2=alp2_sw, alpha2=True
-        )
-
-        if not mult_Dw:
-            S = S[:, 0]
-
-    elif model == 'sw_HL':
-
-        # Reference for sound waves based on Higgsless (sw_HL) simulations is
-        # RoperPol:2023bqa, equation 7, based on the results presented in
-        # Jinno:2022mie
-        # Uses Dw = |vw - cs|/max(vw, cs)
-
-        # if not mult_Dw: Dw = [Dw]
-        s, Dw = np.meshgrid(s, Dw, indexing='ij')
-        # amplitude such that S = 1 at s = 1/Dw
-        A = 16 * (1 + Dw ** (-3)) ** (2 / 3) * Dw ** 3
-        # peak positions
-        peak1 = 1.
-        peak2 = np.sqrt(3) / Dw
-
-        if alp1_sw == 0:
-            alp1_sw = alp1_sw_ref
-        if alp2_sw == 0:
-            alp2_sw = alp2_sw_ref
-
-        S = A*GW_analytical.smoothed_double_bPL(
-            s, peak1, peak2, A=1., a=a_sw, b=b_sw,
-            c=c_sw, alp1=alp1_sw, alp2=alp2_sw
-        )
-        if not mult_Dw:
-            S = S[:, 0]
-
-    elif model == 'sw_LISA':
-
-        # Reference for sound waves based on Higgsless simulations is
-        # Caprini:2024hue (equation 2.8), based on the results presented in
-        # Jinno:2022mie, see updated results and discussion in Caprini:2024gyk.
-        # Uses Dw = xi_shell/max(vw, cs)
-
-        # smoothness parameters
-        if alp1_sw == 0:
-            alp1_sw = alp1_LISA
-        if alp2_sw == 0:
-            alp2_sw = alp2_LISA
-
-        # peak positions
-        peak1 = 0.2
-        peak2 = 0.5 / Dw
-
-        S = GW_analytical.smoothed_double_bPL(
+        peak1 = 0.4
+        if strength == 'weak':
+            peak2 = 0.5 / Dw
+        elif strength == 'interm':
+            peak2 = 1.
+        else:
+            peak2 = 0.5
+        return GW_analytical.smoothed_double_bPL(
             s, peak1, peak2, A=1., a=a_sw, b=b_sw,
             c=c_sw, alp1=alp1_sw, alp2=alp2_sw, alpha2=True
         )
-
-    elif model == 'sw_HLnew':
-
-        # Reference for sound waves based on updated HL results (sw_HLnew)
-        # is Caprini:2024gyk
-        # Uses Dw = xi_shell/max(vw, cs)
-
-        # smoothness parameters
-        if alp1_sw == 0:
-            alp1_sw = alp1_HL
-        if alp2_sw == 0:
-            alp2_sw = alp2_HL
-
-        if not interpolate_HL:
-
-            # peak positions
-            peak1 = 0.4
-            if strength == 'weak':
-                peak2 = 0.5 / Dw
-            elif strength == 'interm':
-                peak2 = 1.
-            else:
-                peak2 = 0.5
-
-            S = GW_analytical.smoothed_double_bPL(
-                s, peak1, peak2, A=1., a=a_sw, b=b_sw,
-                c=c_sw, alp1=alp1_sw, alp2=alp2_sw, alpha2=True
-            )
-
-        else:
-
-            if len(vws) == 0 or len(alphas) == 0:
-                print('To use interpolate_HL in Sf_shape_sw',
-                      'give values of vws and alphas')
-                return 0
-
-            # take values from higgsless dataset
-            dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
-            df = pd.read_csv(dirr)
-            val_str = 'k1'
-            peaks1 = interpolate_HL_vals(
-                df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k1HL
-            )
-            val_str = 'k2'
-            peaks2 = interpolate_HL_vals(
+    else:
+        if len(vws) == 0 or len(alphas) == 0:
+            print('To use interpolate_HL in Sf_shape_sw, '
+                  'give values of vws and alphas')
+            return 0
+        # take values from higgsless dataset
+        dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
+        df = pd.read_csv(dirr)
+        val_str = 'k1'
+        peaks1 = interpolate_HL_vals(
+            df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k1HL
+        )
+        val_str = 'k2'
+        peaks2 = interpolate_HL_vals(
+            df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k2HL
+        )
+        s0 = np.zeros((len(s), len(vws), len(alphas)))
+        peaks10 = np.zeros((len(s), len(vws), len(alphas)))
+        peaks20 = np.zeros((len(s), len(vws), len(alphas)))
+        Rstar_beta = hydro_bubbles.Rstar_beta(
+            vws=vws, corr=corrRs, cs2=cs2
+        ) / 2 / np.pi
+        for i in range(len(vws)):
+            for j in range(len(alphas)):
+                peaks10[:, i, j] = peaks1[i, j] * Rstar_beta[i]
+                peaks20[:, i, j] = peaks2[i, j] * Rstar_beta[i]
+                s0[:, i, j] = s
+        peaks1 = peaks10
+        peaks2 = peaks20
+        s = s0
+        if interpolate_HL_n3:
+            val_str = 'n3'
+            c_sw = -interpolate_HL_vals(
                 df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k2HL
             )
-
-            s0 = np.zeros((len(s), len(vws), len(alphas)))
-            peaks10 = np.zeros((len(s), len(vws), len(alphas)))
-            peaks20 = np.zeros((len(s), len(vws), len(alphas)))
-
-            Rstar_beta = hydro_bubbles.Rstar_beta(
-                vws=vws, corr=corrRs, cs2=cs2
-            ) / 2 / np.pi
-
-            for i in range(len(vws)):
-                for j in range(len(alphas)):
-                    peaks10[:, i, j] = peaks1[i, j] * Rstar_beta[i]
-                    peaks20[:, i, j] = peaks2[i, j] * Rstar_beta[i]
-                    s0[:, i, j] = s
-            peaks1 = peaks10
-            peaks2 = peaks20
-            s = s0
-
-            if interpolate_HL_n3:
-                val_str = 'n3'
-                c_sw = -interpolate_HL_vals(
-                    df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k2HL
-                )
-
-            if not quiet:
-                _data_warning(boxsize=f'{bs_k1HL} and {bs_k2HL}')
-            S = GW_analytical.smoothed_double_bPL(
-                s, peaks1, peaks2, A=1., a=a_sw, b=b_sw, c=c_sw,
-                alp1=alp1_sw, alp2=alp2_sw, alpha2=True
-            )
-
-    else:
-        print('Choose an available model in Sf_shape_sw for the sound wave',
-              'spectral shape.')
-        print('Available models are sw_LISAold, sw_SSM, sw_HL, sw_LISA, '
-              'sw_HLnew')
-        return 0
-
-    return S
+        if not quiet:
+            _data_warning(boxsize=f'{bs_k1HL} and {bs_k2HL}')
+        return GW_analytical.smoothed_double_bPL(
+            s, peaks1, peaks2, A=1., a=a_sw, b=b_sw, c=c_sw,
+            alp1=alp1_sw, alp2=alp2_sw, alpha2=True
+        )
 
 
 def OmGW_spec_sw(
