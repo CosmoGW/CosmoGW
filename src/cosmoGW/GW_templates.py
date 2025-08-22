@@ -133,7 +133,7 @@ import astropy.units as u
 
 from cosmoGW import GW_back, cosmology, GW_analytical, GW_models, hydro_bubbles
 from cosmoGW import COSMOGW_HOME
-from cosmoGW.GW_models import safe_trapezoid
+from cosmoGW.GW_models import _safe_trapezoid
 
 a_turb = GW_analytical.a_ref    # Batchelor spectrum k^5
 b_turb = GW_analytical.b_ref    # Kolmogorov spectrum k^(-2/3)
@@ -163,7 +163,7 @@ alp2_LISA = 4.     # used in Caprini:2024hue
 
 # SOUND WAVES
 # values from Higgsless simulations
-def data_warning(boxsize=20):
+def _data_warning(boxsize=20):
 
     r"""
     Print a warning about the validity range of interpolated numerical data.
@@ -304,7 +304,7 @@ def interpolate_HL_vals(df, vws, alphas, value='Omega_tilde_int_extrap',
             Omegas *= val_alphas / (1 + val_alphas)
 
     if not quiet:
-        data_warning(boxsize=boxsize)
+        _data_warning(boxsize=boxsize)
         if not numerical:
             print(
                 'To see numerical values call interpolate_HL_vals function',
@@ -825,7 +825,7 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref,
                 )
 
             if not quiet:
-                data_warning(boxsize=f'{bs_k1HL} and {bs_k2HL}')
+                _data_warning(boxsize=f'{bs_k1HL} and {bs_k2HL}')
             S = GW_analytical.smoothed_double_bPL(
                 s, peaks1, peaks2, A=1., a=a_sw, b=b_sw, c=c_sw,
                 alp1=alp1_sw, alp2=alp2_sw, alpha2=True
@@ -965,7 +965,7 @@ def OmGW_spec_sw(
 
     if model_efficiency == 'higgsless' and not quiet:
         print('Computing the OmGW efficiency')
-        data_warning(boxsize=bs_HL_eff)
+        _data_warning(boxsize=bs_HL_eff)
 
     ampl = ampl_GWB_sw(
         model=model_efficiency, OmGW_sw=OmGW_tilde,
@@ -980,7 +980,7 @@ def OmGW_spec_sw(
         print('Computing the kinetic energy density using the model',
               model_K0)
         if model_K0 == 'higgsless':
-            data_warning(boxsize=bs_HL_eff)
+            _data_warning(boxsize=bs_HL_eff)
 
     if model_K0 == 'Espinosa':
 
@@ -1051,7 +1051,7 @@ def OmGW_spec_sw(
     if model_shape == ['sw_LISAold']:
 
         S = Sf_shape_sw(s, model=model_shape)
-        mu = safe_trapezoid(S, np.log(s))
+        mu = _safe_trapezoid(S, np.log(s))
         S = S / mu
         S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
 
@@ -1062,7 +1062,7 @@ def OmGW_spec_sw(
             s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
             alp1_sw=alp1_sw, alp2_sw=alp2_sw
         )
-        mu = safe_trapezoid(S, np.log(s), axis=0)
+        mu = _safe_trapezoid(S, np.log(s), axis=0)
         S = S / mu
         S0 = np.zeros((len(s), len(vws), len(alphas)))
         for i in range(len(alphas)):
@@ -1101,7 +1101,7 @@ def OmGW_spec_sw(
             quiet=quiet, interpolate_HL_n3=interpolate_HL_n3,
             corrRs=corrRs, cs2=cs2
         )
-        mu = safe_trapezoid(S, np.log(s), axis=0)
+        mu = _safe_trapezoid(S, np.log(s), axis=0)
         S = S / mu
 
         if not interpolate_HL_shape:
