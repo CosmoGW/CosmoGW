@@ -9,6 +9,7 @@ import pickle
 
 from cosmoGW import GW_models, GW_templates, hydro_bubbles
 from cosmoGW import COSMOGW_HOME
+from cosmoGW.GW_models import safe_trapezoid
 
 import os
 test_dir = os.path.dirname(__file__)
@@ -293,18 +294,18 @@ class TestUnits(unittest.TestCase):
 
         # sw_LISAold model
         S = GW_templates.Sf_shape_sw(s, model='sw_LISAold')
-        S0 = 1. / np.trapezoid(S, np.log(s))
+        S0 = 1. / safe_trapezoid(S, np.log(s))
         S_swLISAold = S * S0
 
         # sw_SSM model
         Dw = np.linspace(0.1, 0.5, 5)
         S = GW_templates.Sf_shape_sw(s, Dw=Dw, model='sw_SSM')
-        S0 = 1. / np.trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_swSSM = S * S0
 
         # sw_HL model
         S = GW_templates.Sf_shape_sw(s, Dw=Dw, model='sw_HL')
-        S0 = 1. / np.trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_swHL = S * S0
 
         with open(
@@ -324,12 +325,12 @@ class TestUnits(unittest.TestCase):
 
         # spectral shape using model sw_LISA
         S = GW_templates.Sf_shape_sw(s, Dw=Dw, model='sw_LISA')
-        S0 = 1. / np.trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_sw_LISA = S * S0
 
         # spectral shape using model sw_HLnew
         S = GW_templates.Sf_shape_sw(s, Dw=Dw, model='sw_HLnew')
-        S0 = 1. / np.trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_sw_HL = S * S0
 
         with open(
@@ -347,11 +348,11 @@ class TestUnits(unittest.TestCase):
 
         # spectral shape using model sw_HLnew
         S = GW_templates.Sf_shape_sw(s, model='sw_HLnew', strength='strong')
-        S0 = 1. / np.trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_sw_HLstr = S * S0
 
         S = GW_templates.Sf_shape_sw(s, model='sw_HLnew', strength='interm')
-        S0 = 1. / np.trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_sw_HLint = S * S0
 
         with open(
