@@ -70,11 +70,7 @@ early Universe: constant-in-time and coherent-decay models," in preparation
 """
 
 import numpy as np
-
-# Reference slopes
-a_ref = 5      # Batchelor spectrum k^5
-b_ref = 2/3    # Kolmogorov spectrum k^(-2/3)
-alp_ref = 2    # reference smoothness of broken power-law transition
+from cosmoGW.utils import a_ref, b_ref, alp_ref, complete_beta
 
 
 def _check_slopes(a, b, dlogk=True):
@@ -216,41 +212,6 @@ def smoothed_bPL(k, A=1., a=a_ref, b=b_ref, kpeak=1., alp=alp_ref, norm=True,
                                dlogk=dlogk)
 
     return spec
-
-
-def complete_beta(a, b):
-    """
-    Compute the complete beta function
-
-    .. note::
-
-        Beta function only converges for positive arguments.
-
-    .. math::
-
-        B(a, b; x \\to \\infty) = \\int_0^x u^{a - 1} (1 - u)^{b - 1} du
-
-    Parameters
-    ----------
-    a : float
-        First argument of the beta function.
-    b : float
-        Second argument of the beta function.
-
-    Returns
-    -------
-    B : float
-        Value of the complete beta function.
-    """
-    import math as m
-
-    if a > 0 and b > 0:
-        B = m.gamma(a)*m.gamma(b)/m.gamma(a + b)
-    else:
-        print('arguments of beta function need to be positive')
-        B = 0
-
-    return B
 
 
 def calIab_n_alpha(a=a_ref, b=b_ref, alp=alp_ref, n=0, norm=True):
