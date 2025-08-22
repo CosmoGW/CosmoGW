@@ -1,5 +1,5 @@
 
-hydro\_bubbles module
+hydro\_bubbles
 -----------------------
 
 .. automodule:: cosmoGW.hydro_bubbles

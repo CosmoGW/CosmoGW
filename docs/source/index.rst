@@ -11,9 +11,24 @@ Welcome to CosmoGW documentation!
 backgrounds from different sources in the early Universe, focusing on the production of GWs
 from sound waves and MHD turbulence from cosmological phase transitions.
 
+The repository is stored on GitHub: https://github.com/CosmoGW/cosmoGW
+And publicly available on PyPI: https://pypi.org/project/cosmoGW/
+
+To install, you can use pip:
+
+.. code-block:: bash
+
+   pip install cosmoGW
+
 .. note::
 
    This project is under active development.
+
+For any comments, suggestions, contributions, or collaborations
+feel free to contact me at alberto.roperpol@unige.ch
+
+Below is the table of contents for the documentation
+(see README for more information)
 
 .. toctree::
    :maxdepth: 2

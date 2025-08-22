@@ -1,5 +1,5 @@
 
-GW\_analytical module
+GW\_analytical
 -----------------------
 
 .. automodule:: cosmoGW.GW_analytical

@@ -1,5 +1,5 @@
 
-GW\_back module
+GW\_back
 -----------------------
 
 .. automodule:: cosmoGW.GW_back

@@ -1,5 +1,5 @@
 
-cosmology module
+cosmology
 -----------------------
 
 .. automodule:: cosmoGW.cosmology

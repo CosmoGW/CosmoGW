@@ -1,5 +1,5 @@
 
-interferometry module
+interferometry
 -----------------------
 
 .. automodule:: cosmoGW.interferometry

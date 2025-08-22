@@ -1,5 +1,5 @@
 
-GW\_models module
+GW\_models
 -----------------------
 
 .. automodule:: cosmoGW.GW_models

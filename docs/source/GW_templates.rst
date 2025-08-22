@@ -1,5 +1,5 @@
 
-GW\_templates module
+GW\_templates
 -----------------------
 
 .. automodule:: cosmoGW.GW_templates
