@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import astropy.units as u
 import unittest
-import pickle
 
 from cosmoGW import GW_models, GW_templates, hydro_bubbles
 from cosmoGW import COSMOGW_HOME
@@ -67,17 +66,12 @@ class TestUnits(unittest.TestCase):
             interpolate_HL_n3=True, redshift=True, T=T, gstar=g
         )
 
-        # read test data
-        with open(
-            file_path + '/Oms_sws1.pkl', 'rb'
-        ) as f:
-            freq_tst, OmGW_tst, freq2_tst, OmGW2_tst = pickle.load(f)
-
         # check that the output is correct
-        self.assertTrue(np.allclose(freq_tst, freq))
-        self.assertTrue(np.allclose(OmGW_tst, OmGW))
-        self.assertTrue(np.allclose(freq2_tst, freq2))
-        self.assertTrue(np.allclose(OmGW2_tst, OmGW2))
+        data = np.load(file_path + '/Oms_sws1.npz')
+        self.assertTrue(np.allclose(data['freq'], freq.value))
+        self.assertTrue(np.allclose(data['OmGW'], OmGW))
+        self.assertTrue(np.allclose(data['freq2'], freq2.value))
+        self.assertTrue(np.allclose(data['OmGW2'], OmGW2))
 
     def test_read_Omega_higgsless(self):
 
@@ -89,13 +83,9 @@ class TestUnits(unittest.TestCase):
             alphas=alphas, numerical=False, quiet=True
         )
 
-        with open(
-            file_path + '/OmGWtilde_HL.pkl', 'rb'
-        ) as f:
-            OmGWtilde2 = pickle.load(f)
-
         # check that the output is correct
-        self.assertTrue(np.allclose(OmGWtilde, OmGWtilde2))
+        data = np.load(file_path + '/OmGWtilde_HL.npz')
+        self.assertTrue(np.allclose(data['OmGWtilde2'], OmGWtilde))
 
     def test_compute_read_K0s(self):
 
@@ -114,16 +104,13 @@ class TestUnits(unittest.TestCase):
             value='curly_K_0_512', boxsize=20
         )
 
-        with open(
-            file_path + '/K0_Esp_HL.pkl', 'rb'
-        ) as f:
-            K_xi_tst, Oms_xi_tst, K0_tst, K0num_tst = pickle.load(f)
+        data = np.load(file_path + '/K0_Esp_HL.npz')
 
         # check that the output is correct
-        self.assertTrue(np.allclose(K_xi_tst, K_xi))
-        self.assertTrue(np.allclose(Oms_xi_tst, Oms_xi))
-        self.assertTrue(np.allclose(K0_tst, K0))
-        self.assertTrue(np.allclose(K0num_tst, K0num))
+        self.assertTrue(np.allclose(data['K_xi'], K_xi))
+        self.assertTrue(np.allclose(data['Oms_xi'], Oms_xi))
+        self.assertTrue(np.allclose(data['K0'], K0))
+        self.assertTrue(np.allclose(data['K0num'], K0num))
 
     def test_tdurs_Esp(self):
 
@@ -145,13 +132,9 @@ class TestUnits(unittest.TestCase):
         lf2, _ = np.meshgrid(lf2, val_alphas, indexing='ij')
         dtdur = lf2 / np.sqrt(Oms_xi2)
 
-        with open(
-            file_path + '/tdur_eddy_HL.pkl', 'rb'
-        ) as f:
-            dtdur_tst = pickle.load(f)
-
         # check that the output is correct
-        self.assertTrue(np.allclose(dtdur_tst, dtdur))
+        data = np.load(file_path + '/tdur_eddy_HL.npz')
+        self.assertTrue(np.allclose(data['dtdur'], dtdur))
 
     def test_K2ints_flat(self):
 
@@ -184,14 +167,10 @@ class TestUnits(unittest.TestCase):
                     dtdur[i, j], K0=1., b=bnum[i, j], expansion=False
                 )
 
-        with open(
-            file_path + '/K2ints_flat_HL.pkl', 'rb'
-        ) as f:
-            K2int_flat_tst, K2int_flat_tdur_tst = pickle.load(f)
-
         # check that the output is correct
-        self.assertTrue(np.allclose(K2int_flat_tst, K2int_flat))
-        self.assertTrue(np.allclose(K2int_flat_tdur_tst, K2int_flat_tdur))
+        data = np.load(file_path + '/K2ints_flat_HL.npz')
+        self.assertTrue(np.allclose(data['K2int_flat'], K2int_flat))
+        self.assertTrue(np.allclose(data['K2int_flat_tdur'], K2int_flat_tdur))
 
     def test_K2ints_exp(self):
 
@@ -228,14 +207,10 @@ class TestUnits(unittest.TestCase):
                     K0=1., b=bnum[i, j], expansion=True, beta=betas[l]
                 )
 
-        with open(
-            file_path + '/K2ints_exp_HL.pkl', 'rb'
-        ) as f:
-            K2int_exp_tst, K2int_exp_tdur_tst = pickle.load(f)
-
         # check that the output is correct
-        self.assertTrue(np.allclose(K2int_exp_tst, K2int_exp))
-        self.assertTrue(np.allclose(K2int_exp_tdur_tst, K2int_exp_tdur))
+        data = np.load(file_path + '/K2ints_exp_HL.npz')
+        self.assertTrue(np.allclose(data['K2int_exp'], K2int_exp))
+        self.assertTrue(np.allclose(data['K2int_exp_tdur'], K2int_exp_tdur))
 
     def test_prefs_sw_HL(self):
 
@@ -278,15 +253,11 @@ class TestUnits(unittest.TestCase):
                         expansion=True, beta=betas[l], cs2=cs2
                     )
 
-        with open(
-            file_path + '/prefs_HL.pkl', 'rb'
-        ) as f:
-            pref_exp_tst, pref_exp2_tst, pref_sw_exp_tst = pickle.load(f)
-
+        data = np.load(file_path + '/prefs_HL.npz')
         # check that the output is correct
-        self.assertTrue(np.allclose(pref_exp_tst, pref_exp))
-        self.assertTrue(np.allclose(pref_exp2_tst, pref_exp2))
-        self.assertTrue(np.allclose(pref_sw_exp_tst, pref_sw_exp))
+        self.assertTrue(np.allclose(pref_exp, data['pref_exp']))
+        self.assertTrue(np.allclose(pref_exp2, data['pref_exp2']))
+        self.assertTrue(np.allclose(pref_sw_exp, data['pref_sw_exp']))
 
     def test_shapes_sw_HL(self):
 
@@ -308,15 +279,11 @@ class TestUnits(unittest.TestCase):
         S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_swHL = S * S0
 
-        with open(
-            file_path + '/shapes_sw_HL.pkl', 'rb'
-        ) as f:
-            S_swLISAold_tst, S_swSSM_tst, S_swHL_tst = pickle.load(f)
-
+        data = np.load(file_path + '/shapes_sw_HL.npz')
         # check that the output is correct
-        self.assertTrue(np.allclose(S_swLISAold_tst, S_swLISAold))
-        self.assertTrue(np.allclose(S_swSSM_tst, S_swSSM))
-        self.assertTrue(np.allclose(S_swHL_tst, S_swHL))
+        self.assertTrue(np.allclose(data['S_swLISAold'], S_swLISAold))
+        self.assertTrue(np.allclose(data['S_swSSM'], S_swSSM))
+        self.assertTrue(np.allclose(data['S_swHL'], S_swHL))
 
     def test_shapes2_sw_HL(self):
 
@@ -333,14 +300,10 @@ class TestUnits(unittest.TestCase):
         S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_sw_HL = S * S0
 
-        with open(
-            file_path + '/shapes2_sw_HL.pkl', 'rb'
-        ) as f:
-            S_sw_LISA_tst, S_sw_HL_tst = pickle.load(f)
-
+        data = np.load(file_path + '/shapes2_sw_HL.npz')
         # check that the output is correct
-        self.assertTrue(np.allclose(S_sw_LISA_tst, S_sw_LISA))
-        self.assertTrue(np.allclose(S_sw_HL_tst, S_sw_HL))
+        self.assertTrue(np.allclose(data['S_sw_LISA'], S_sw_LISA))
+        self.assertTrue(np.allclose(data['S_sw_HL'], S_sw_HL))
 
     def test_shapes3_sw_HL(self):
 
@@ -355,14 +318,10 @@ class TestUnits(unittest.TestCase):
         S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_sw_HLint = S * S0
 
-        with open(
-            file_path + '/shapes3_sw_HL.pkl', 'rb'
-        ) as f:
-            S_sw_HLstr_tst, S_sw_HLint_tst = pickle.load(f)
-
+        data = np.load(file_path + '/shapes3_sw_HL.npz')
         # check that the output is correct
-        self.assertTrue(np.allclose(S_sw_HLstr_tst, S_sw_HLstr))
-        self.assertTrue(np.allclose(S_sw_HLint_tst, S_sw_HLint))
+        self.assertTrue(np.allclose(data['S_sw_HLstr'], S_sw_HLstr))
+        self.assertTrue(np.allclose(data['S_sw_HLint'], S_sw_HLint))
 
     def test_shell_thickness_HL(self):
 
@@ -379,10 +338,6 @@ class TestUnits(unittest.TestCase):
                 xi_shocks[:, i] - np.minimum(vwss, cs)
             ) / np.maximum(vwss, cs)
 
-        with open(
-            file_path + '/shell_thickness_HL.pkl', 'rb'
-        ) as f:
-            Dw_tst = pickle.load(f)
-
+        data = np.load(file_path + '/shell_thickness_HL.npz')
         # check that the output is correct
-        self.assertTrue(np.allclose(Dw, Dw_tst))
+        self.assertTrue(np.allclose(Dw, data['Dw']))
