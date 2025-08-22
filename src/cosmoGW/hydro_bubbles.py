@@ -1105,160 +1105,37 @@ def compute_profiles_vws(
 
     for i, vw in enumerate(vws):
         ty = type_nucleation(vw, alpha, cs2=cs2)
-        if ty == 'def':
-            # iteratively compute the real alpha_+ leading to alpha
-            if alphan:
-                result = compute_alphan(
-                    vw=vw, alpha_obj=alpha, tol=tol, cs2=cs2,
-                    quiet=quiet, max_it=max_it, Nxi=Nxi, ty='def'
-                )
-                (
-                    xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m,
-                    alpha_n, alp_plus, conv_i
-                ) = result
-                alphas_n[i] = alp_plus
-                conv[i] = conv_i
+        result = _compute_profiles_block(
+            ty, vw, alpha, alphan, tol, cs2, quiet, max_it, Nxi
+        )
+        # Unpack mandatory values, handle optional ones
+        xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m, *rest = result
+        alpha_plus = rest[0] if len(rest) > 0 else None
+        conv_i = rest[1] if len(rest) > 1 else None
 
-            # otherwise, alpha given is assumed to be alpha_+
-            else:
-                xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m = compute_def(
-                    vw=vw, alpha=alpha, cs2=cs2, Nxi=Nxi, shock=True
-                )
-                alphas_n[i] = alpha * w_pl
-            inds = np.where((xis >= vw) & (xis <= xi_sh))[0]
-            inds2 = np.where(xis < vw)[0]
-            wws[i, inds2] = w_m
+        _assign_results(
+            i, ty, xis, vw, xi_sh, cs, vvs, wws, w_m, vvs0, wws0, xis0, sh,
+            xi_shocks, shocks, wms, alpha_plus, conv_i, alphas_n, conv
+        )
 
-        elif ty == 'hyb':
-            # iteratively compute the real alpha_+ leading to alpha
-            if alphan:
-                result = compute_alphan(
-                    vw=vw, alpha_obj=alpha, tol=tol, cs2=cs2,
-                    quiet=quiet, max_it=max_it, Nxi=Nxi, ty='hyb'
-                )
-                (
-                    xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m,
-                    _, alp_plus, conv_i
-                ) = result
-                alphas_n[i] = alp_plus
-                conv[i] = conv_i
-            # otherwise, alpha given is assumed to be alpha_+
-            else:
-                xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m = compute_hyb(
-                    vw=vw, alpha=alpha, cs2=cs2, Nxi=Nxi, shock=True
-                )
-                alphas_n[i] = alpha * w_pl
-            inds = np.where((xis >= cs) & (xis <= xi_sh))[0]
-            if xi_sh == vw:
-                inds = np.append(inds, np.where((xis <= xi_sh))[-1] + 1)
-            inds2 = np.where(xis < cs)[0]
-            wws[i, inds2] = wws0[0]
-        else:
-            xis0, vvs0, wws0, xi_sh, sh, w_pl, w_m = compute_det(
-                vw=vw, alpha=alpha, cs2=cs2, Nxi=Nxi
-            )
-            inds = np.where((xis >= cs) & (xis <= vw))[0]
-            inds2 = np.where(xis < cs)[0]
-            wws[i, inds2] = wws0[0]
-            alphas_n[i] = alpha
+    # compute efficiency of energy density production
+    if eff:
+        kappas[i], omegas[i] = kappas_from_prof(
+            vw, alpha, xis, wws[i, :], vvs[i, :]
+        )
 
-        vvs[i, inds] = np.interp(xis[inds], xis0, vvs0)
-        wws[i, inds] = np.interp(xis[inds], xis0, wws0)
-        shocks[i] = sh
-        xi_shocks[i] = xi_sh
-        wms[i] = w_m
-
-        # compute efficiency of energy density production
-        if eff:
-            kappas[i], omegas[i] = kappas_from_prof(
-                vw, alpha, xis, wws[i, :], vvs[i, :]
-            )
-
-        # compute mean energy density from enthalpy if lam is True
-        if lam:
-            alp_lam = alpha if alphan else alphas_n[i]
-            wws[i, :] = w_to_lam(xis, wws[i, :], vw, alp_lam)
-
-        if plot:
-            j = i % len(cols)
-            str_lg = (
-                r'$\xi_w=%.2f$' % vw if st_lg == 2 else r'$\xi_w=%.1f$' % vw
-            )
-            if plot_v == 'v':
-                plt.plot(
-                    xis, vvs[i, :],
-                    color=cols[j], ls=ls, alpha=alp, label=str_lg
-                )
-            if plot_v == 'w':
-                plt.plot(
-                    xis, wws[i, :],
-                    color=cols[j], ls=ls, alpha=alp, label=str_lg
-                )
-            if plot_v == 'both':
-                plt.figure(1)
-                plt.plot(
-                    xis, vvs[i, :],
-                    color=cols[j], ls=ls, alpha=alp, label=str_lg
-                )
-                plt.figure(2)
-                plt.plot(
-                    xis, wws[i, :],
-                    color=cols[j], ls=ls, alpha=alp, label=str_lg
-                )
-
-        if save and alphan:
-            df = pd.DataFrame({
-                'alpha': alpha * xis ** 0,
-                'xi_w': vw * xis ** 0,
-                'xi': xis,
-                'v': vvs[i, :],
-                'w': wws[i, :],
-                'alpha_pl': alphas_n[i] * xis ** 0,
-                'shock': shocks[i] * xis ** 0,
-                'xi_sh': xi_shocks[i] * xis ** 0,
-                'wm': wms[i] * xis ** 0
-            })
-            if str_alp is None:
-                str_alp_val = '%s' % alpha
-                str_alp_val = '0' + str_alp_val
-                str_alp_val = str_alp_val[2:]
-            else:
-                str_alp_val = str_alp[i]
-            if strs_vws is None:
-                str_vws_val = '%s' % np.round(vw, decimals=dec_vw)
-                str_vws_val = str_vws_val[2:]
-            else:
-                str_vws_val = strs_vws[i]
-            file_dir = f'{ress}/alpha_{str_alp_val}_vw_{str_vws_val}.csv'
-            try:
-                df.to_csv(file_dir)
-                print('results of 1d profile saved in ', file_dir)
-            except Exception:
-                print(
-                    'create directory results/1d_profiles '
-                    'to save the 1d profiles'
-                )
+    # compute mean energy density from enthalpy if lam is True
+    if lam:
+        alp_lam = alpha if alphan else alphas_n[i]
+        wws[i, :] = w_to_lam(xis, wws[i, :], vw, alp_lam)
 
     if plot:
-        if plot_v == 'v' or plot_v == 'both':
-            if plot_v == 'both':
-                plt.figure(1)
-            plt.ylim(-.05, 1.05)
-            plt.ylabel(r'$ v_{\rm ip} (\xi)$')
-        if plot_v == 'w' or plot_v == 'both':
-            if plot_v == 'both':
-                plt.figure(2)
-            plt.ylim(0, 5)
-            plt.ylabel(r'$ \lambda_{\rm ip} (\xi)$' if lam else r'$ w(\xi)$')
-        l = [1] if plot_v != 'both' else [1, 2]
-        for j in l:
-            plt.figure(j)
-            plt.xlim(0, 1)
-            plt.vlines(cs, -5, 30, color='black', ls='dashed', lw=1)
-            plt.vlines(vCJ, -5, 30, color='black', ls='dashed', lw=1)
-            plt.xlabel(r'$\xi$')
-            if legs:
-                plt.legend(fontsize=fs_lg)
+        _plot_profiles(i, vw, xis, vvs, wws, cols, ls, alp, st_lg, plot_v,
+                       legs, fs_lg, cs, vCJ, lam)
+
+    if save and alphan:
+        _save_profiles(i, alpha, xis, vvs, wws, alphas_n, shocks, xi_shocks,
+                       wms, str_alp, strs_vws, dec_vw, ress, vw)
 
     if eff:
         return (
@@ -1267,6 +1144,140 @@ def compute_profiles_vws(
         )
     else:
         return xis, vvs, wws, alphas_n, conv, shocks, xi_shocks, wms
+
+
+def _compute_profiles_block(ty, vw, alpha, alphan, tol, cs2,
+                            quiet, max_it, Nxi):
+    '''
+    Compute the profiles for a given type of nucleation, called
+    from compute_profiles_vws.
+    '''
+    if ty == 'def':
+        # iteratively compute the real alpha_+ leading to alpha
+        if alphan:
+            return compute_alphan(
+                vw=vw, alpha_obj=alpha, tol=tol, cs2=cs2, quiet=quiet,
+                max_it=max_it, Nxi=Nxi, ty='def'
+            )
+        return compute_def(vw=vw, alpha=alpha, cs2=cs2, Nxi=Nxi, shock=True)
+    if ty == 'hyb':
+        if alphan:
+            return compute_alphan(
+                vw=vw, alpha_obj=alpha, tol=tol, cs2=cs2, quiet=quiet,
+                max_it=max_it, Nxi=Nxi, ty='hyb'
+            )
+        return compute_hyb(vw=vw, alpha=alpha, cs2=cs2, Nxi=Nxi, shock=True)
+    return compute_det(vw=vw, alpha=alpha, cs2=cs2, Nxi=Nxi)
+
+
+def _assign_results(
+        i, ty, xis, vw, xi_sh, cs, vvs, wws, w_m, vvs0, wws0, xis0, sh,
+        xi_shocks, shocks, wms, alpha_plus, conv_i, alphas_n, conv
+):
+    '''
+    Assign results to arrays from 1d profiles, called from
+    compute_profiles_vws.
+    '''
+
+    if ty == 'def':
+        inds = np.where((xis >= vw) & (xis <= xi_sh))[0]
+        inds2 = np.where(xis < vw)[0]
+    elif ty == 'hyb':
+        inds = np.where((xis >= cs) & (xis <= xi_sh))[0]
+        if xi_sh == vw:
+            inds = np.append(inds, np.where((xis <= xi_sh))[-1] + 1)
+        inds2 = np.where(xis < cs)[0]
+    else:
+        inds = np.where((xis >= cs) & (xis <= vw))[0]
+        inds2 = np.where(xis < cs)[0]
+
+    # Interpolate and assign velocity and enthalpy profiles
+    vvs[i, inds] = np.interp(xis[inds], xis0, vvs0)
+    wws[i, inds] = np.interp(xis[inds], xis0, wws0)
+    wws[i, inds2] = w_m
+
+    # Assign shock and wall values
+    xi_shocks[i] = xi_sh
+    shocks[i] = sh
+    wms[i] = w_m
+
+    # Assign alpha_plus and convergence if available
+    if alpha_plus is not None:
+        alphas_n[i] = alpha_plus
+    if conv_i is not None:
+        conv[i] = conv_i
+
+
+def _plot_profiles(i, vw, xis, vvs, wws, cols, ls, alp, st_lg, plot_v,
+                   legs, fs_lg, cs, vCJ, lam):
+
+    '''
+    Plot profiles for a given type of nucleation, called from
+    compute_profiles_vws.
+    '''
+    j = i % len(cols)
+    str_lg = r'$\xi_w=%.2f$' % vw if st_lg == 2 else r'$\xi_w=%.1f$' % vw
+    if plot_v == 'v':
+        plt.plot(xis, vvs[i, :], color=cols[j], ls=ls, alpha=alp, label=str_lg)
+    if plot_v == 'w':
+        plt.plot(xis, wws[i, :], color=cols[j], ls=ls, alpha=alp, label=str_lg)
+    if plot_v == 'both':
+        plt.figure(1)
+        plt.plot(xis, vvs[i, :], color=cols[j], ls=ls, alpha=alp, label=str_lg)
+        plt.figure(2)
+        plt.plot(xis, wws[i, :], color=cols[j], ls=ls, alpha=alp, label=str_lg)
+    # Axis labels and legends
+    if plot_v == 'v' or plot_v == 'both':
+        if plot_v == 'both':
+            plt.figure(1)
+        plt.ylim(-.05, 1.05)
+        plt.ylabel(r'$ v_{\rm ip} (\xi)$')
+    if plot_v == 'w' or plot_v == 'both':
+        if plot_v == 'both':
+            plt.figure(2)
+        plt.ylim(0, 5)
+        plt.ylabel(r'$ \lambda_{\rm ip} (\xi)$' if lam else r'$ w(\xi)$')
+    l = [1] if plot_v != 'both' else [1, 2]
+    for fig_num in l:
+        plt.figure(fig_num)
+        plt.xlim(0, 1)
+        plt.vlines(cs, -5, 30, color='black', ls='dashed', lw=1)
+        plt.vlines(vCJ, -5, 30, color='black', ls='dashed', lw=1)
+        plt.xlabel(r'$\xi$')
+        if legs:
+            plt.legend(fontsize=fs_lg)
+
+
+def _save_profiles(i, alpha, xis, vvs, wws, alphas_n, shocks, xi_shocks, wms,
+                   str_alp, strs_vws, dec_vw, ress, vw):
+
+    '''
+    Save the profiles to a CSV file, called from compute_profiles_vws.
+    '''
+
+    df = pd.DataFrame({'alpha': alpha * xis ** 0, 'xi_w': vw * xis ** 0,
+                       'xi': xis, 'v': vvs[i, :], 'w': wws[i, :],
+                       'alpha_pl': alphas_n[i] * xis ** 0,
+                       'shock': shocks[i] * xis ** 0,
+                       'xi_sh': xi_shocks[i] * xis ** 0,
+                       'wm': wms[i] * xis ** 0})
+    if str_alp is None:
+        str_alp_val = '%s' % alpha
+        str_alp_val = '0' + str_alp_val
+        str_alp_val = str_alp_val[2:]
+    else:
+        str_alp_val = str_alp[i]
+    if strs_vws is None:
+        str_vws_val = '%s' % np.round(vw, decimals=dec_vw)
+        str_vws_val = str_vws_val[2:]
+    else:
+        str_vws_val = strs_vws[i]
+    file_dir = f'{ress}/alpha_{str_alp_val}_vw_{str_vws_val}.csv'
+    try:
+        df.to_csv(file_dir)
+        print('results of 1d profile saved in ', file_dir)
+    except Exception:
+        print('create directory results/1d_profiles to save the 1d profiles')
 
 
 # COMPUTING EFFICIENCIES FROM 1D PROFILES
@@ -1477,41 +1488,46 @@ def fp_z(xi, vs, z, lz=False, ls=None, multi=True, quiet=False):
         j0_z[np.where(zxi_ij == 0)] = 1
 
     if multi:
-        Nvws = np.shape(vs)[0]
-        fpzs = np.zeros((Nvws, len(z)))
-        if lz:
-            lzs = np.zeros((Nvws, len(z)))
-        for i in range(Nvws):
-            v_ij, z_ij = np.meshgrid(vs[i, 1:], z, indexing='ij')
-            integrand_fp = j1_z * xi_ij ** 2 * v_ij
-            fpzs[i, :] = -4 * np.pi * safe_trapezoid(
-                integrand_fp, xi[1:], axis=0
-            )
-            if lz:
-                l_ij, z_ij = np.meshgrid(ls[i, 1:], z, indexing='ij')
-                integrand_l = j0_z * xi_ij ** 2 * l_ij
-                lzs[i, :] = 4 * np.pi * safe_trapezoid(
-                    integrand_l, xi[1:], axis=0
-                )
-            if not quiet:
-                print('vw ', i + 1, '/', Nvws, ' computed')
-
-    else:
-        v_ij, z_ij = np.meshgrid(vs[1:], z, indexing='ij')
-        integrand_fp = j1_z * xi_ij ** 2 * v_ij
-        fpzs = -4 * np.pi * safe_trapezoid(
-            integrand_fp, xi[1:], axis=0
+        fpzs, lzs = _fp_z_multi(
+            xi, vs, z, lz, ls, xi_ij, j1_z, j0_z if lz else None, quiet
         )
-        if lz:
-            l_ij, z_ij = np.meshgrid(ls[1:], z, indexing='ij')
-            integrand_l = j0_z * xi_ij ** 2 * l_ij
-            lzs = 4 * np.pi * safe_trapezoid(
-                integrand_l, xi[1:], axis=0
-            )
+    else:
+        fpzs, lzs = _fp_z_single(
+            xi, vs, z, lz, ls, xi_ij, j1_z, j0_z if lz else None
+        )
+
     if lz:
         return fpzs, lzs
-    else:
-        return fpzs
+    return fpzs
+
+
+def _fp_z_multi(xi, vs, z, lz, ls, xi_ij, j1_z, j0_z, quiet):
+    Nvws = np.shape(vs)[0]
+    fpzs = np.zeros((Nvws, len(z)))
+    lzs = np.zeros((Nvws, len(z))) if lz else None
+    for i in range(Nvws):
+        v_ij, _ = np.meshgrid(vs[i, 1:], z, indexing='ij')
+        integrand_fp = j1_z * xi_ij ** 2 * v_ij
+        fpzs[i, :] = -4 * np.pi * safe_trapezoid(integrand_fp, xi[1:], axis=0)
+        if lz:
+            l_ij, _ = np.meshgrid(ls[i, 1:], z, indexing='ij')
+            integrand_l = j0_z * xi_ij ** 2 * l_ij
+            lzs[i, :] = 4 * np.pi * safe_trapezoid(integrand_l, xi[1:], axis=0)
+        if not quiet:
+            print('vw ', i + 1, '/', Nvws, ' computed')
+    return fpzs, lzs
+
+
+def _fp_z_single(xi, vs, z, lz, ls, xi_ij, j1_z, j0_z):
+    v_ij, _ = np.meshgrid(vs[1:], z, indexing='ij')
+    integrand_fp = j1_z * xi_ij ** 2 * v_ij
+    fpzs = -4 * np.pi * safe_trapezoid(integrand_fp, xi[1:], axis=0)
+    lzs = None
+    if lz:
+        l_ij, _ = np.meshgrid(ls[1:], z, indexing='ij')
+        integrand_l = j0_z * xi_ij ** 2 * l_ij
+        lzs = 4 * np.pi * safe_trapezoid(integrand_l, xi[1:], axis=0)
+    return fpzs, lzs
 
 
 def Rstar_beta(vws=1., cs2=cs2_ref, corr=True):

@@ -1169,7 +1169,9 @@ def _compute_spectral_shape(
         return _spectral_shape_LISAold(s, vws, alphas)
 
     if model_shape in ['sw_HL', 'sw_SSM']:
-        return _spectral_shape_HL_SSM(s, vws, alphas, cs, a_sw, b_sw, c_sw, alp1_sw, alp2_sw)
+        return _spectral_shape_HL_SSM(
+            s, vws, alphas, cs, a_sw, b_sw, c_sw, alp1_sw, alp2_sw
+        )
 
     if model_shape in ['sw_LISA', 'sw_HLnew']:
         return _spectral_shape_LISA_HLnew(
