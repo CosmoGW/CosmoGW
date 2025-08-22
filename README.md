@@ -44,7 +44,7 @@ pip install git+https://github.com/cosmoGW/cosmoGW.git
 Python >= 3.8, numpy, scipy, matplotlib, astropy, pandas
 
 To use the plotting routines available in the tutorials and in
-:func:[`plot_sets.py`](src/cosmoGW/plot_sets.py), make sure to install latex for Python:
+[plot_sets](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/plot_sets.py), make sure to install latex for Python:
 
 ```bash
 sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
@@ -92,9 +92,10 @@ make html
 
 Tutorials and example notebooks are available in the [`tutorials/`](https://github.com/cosmoGW/cosmoGW/blob/main/tutorials/) directory:
 
-- [**GWs_sound-waves**](https://github.com/cosmoGW/cosmoGW/blob/main/tutorials/GWs_sound-waves)
+- [**GWs_sound-waves**](https://github.com/cosmoGW/cosmoGW/blob/main/tutorials/GWs_sound-waves.ipynb)
 
-These tutorials can be run from Google Colab by loading the notebooks from GitHub.
+These tutorials can be run from [*Google Colab*](https://colab.research.google.com/)
+by loading the notebooks from GitHub.
 
 When using Colab, latex needs to be installed, together with CosmoGW, for plotting routines.
 For the installation, uncomment and execute the first cell of the tutorials:
@@ -108,7 +109,7 @@ For the installation, uncomment and execute the first cell of the tutorials:
 
 <img src="https://img.icons8.com/ios-filled/50/000000/test-passed.png" width="24" /> **Tests**
 
-Unit tests are provided in the `tests/` directory.
+Unit tests are provided in the [`tests/`](https://github.com/cosmoGW/cosmoGW/blob/main/tests/) directory.
 
 To run all tests (from cosmoGW directory):
 
