@@ -11,6 +11,10 @@ Currently part of the cosmoGW code:
 https://github.com/cosmoGW/cosmoGW/
 https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_back.py
 
+.. note::
+   For full documentation, visit `Read the Docs
+   <https://cosmogw-manual.readthedocs.io/en/latest/GW_back.html>`_.
+
 To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
 
     pip install cosmoGW
