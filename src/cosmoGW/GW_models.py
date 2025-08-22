@@ -525,6 +525,54 @@ def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb,
     return TGW
 
 
+def _get_A2(fp, l, cs2, sp):
+    '''
+    Compute A2 coefficient for kinetic spectrum in
+    :func:`compute_kin_spec_ssm`.
+    '''
+    fp = np.array(fp)
+    l = np.array(l)
+    if sp == "sum":
+        return 0.25 * (cs2 * l ** 2 + fp ** 2)
+    if sp == "only_f":
+        return 0.5 * fp ** 2
+    if sp == "only_l":
+        return 0.5 * cs2 * l ** 2
+    if sp == "diff":
+        return 0.25 * (fp ** 2 - cs2 * l ** 2)
+    if sp == "cross":
+        return -0.5 * fp * np.sqrt(cs2) * l
+    raise ValueError("Unknown sp value")
+
+
+def _get_nu_T(TT_ij, type_n):
+    '''
+    Function to compute the lifetime distribution nu_T.
+    '''
+    if type_n == "exp":
+        return np.exp(-TT_ij)
+    if type_n == "sim":
+        return 0.5 * np.exp(-(TT_ij**3) / 6) * TT_ij**2
+    raise ValueError("Unknown type_n value")
+
+
+def _convert_to_spec(Pv, Rstar_beta, qbeta, vws):
+    '''
+    Function to convert power spectral density to spectrum
+    '''
+    for i in range(len(vws)):
+        pref = qbeta**2 / Rstar_beta[i] ** 4 / (2 * np.pi**2)
+        Pv[i, :] *= pref
+    return Pv
+
+
+def _normalize_qbeta(qbeta, vws, Rstar_beta):
+    _, qbeta_mesh = np.meshgrid(vws, qbeta, indexing="ij")
+    for i in range(len(vws)):
+        qbeta_mesh[i, :] *= Rstar_beta[i]
+    return qbeta_mesh
+
+
 def compute_kin_spec_ssm(z, vws, fp, l=None, sp="sum", type_n="exp",
                          cs2=hydro_bubbles.cs2_ref, min_qbeta=-4, max_qbeta=5,
                          Nqbeta=Nk_ref, min_TT=-1, max_TT=3, NTT=NTT_ref,
@@ -580,47 +628,25 @@ def compute_kin_spec_ssm(z, vws, fp, l=None, sp="sum", type_n="exp",
 
     if l is None:
         l = []
-    if sp == "sum":
-        A2 = 0.25 * (cs2 * np.array(l) ** 2 + np.array(fp) ** 2)
-    if sp == "only_f":
-        A2 = 0.5 * np.array(fp) ** 2
-    if sp == "only_l":
-        A2 = 0.5 * cs2 * np.array(l) ** 2
-    if sp == "diff":
-        A2 = 0.25 * (np.array(fp) ** 2 - cs2 * np.array(l) ** 2)
-    if sp == "cross":
-        A2 = -0.5 * np.array(fp) * np.sqrt(cs2) * np.array(l)
 
+    A2 = _get_A2(fp, l, cs2, sp)
     qbeta = np.logspace(min_qbeta, max_qbeta, Nqbeta)
     TT = np.logspace(min_TT, max_TT, NTT)
     Pv = np.zeros((len(vws), len(qbeta)))
-
     q_ij, TT_ij = np.meshgrid(qbeta, TT, indexing="ij")
-    if type_n == "exp":
-        nu_T = np.exp(-TT_ij)
-    if type_n == "sim":
-        nu_T = 0.5 * np.exp(-(TT_ij**3) / 6) * TT_ij**2
-
+    nu_T = _get_nu_T(TT_ij, type_n)
     funcT = np.zeros((len(vws), len(qbeta), len(TT)))
 
     for i in range(0, len(vws)):
-        funcT[i, :, :] = nu_T * TT_ij**6 * np.interp(
-            TT_ij * q_ij, z, A2[i, :]
-        )
+        funcT[i, :, :] = nu_T * TT_ij**6 * np.interp(TT_ij * q_ij, z, A2[i, :])
         Pv[i, :] = _safe_trapezoid(funcT[i, :, :], TT, axis=1)
 
     if not dens:
         Rstar_beta = hydro_bubbles.Rstar_beta(vws=vws, cs2=cs2, corr=corr)
-        for i in range(0, len(vws)):
-            pref = qbeta**2 / Rstar_beta[i] ** 4 / (2 * np.pi**2)
-            Pv[i, :] *= pref
+        Pv = _convert_to_spec(Pv, Rstar_beta, qbeta, vws)
 
     if not normbeta:
-        if not dens:
-            Rstar_beta = hydro_bubbles.Rstar_beta(vws=vws, cs2=cs2, corr=corr)
-        _, qbeta = np.meshgrid(vws, qbeta, indexing="ij")
-        for i in range(0, len(vws)):
-            qbeta[i, :] *= Rstar_beta[i]
+        qbeta = _normalize_qbeta(qbeta, vws, Rstar_beta)
 
     return qbeta, Pv
 
