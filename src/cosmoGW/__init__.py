@@ -44,4 +44,3 @@ __all__ = [
     "plot_sets",
     "COSMOGW_HOME"
 ]
-
