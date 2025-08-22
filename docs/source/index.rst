@@ -26,3 +26,4 @@ from sound waves and MHD turbulence from cosmological phase transitions.
    cosmology
    GW_templates
    hydro_bubbles
+   interferometry
