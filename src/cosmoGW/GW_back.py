@@ -91,7 +91,7 @@ def fac_hc_OmGW(d=1, h0=1.):
     return fac
 
 
-def check_frequency(f, func=''):
+def _check_frequency(f, func=''):
 
     """
     Checks and converts the input frequency to Hz using astropy units.
@@ -185,7 +185,7 @@ def hc_OmGW(f, OmGW, d=1, h0=1.):
         S_h^{\pm}(f) = \frac{h_c^2(f)}{f}
     """
 
-    f = check_frequency(f, func='hc_OmGW')
+    f = _check_frequency(f, func='hc_OmGW')
     fac = fac_hc_OmGW(d=d, h0=h0)
     hc = fac / f * np.sqrt(OmGW)
     if d == -1:
@@ -249,7 +249,7 @@ def hc_Sf(f, Sf, d=1):
     ---------
     RoperPol:2022iel, eq. 42
     """
-    f = check_frequency(f, func='hc_Sf')
+    f = _check_frequency(f, func='hc_Sf')
     Sf = check_Sf(Sf, func='hc_Sf')
     hc = np.sqrt(12 * np.pi ** 2 * Sf * f ** 3)
     if d == -1:
@@ -301,7 +301,7 @@ def Omega_A(A=1., fref=0, beta=0, h0=1.):
     fyr = (1. / u.yr).to(u.Hz)
     Omref = fac * fyr ** 2 * A ** 2
     if fref != 0:
-        fref = check_frequency(fref, func='Omega_A')
+        fref = _check_frequency(fref, func='Omega_A')
         Omref *= (fref.value / fyr.value) ** beta
     return Omref
 
