@@ -818,61 +818,6 @@ def _shape_sw_HLnew(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, strength,
     Uses Dw = xi_shell/max(vw, cs).
     '''
 
-    def _get_peaks_HLnew(strength, Dw):
-        peak1 = 0.4
-        if strength == 'weak':
-            peak2 = 0.5 / Dw
-        elif strength == 'interm':
-            peak2 = 1.
-        else:
-            peak2 = 0.5
-        return peak1, peak2
-    
-    def _compute_shape_HLnew(s, peak1, peak2, a_sw, b_sw, c_sw,
-                             alp1_sw, alp2_sw):
-        return GW_analytical.smoothed_double_bPL(
-            s, peak1, peak2, A=1., a=a_sw, b=b_sw,
-            c=c_sw, alp1=alp1_sw, alp2=alp2_sw, alpha2=True
-        )
-
-    def _interpolate_peaks_and_shape_HLnew(s, vws, alphas, bs_k1HL, bs_k2HL,
-                                           quiet, corrRs, cs2,
-                                           interpolate_HL_n3):
-        dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
-        df = pd.read_csv(dirr)
-        val_str = 'k1'
-        peaks1 = interpolate_HL_vals(
-            df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k1HL
-        )
-        val_str = 'k2'
-        peaks2 = interpolate_HL_vals(
-            df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k2HL
-        )
-        s0 = np.zeros((len(s), len(vws), len(alphas)))
-        peaks10 = np.zeros((len(s), len(vws), len(alphas)))
-        peaks20 = np.zeros((len(s), len(vws), len(alphas)))
-        Rstar_beta = hydro_bubbles.Rstar_beta(
-            vws=vws, corr=corrRs, cs2=cs2
-        ) / 2 / np.pi
-        for i in range(len(vws)):
-            for j in range(len(alphas)):
-                peaks10[:, i, j] = peaks1[i, j] * Rstar_beta[i]
-                peaks20[:, i, j] = peaks2[i, j] * Rstar_beta[i]
-                s0[:, i, j] = s
-        peaks1 = peaks10
-        peaks2 = peaks20
-        s = s0
-        if interpolate_HL_n3:
-            val_str = 'n3'
-            c_sw = -interpolate_HL_vals(
-                df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k2HL
-            )
-        else:
-            c_sw = None
-        if not quiet:
-            _data_warning(boxsize=f'{bs_k1HL} and {bs_k2HL}')
-        return peaks1, peaks2, s, c_sw
-
     # smoothness parameters
     if alp1_sw == 0:
         alp1_sw = alp1_HL
@@ -897,6 +842,64 @@ def _shape_sw_HLnew(s, Dw, a_sw, b_sw, c_sw, alp1_sw, alp2_sw, strength,
         return _compute_shape_HLnew(
             s, peaks1, peaks2, a_sw, b_sw, c_sw, alp1_sw, alp2_sw
         )
+
+
+def _get_peaks_HLnew(strength, Dw):
+    peak1 = 0.4
+    if strength == 'weak':
+        peak2 = 0.5 / Dw
+    elif strength == 'interm':
+        peak2 = 1.
+    else:
+        peak2 = 0.5
+    return peak1, peak2
+
+
+def _compute_shape_HLnew(s, peak1, peak2, a_sw, b_sw, c_sw,
+                         alp1_sw, alp2_sw):
+    return GW_analytical.smoothed_double_bPL(
+        s, peak1, peak2, A=1., a=a_sw, b=b_sw,
+        c=c_sw, alp1=alp1_sw, alp2=alp2_sw, alpha2=True
+    )
+
+
+def _interpolate_peaks_and_shape_HLnew(s, vws, alphas, bs_k1HL, bs_k2HL,
+                                       quiet, corrRs, cs2,
+                                       interpolate_HL_n3):
+    dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
+    df = pd.read_csv(dirr)
+    val_str = 'k1'
+    peaks1 = interpolate_HL_vals(
+        df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k1HL
+    )
+    val_str = 'k2'
+    peaks2 = interpolate_HL_vals(
+        df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k2HL
+    )
+    s0 = np.zeros((len(s), len(vws), len(alphas)))
+    peaks10 = np.zeros((len(s), len(vws), len(alphas)))
+    peaks20 = np.zeros((len(s), len(vws), len(alphas)))
+    Rstar_beta = hydro_bubbles.Rstar_beta(
+        vws=vws, corr=corrRs, cs2=cs2
+    ) / 2 / np.pi
+    for i in range(len(vws)):
+        for j in range(len(alphas)):
+            peaks10[:, i, j] = peaks1[i, j] * Rstar_beta[i]
+            peaks20[:, i, j] = peaks2[i, j] * Rstar_beta[i]
+            s0[:, i, j] = s
+    peaks1 = peaks10
+    peaks2 = peaks20
+    s = s0
+    if interpolate_HL_n3:
+        val_str = 'n3'
+        c_sw = -interpolate_HL_vals(
+            df, vws, alphas, quiet=True, value=val_str, boxsize=bs_k2HL
+        )
+    else:
+        c_sw = None
+    if not quiet:
+        _data_warning(boxsize=f'{bs_k1HL} and {bs_k2HL}')
+    return peaks1, peaks2, s, c_sw
 
 
 def OmGW_spec_sw(
