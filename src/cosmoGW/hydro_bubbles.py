@@ -183,7 +183,7 @@ def type_nucleation(vw, alp, cs2=cs2_ref):
 
 
 # 1D HYDRO SOLUTIONS UNDER SPHERICAL SYMMETRY
-def Lor_mu(v, vw):
+def _Lor_mu(v, vw):
 
     r"""
     Lorentz transform of the velocity v in the reference frame of the wall.
@@ -255,7 +255,7 @@ def w_shock(xi):
 
 
 # differential equation for the velocity radial profile
-def xi_o_v(xi, v, cs2=cs2_ref):
+def _xi_o_v(xi, v, cs2=cs2_ref):
 
     r"""
     Characterize the 1D hydro equation under radial symmetry.
@@ -283,7 +283,7 @@ def xi_o_v(xi, v, cs2=cs2_ref):
     """
 
     gamma2 = 1 / (1 - v ** 2)
-    mu = Lor_mu(v, xi)
+    mu = _Lor_mu(v, xi)
     f = xi * gamma2 * (1 - xi * v) * (mu ** 2 / cs2 - 1) / (2 * v)
     return f
 
@@ -327,10 +327,10 @@ def compute_xi_from_v(v, xi0, cs2=cs2_ref, shock=False):
 
     for i in range(0, len(v) - 1):
         dv = v[i + 1] - v[i]
-        k1 = xi_o_v(xi[i], v[i])
-        k2 = xi_o_v(xi[i] + dv * k1 / 2, 0.5 * (v[i + 1] + v[i]))
-        k3 = xi_o_v(xi[i] + dv * k2 / 2, 0.5 * (v[i + 1] + v[i]))
-        k4 = xi_o_v(xi[i] + dv * k3, v[i + 1])
+        k1 = _xi_o_v(xi[i], v[i])
+        k2 = _xi_o_v(xi[i] + dv * k1 / 2, 0.5 * (v[i + 1] + v[i]))
+        k3 = _xi_o_v(xi[i] + dv * k2 / 2, 0.5 * (v[i + 1] + v[i]))
+        k4 = _xi_o_v(xi[i] + dv * k3, v[i + 1])
         xi_new = xi[i] + (1 / 6) * (k1 + 2 * k2 + 2 * k3 + k4) * dv
         if shock:
             xi_sh = xi_new
@@ -346,7 +346,7 @@ def compute_xi_from_v(v, xi0, cs2=cs2_ref, shock=False):
     return xi, sh, indsh
 
 
-def compute_int_w(xi, v, cs2=cs2_ref):
+def _integrand_w(xi, v, cs2=cs2_ref):
 
     r"""
     Compute the integrand for the integration of :math:`dw/d\xi`
@@ -372,7 +372,7 @@ def compute_int_w(xi, v, cs2=cs2_ref):
     Eq. (29) of Espinosa:2010hh
     """
 
-    return (1.0 + 1.0 / cs2) / (1.0 - v ** 2) * Lor_mu(v, xi)
+    return (1.0 + 1.0 / cs2) / (1.0 - v ** 2) * _Lor_mu(v, xi)
 
 
 def compute_w(v, xi, cs2=cs2_ref):
@@ -398,8 +398,8 @@ def compute_w(v, xi, cs2=cs2_ref):
     w = np.zeros(len(v)) + 1
     ss = 0
     for i in range(0, len(v) - 1):
-        ff_ip = compute_int_w(xi[i + 1], v[i + 1], cs2=cs2)
-        ff_i = compute_int_w(xi[i], v[i], cs2=cs2)
+        ff_ip = _integrand_w(xi[i + 1], v[i + 1], cs2=cs2)
+        ff_i = _integrand_w(xi[i], v[i], cs2=cs2)
         ss += 0.5 * (v[i + 1] - v[i]) * (ff_ip + ff_i)
         w[i + 1] = np.exp(ss)
 
@@ -408,7 +408,7 @@ def compute_w(v, xi, cs2=cs2_ref):
 
 # SOLVE FOR THE DIFFERENT TYPE OF BOUNDARY CONDITIONS
 # MATCHING CONDITIONS ACROSS DISCONTINUITIES
-def vp_tilde_from_vm_tilde(vw, alpha, plus=True, sg='plus'):
+def _vp_tilde_from_vm_tilde(vw, alpha, plus=True, sg='plus'):
 
     """
     Compute the velocity on one side of the bubble wall from the velocity on
@@ -490,13 +490,13 @@ def vplus_vminus(alpha, vw=1.0, ty='det', cs2=cs2_ref):
     if not isinstance(ty, (list, tuple, np.ndarray)):
         if ty == 'det':
             vplus = vw
-            vminus = vp_tilde_from_vm_tilde(vw, alpha, plus=True, sg='minus')
+            vminus = _vp_tilde_from_vm_tilde(vw, alpha, plus=True, sg='minus')
         elif ty == 'def':
             vminus = vw
-            vplus = vp_tilde_from_vm_tilde(vw, alpha, plus=False, sg='plus')
+            vplus = _vp_tilde_from_vm_tilde(vw, alpha, plus=False, sg='plus')
         elif ty == 'hyb':
             vminus = cs
-            vplus = vp_tilde_from_vm_tilde(cs, alpha, plus=False, sg='plus')
+            vplus = _vp_tilde_from_vm_tilde(cs, alpha, plus=False, sg='plus')
     else:
         vplus = np.zeros(len(vw))
         vminus = np.zeros(len(vw))
@@ -504,14 +504,14 @@ def vplus_vminus(alpha, vw=1.0, ty='det', cs2=cs2_ref):
         inds_def = np.where(ty == 'def')
         inds_hyb = np.where(ty == 'hyb')
         vplus[inds_det] = vw[inds_det]
-        vminus[inds_det] = vp_tilde_from_vm_tilde(
+        vminus[inds_det] = _vp_tilde_from_vm_tilde(
             vw, alpha, plus=True, sg='minus'
         )[inds_det]
-        vplus[inds_def] = vp_tilde_from_vm_tilde(
+        vplus[inds_def] = _vp_tilde_from_vm_tilde(
             vw, alpha, plus=False, sg='plus'
         )[inds_def]
         vminus[inds_def] = vw[inds_def]
-        vplus[inds_hyb] = vp_tilde_from_vm_tilde(
+        vplus[inds_hyb] = _vp_tilde_from_vm_tilde(
             cs, alpha, plus=False, sg='plus'
         )
         vminus[inds_hyb] = cs
@@ -519,7 +519,7 @@ def vplus_vminus(alpha, vw=1.0, ty='det', cs2=cs2_ref):
 
 
 # function that computes the detonation part of the solutions
-def det_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, zero_v=-4):
+def _det_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, zero_v=-4):
 
     """
     Compute a detonation solution with boundary condition v0 at xi0.
@@ -581,7 +581,7 @@ def det_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, zero_v=-4):
 
 
 # function that computes the deflagration part of the solutions #######
-def def_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, shock=True, zero_v=-4):
+def _def_sol(v0, xi0, cs2=cs2_ref, Nxi=Nxi_ref, shock=True, zero_v=-4):
 
     """
     Compute a deflagration solution with boundary condition v0 at xi0.
@@ -653,7 +653,7 @@ def compute_def(vw=vw_def, alpha=alpha_def, cs2=cs2_ref, Nxi=Nxi_ref,
     Compute the solutions for a subsonic deflagration 1D profile given
     vw and alpha.
 
-    Uses :func:`def_sol` to compute the velocity and enthalpy profiles.
+    Uses :func:`_def_sol` to compute the velocity and enthalpy profiles.
 
     Parameters
     ----------
@@ -689,9 +689,9 @@ def compute_def(vw=vw_def, alpha=alpha_def, cs2=cs2_ref, Nxi=Nxi_ref,
     # relative velocity at + is computed from \tilde v- = \xi_w
     vrels, _ = vplus_vminus(alpha, vw=vw, ty='def')
     # Lorentz boosted v plus
-    vpl = Lor_mu(vrels, vw)
+    vpl = _Lor_mu(vrels, vw)
 
-    xis, vs, ws, xi_sh, sh = def_sol(vpl, vw, cs2=cs2, Nxi=Nxi, shock=shock)
+    xis, vs, ws, xi_sh, sh = _def_sol(vpl, vw, cs2=cs2, Nxi=Nxi, shock=shock)
 
     # values at both sides of the bubble wall
     w_pl = ws[0]
@@ -707,7 +707,7 @@ def compute_hyb(vw=vw_hyb, alpha=alpha_hyb, cs2=cs2_ref, Nxi=Nxi_ref,
     Compute the solutions for a supersonic deflagration 1D profile given
     vw and alpha.
 
-    Uses :func:`det_sol` and :func:`def_sol` to compute velocity and
+    Uses :func:`_det_sol` and :func:`_def_sol` to compute velocity and
     enthalpy profiles.
 
     Parameters
@@ -745,16 +745,16 @@ def compute_hyb(vw=vw_hyb, alpha=alpha_hyb, cs2=cs2_ref, Nxi=Nxi_ref,
 
     # relative velocity at + is computed from \tilde v- = cs
     vrels, _ = vplus_vminus(alpha, cs2=cs2, ty='hyb')
-    vpl = Lor_mu(vrels, vw)
-    vm = Lor_mu(cs, vw)
+    vpl = _Lor_mu(vrels, vw)
+    vm = _Lor_mu(cs, vw)
 
     # compute deflagration solution
-    xis, vs, ws, xi_sh, sh = def_sol(
+    xis, vs, ws, xi_sh, sh = _def_sol(
        vpl, vw, cs2=cs2, Nxi=int(Nxi / 2), shock=shock
     )
 
     # compute detonation solution
-    xis2, vs2, ws2 = det_sol(vm, vw, cs2=cs2, Nxi=int(Nxi / 2))
+    xis2, vs2, ws2 = _det_sol(vm, vw, cs2=cs2, Nxi=int(Nxi / 2))
     # ratio of w+ over w- across the bubble wall
     w_pl = ws[0]
     w_m = w_pl * vrels / (1 - vrels ** 2) * (1 - cs2) / cs
@@ -772,7 +772,7 @@ def compute_det(vw=vw_det, alpha=alpha_det, cs2=cs2_ref, Nxi=Nxi_ref):
     """
     Compute the solutions for a detonation 1D profile given vw and alpha.
 
-    Uses :func:`det_sol` to compute velocity and enthalpy profiles.
+    Uses :func:`_det_sol` to compute velocity and enthalpy profiles.
 
     Parameters
     ----------
@@ -807,11 +807,11 @@ def compute_det(vw=vw_det, alpha=alpha_det, cs2=cs2_ref, Nxi=Nxi_ref):
     _, vrels = vplus_vminus(alpha, vw=vw, ty='det')
 
     # Lorentz boosted v minus
-    vm = Lor_mu(vrels, vw)
+    vm = _Lor_mu(vrels, vw)
     w_m = vw / (1 - vw ** 2) / vrels * (1 - vrels ** 2)
     w_pl = 1
 
-    xis, vs, ws = det_sol(vm, vw, cs2=cs2, Nxi=Nxi)
+    xis, vs, ws = _det_sol(vm, vw, cs2=cs2, Nxi=Nxi)
     ws *= w_m
 
     # no shock is formed in detonations, so xi_sh is set to vw
@@ -1333,8 +1333,8 @@ def kappas_from_prof(vw, alpha, xis, ws, vs):
 
     integrand_kappa = xis ** 2 * ws / (1 - vs ** 2) * vs ** 2
     integrand_omega = xis ** 2 * (ws - 1)
-    kappa = 4. / vw ** 3. / alpha * safe_trapezoid(integrand_kappa, xis)
-    omega = 3. / vw ** 3. / alpha * safe_trapezoid(integrand_omega, xis)
+    kappa = 4. / vw ** 3. / alpha * _safe_trapezoid(integrand_kappa, xis)
+    omega = 3. / vw ** 3. / alpha * _safe_trapezoid(integrand_omega, xis)
 
     return kappa, omega
 
@@ -1519,13 +1519,13 @@ def fp_z(xi, vs, z, lz=False, ls=None, multi=True, quiet=False):
         for i in range(Nvws):
             v_ij, z_ij = np.meshgrid(vs[i, 1:], z, indexing='ij')
             integrand_fp = j1_z * xi_ij ** 2 * v_ij
-            fpzs[i, :] = -4 * np.pi * safe_trapezoid(
+            fpzs[i, :] = -4 * np.pi * _safe_trapezoid(
                 integrand_fp, xi[1:], axis=0
             )
             if lz:
                 l_ij, z_ij = np.meshgrid(ls[i, 1:], z, indexing='ij')
                 integrand_l = j0_z * xi_ij ** 2 * l_ij
-                lzs[i, :] = 4 * np.pi * safe_trapezoid(
+                lzs[i, :] = 4 * np.pi * _safe_trapezoid(
                     integrand_l, xi[1:], axis=0
                 )
             if not quiet:
@@ -1534,13 +1534,13 @@ def fp_z(xi, vs, z, lz=False, ls=None, multi=True, quiet=False):
     else:
         v_ij, z_ij = np.meshgrid(vs[1:], z, indexing='ij')
         integrand_fp = j1_z * xi_ij ** 2 * v_ij
-        fpzs = -4 * np.pi * safe_trapezoid(
+        fpzs = -4 * np.pi * _safe_trapezoid(
             integrand_fp, xi[1:], axis=0
         )
         if lz:
             l_ij, z_ij = np.meshgrid(ls[1:], z, indexing='ij')
             integrand_l = j0_z * xi_ij ** 2 * l_ij
-            lzs = 4 * np.pi * safe_trapezoid(
+            lzs = 4 * np.pi * _safe_trapezoid(
                 integrand_l, xi[1:], axis=0
             )
     if lz:
@@ -1586,25 +1586,10 @@ def Rstar_beta(vws=1., cs2=cs2_ref, corr=True):
     return Rbeta
 
 
-def safe_trapezoid(y, x, axis=-1):
+def _safe_trapezoid(y, x, axis=-1):
     """
     Safely compute the trapezoidal integral of y with respect to x.
-
     Uses numpy.trapezoid (Numpy>=1.20.0) or trapz function (older versions).
-
-    Parameters
-    ----------
-    y : np.ndarray
-        Array to integrate.
-    x : np.ndarray
-        Array of integration variable.
-    axis : int, optional
-        Axis along which to integrate (default: -1).
-
-    Returns
-    -------
-    float or np.ndarray
-        Result of the integration.
     """
     try:
         return np.trapezoid(y, x, axis=axis)
