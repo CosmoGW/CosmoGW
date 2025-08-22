@@ -7,6 +7,10 @@ Currently part of the cosmoGW code:
 https://github.com/cosmoGW/cosmoGW/
 https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_models.py
 
+.. note::
+   For full documentation, visit `Read the Docs
+   <https://cosmogw-manual.readthedocs.io/en/latest/GW_models.html>`_.
+
 To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
 
     pip install cosmoGW
@@ -639,10 +643,7 @@ def compute_kin_spec_ssm(z, vws, fp, l=None, sp="sum", type_n="exp",
         funcT[i, :, :] = nu_T * TT_ij**6 * np.interp(
             TT_ij * q_ij, z, A2[i, :]
         )
-        try:
-            Pv[i, :] = np.trapezoid(funcT[i, :, :], TT, axis=1)
-        except Exception:
-            Pv[i, :] = np.trapz(funcT[i, :, :], TT, axis=1)
+        Pv[i, :] = safe_trapezoid(funcT[i, :, :], TT, axis=1)
 
     if not dens:
         Rstar_beta = hydro_bubbles.Rstar_beta(vws=vws, cs2=cs2, corr=corr)
@@ -724,10 +725,7 @@ def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
         EK_ptilde = np.interp(ptilde, k, EK)
 
         Omm1 = (1 - z**2) ** 2 * p / ptilde**3 * EK_p * EK_ptilde
-        try:
-            Omm[i] = np.trapezoid(Omm1, p)
-        except Exception:
-            Omm[i] = np.trapz(Omm1, p)
+        Omm[i] = safe_trapezoid(Omm1, p)
 
     return kp, Omm
 
@@ -841,24 +839,13 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
 
     Omm = np.zeros((l + 1, len(kp)))
     for i in range(0, l):
-        try:
-            Pi_1 = np.trapezoid(
-                EK_ptilde / ptilde**4 * (1 - zij**2) ** 2 *
-                Delta_mn[i, :, :, :],
-                z, axis=2
-            )
-        except Exception:
-            Pi_1 = np.trapz(
-                EK_ptilde / ptilde**4 * (1 - zij**2) ** 2 *
-                Delta_mn[i, :, :, :],
-                z, axis=2
-            )
+        Pi_1 = safe_trapezoid(
+            EK_ptilde / ptilde**4 * (1 - zij**2) ** 2 * Delta_mn[i, :, :, :],
+            z, axis=2
+        )
         kij, EK_pij = np.meshgrid(kp, EK_p, indexing="ij")
         kij, pij = np.meshgrid(kp, p, indexing="ij")
-        try:
-            Omm[i, :] = np.trapezoid(Pi_1 * pij**2 * EK_pij, p, axis=1)
-        except Exception:
-            Omm[i, :] = np.trapz(Pi_1 * pij**2 * EK_pij, p, axis=1)
+        Omm[i, :] = safe_trapezoid(Pi_1 * pij**2 * EK_pij, p, axis=1)
 
     return kp, Omm
 
@@ -1003,3 +990,29 @@ def K2int(dtfin, K0=1.0, dt0=dt0_ref, b=0.0, expansion=False, beta=beta_ref):
             K2int *= (1 + dtfin / dt0) ** (1.0 - 2 * b) * A - B
 
     return K2int
+
+
+def safe_trapezoid(y, x, axis=-1):
+    """
+    Safely compute the trapezoidal integral of y with respect to x.
+
+    Uses numpy.trapezoid (Numpy>=1.20.0) or trapz function (older versions).
+
+    Parameters
+    ----------
+    y : np.ndarray
+        Array to integrate.
+    x : np.ndarray
+        Array of integration variable.
+    axis : int, optional
+        Axis along which to integrate (default: -1).
+
+    Returns
+    -------
+    float or np.ndarray
+        Result of the integration.
+    """
+    try:
+        return np.trapezoid(y, x, axis=axis)
+    except AttributeError:
+        return np.trapz(y, x, axis=axis)
