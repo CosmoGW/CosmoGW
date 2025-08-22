@@ -12,6 +12,7 @@ backgrounds from different sources in the early Universe, focusing on the produc
 from sound waves and MHD turbulence from cosmological phase transitions.
 
 The repository is stored on GitHub: https://github.com/CosmoGW/cosmoGW.
+
 It is also publicly available on PyPI: https://pypi.org/project/cosmoGW/
 
 To install the code, you can use pip:
