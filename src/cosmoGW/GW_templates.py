@@ -8,6 +8,10 @@ Currently part of the cosmoGW code:
 https://github.com/cosmoGW/cosmoGW/
 https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_templates.py
 
+.. note::
+   For full documentation, visit `Read the Docs
+   <https://cosmogw-manual.readthedocs.io/en/latest/GW_templates.html>`_.
+
 To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
 
     pip install cosmoGW
@@ -129,6 +133,7 @@ import astropy.units as u
 
 from cosmoGW import GW_back, cosmology, GW_analytical, GW_models, hydro_bubbles
 from cosmoGW import COSMOGW_HOME
+from cosmoGW.GW_models import safe_trapezoid
 
 a_turb = GW_analytical.a_ref    # Batchelor spectrum k^5
 b_turb = GW_analytical.b_ref    # Kolmogorov spectrum k^(-2/3)
@@ -1046,10 +1051,7 @@ def OmGW_spec_sw(
     if model_shape == ['sw_LISAold']:
 
         S = Sf_shape_sw(s, model=model_shape)
-        try:
-            mu = np.trapezoid(S, np.log(s))
-        except Exception:
-            mu = np.trapz(S, np.log(s))
+        mu = safe_trapezoid(S, np.log(s))
         S = S / mu
         S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
 
@@ -1060,10 +1062,7 @@ def OmGW_spec_sw(
             s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
             alp1_sw=alp1_sw, alp2_sw=alp2_sw
         )
-        try:
-            mu = np.trapezoid(S, np.log(s), axis=0)
-        except Exception:
-            mu = np.trapz(S, np.log(s), axis=0)
+        mu = safe_trapezoid(S, np.log(s), axis=0)
         S = S / mu
         S0 = np.zeros((len(s), len(vws), len(alphas)))
         for i in range(len(alphas)):
@@ -1102,10 +1101,7 @@ def OmGW_spec_sw(
             quiet=quiet, interpolate_HL_n3=interpolate_HL_n3,
             corrRs=corrRs, cs2=cs2
         )
-        try:
-            mu = np.trapezoid(S, np.log(s), axis=0)
-        except Exception:
-            mu = np.trapz(S, np.log(s), axis=0)
+        mu = safe_trapezoid(S, np.log(s), axis=0)
         S = S / mu
 
         if not interpolate_HL_shape:
