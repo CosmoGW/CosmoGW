@@ -193,7 +193,7 @@ def hc_OmGW(f, OmGW, d=1, h0=1.):
     return hc
 
 
-def check_Sf(Sf, func=''):
+def _check_Sf(Sf, func=''):
 
     """
     Checks and converts the input spectral density to 1/Hz^3 using
@@ -250,7 +250,7 @@ def hc_Sf(f, Sf, d=1):
     RoperPol:2022iel, eq. 42
     """
     f = _check_frequency(f, func='hc_Sf')
-    Sf = check_Sf(Sf, func='hc_Sf')
+    Sf = _check_Sf(Sf, func='hc_Sf')
     hc = np.sqrt(12 * np.pi ** 2 * Sf * f ** 3)
     if d == -1:
         hc = Sf ** 2 / 12 / np.pi ** 2 / f ** 3
