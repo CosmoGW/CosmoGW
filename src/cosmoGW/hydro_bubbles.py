@@ -8,6 +8,10 @@ Currently part of the cosmoGW code:
 https://github.com/cosmoGW/cosmoGW/
 https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/hydro_bubbles.py
 
+.. note::
+   For full documentation, visit `Read the Docs
+   <https://cosmogw-manual.readthedocs.io/en/latest/hydro_bubbles.html>`_
+
 To use it, first install `cosmoGW <https://pypi.org/project/cosmoGW>`_::
 
     pip install cosmoGW
@@ -1329,13 +1333,8 @@ def kappas_from_prof(vw, alpha, xis, ws, vs):
 
     integrand_kappa = xis ** 2 * ws / (1 - vs ** 2) * vs ** 2
     integrand_omega = xis ** 2 * (ws - 1)
-
-    try:
-        kappa = 4. / vw ** 3. / alpha * np.trapezoid(integrand_kappa, xis)
-        omega = 3. / vw ** 3. / alpha * np.trapezoid(integrand_omega, xis)
-    except Exception:
-        kappa = 4. / vw ** 3. / alpha * np.trapz(integrand_kappa, xis)
-        omega = 3. / vw ** 3. / alpha * np.trapz(integrand_omega, xis)
+    kappa = 4. / vw ** 3. / alpha * safe_trapezoid(integrand_kappa, xis)
+    omega = 3. / vw ** 3. / alpha * safe_trapezoid(integrand_omega, xis)
 
     return kappa, omega
 
@@ -1520,50 +1519,30 @@ def fp_z(xi, vs, z, lz=False, ls=None, multi=True, quiet=False):
         for i in range(Nvws):
             v_ij, z_ij = np.meshgrid(vs[i, 1:], z, indexing='ij')
             integrand_fp = j1_z * xi_ij ** 2 * v_ij
-            try:
-                fpzs[i, :] = -4 * np.pi * np.trapezoid(
-                    integrand_fp, xi[1:], axis=0
-                )
-            except Exception:
-                fpzs[i, :] = -4 * np.pi * np.trapz(
-                    integrand_fp, xi[1:], axis=0
-                )
+            fpzs[i, :] = -4 * np.pi * safe_trapezoid(
+                integrand_fp, xi[1:], axis=0
+            )
             if lz:
                 l_ij, z_ij = np.meshgrid(ls[i, 1:], z, indexing='ij')
                 integrand_l = j0_z * xi_ij ** 2 * l_ij
-                try:
-                    lzs[i, :] = 4 * np.pi * np.trapezoid(
-                        integrand_l, xi[1:], axis=0
-                    )
-                except Exception:
-                    lzs[i, :] = 4 * np.pi * np.trapz(
-                        integrand_l, xi[1:], axis=0
-                    )
+                lzs[i, :] = 4 * np.pi * safe_trapezoid(
+                    integrand_l, xi[1:], axis=0
+                )
             if not quiet:
                 print('vw ', i + 1, '/', Nvws, ' computed')
 
     else:
         v_ij, z_ij = np.meshgrid(vs[1:], z, indexing='ij')
         integrand_fp = j1_z * xi_ij ** 2 * v_ij
-        try:
-            fpzs = -4 * np.pi * np.trapezoid(
-                integrand_fp, axis=0
-            )
-        except Exception:
-            fpzs = -4 * np.pi * np.trapz(
-                integrand_fp, xi[1:], axis=0
-            )
+        fpzs = -4 * np.pi * safe_trapezoid(
+            integrand_fp, xi[1:], axis=0
+        )
         if lz:
             l_ij, z_ij = np.meshgrid(ls[1:], z, indexing='ij')
             integrand_l = j0_z * xi_ij ** 2 * l_ij
-            try:
-                lzs = 4 * np.pi * np.trapezoid(
-                    integrand_l, xi[1:], axis=0
-                )
-            except Exception:
-                lzs = 4 * np.pi * np.trapz(
-                    integrand_l, xi[1:], axis=0
-                )
+            lzs = 4 * np.pi * safe_trapezoid(
+                integrand_l, xi[1:], axis=0
+            )
     if lz:
         return fpzs, lzs
     else:
@@ -1605,3 +1584,29 @@ def Rstar_beta(vws=1., cs2=cs2_ref, corr=True):
         Rbeta = Rbeta * np.maximum(1.0, cs / vws)
 
     return Rbeta
+
+
+def safe_trapezoid(y, x, axis=-1):
+    """
+    Safely compute the trapezoidal integral of y with respect to x.
+
+    Uses numpy.trapezoid (Numpy>=1.20.0) or trapz function (older versions).
+
+    Parameters
+    ----------
+    y : np.ndarray
+        Array to integrate.
+    x : np.ndarray
+        Array of integration variable.
+    axis : int, optional
+        Axis along which to integrate (default: -1).
+
+    Returns
+    -------
+    float or np.ndarray
+        Result of the integration.
+    """
+    try:
+        return np.trapezoid(y, x, axis=axis)
+    except AttributeError:
+        return np.trapz(y, x, axis=axis)
