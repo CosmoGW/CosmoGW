@@ -83,20 +83,11 @@ is True
 import numpy as np
 from scipy import special, integrate
 import matplotlib.pyplot as plt
-from cosmoGW import hydro_bubbles, GW_analytical
-
-# Reference values for models
-Oms_ref = 0.1         # Source amplitude (fraction to radiation energy)
-lf_ref = 0.01         # Source length scale (normalized by Hubble radius)
-beta_ref = 100        # Nucleation rate beta/H_ast
-N_turb = 2            # Source duration/eddy turnover time ratio
-Nk_ref = 1000         # Wave number discretization
-Nkconv_ref = 1000     # Wave number discretization for convolution
-Np_ref = 3000         # Wave number discretization for convolution
-NTT_ref = 5000        # Lifetimes discretization
-dt0_ref = 11          # Numerical parameter for fit (Caprini:2024gyk)
-tini_ref = 1.         # Initial time of GW production (normalized)
-tfin_ref = 1e4        # Final time of GW production in cit model
+from cosmoGW import hydro_bubbles
+from cosmoGW.utils import (
+    a_ref, b_ref, alp_ref, tini_ref, tfin_ref, cs2_ref, N_turb, lf_ref, Oms_ref,
+    beta_ref, dt0_ref, Np_ref, Nk_ref, Nkconv_ref, NTT_ref, safe_trapezoid
+)
 
 
 def _Integ(p, tildep, z, k=0.0, tp="vort", hel=False):
@@ -230,11 +221,9 @@ def _integrate_over_ptilde(k, tps, funcs, dlogk, hel):
     return pis
 
 
-def EPi_correlators(
-    k, a=GW_analytical.a_ref, b=GW_analytical.b_ref, alp=GW_analytical.alp_ref,
-    tp="all", zeta=False, hel=False, norm=True, dlogk=True, model="dbpl",
-    kk=None, EK_p=None,
-):
+def EPi_correlators(k, a=a_ref, b=b_ref, alp=alp_ref, tp="all", zeta=False,
+                    hel=False, norm=True, dlogk=True, model="dbpl", kk=None,
+                    EK_p=None):
     r"""
     Compute spectrum of projected or unprojected stresses from the
     two-point correlator of the source (Gaussian assumption).
@@ -405,7 +394,7 @@ def Delta2_cit_aver(k, tini=tini_ref, tfin=tfin_ref, expansion=True):
 
 
 def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb,
-             cs2=hydro_bubbles.cs2_ref, expansion=True, tdecay="eddy",
+             cs2=cs2_ref, expansion=True, tdecay="eddy",
              tp="magnetic"):
 
     r"""
@@ -574,7 +563,7 @@ def _normalize_qbeta(qbeta, vws, Rstar_beta):
 
 
 def compute_kin_spec_ssm(z, vws, fp, l=None, sp="sum", type_n="exp",
-                         cs2=hydro_bubbles.cs2_ref, min_qbeta=-4, max_qbeta=5,
+                         cs2=cs2_ref, min_qbeta=-4, max_qbeta=5,
                          Nqbeta=Nk_ref, min_TT=-1, max_TT=3, NTT=NTT_ref,
                          corr=False, dens=True, normbeta=True):
     """
@@ -639,7 +628,7 @@ def compute_kin_spec_ssm(z, vws, fp, l=None, sp="sum", type_n="exp",
 
     for i in range(0, len(vws)):
         funcT[i, :, :] = nu_T * TT_ij**6 * np.interp(TT_ij * q_ij, z, A2[i, :])
-        Pv[i, :] = _safe_trapezoid(funcT[i, :, :], TT, axis=1)
+        Pv[i, :] = safe_trapezoid(funcT[i, :, :], TT, axis=1)
 
     if not dens:
         Rstar_beta = hydro_bubbles.Rstar_beta(vws=vws, cs2=cs2, corr=corr)
@@ -651,8 +640,7 @@ def compute_kin_spec_ssm(z, vws, fp, l=None, sp="sum", type_n="exp",
     return qbeta, Pv
 
 
-def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
-                  cs2=hydro_bubbles.cs2_ref):
+def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False, cs2=cs2_ref):
 
     r"""
     Compute normalized GW spectrum :math:`\Omega(k)`
@@ -715,7 +703,7 @@ def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
         EK_ptilde = np.interp(ptilde, k, EK)
 
         Omm1 = (1 - z**2) ** 2 * p / ptilde**3 * EK_p * EK_ptilde
-        Omm[i] = _safe_trapezoid(Omm1, p)
+        Omm[i] = safe_trapezoid(Omm1, p)
 
     return kp, Omm
 
@@ -723,7 +711,7 @@ def OmGW_ssm_HH19(k, EK, Np=Np_ref, Nk=Nkconv_ref, plot=False,
 def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
                                  plot=False, expansion=True, kstar=1.0,
                                  extend=False, largek=3, smallk=-3,
-                                 tini=tini_ref, cs2=hydro_bubbles.cs2_ref,
+                                 tini=tini_ref, cs2=cs2_ref,
                                  terms="all", inds_m=None, inds_n=None):
 
     r"""
@@ -829,18 +817,18 @@ def effective_ET_correlator_stat(k, EK, tfin, Np=Np_ref, Nk=Nkconv_ref,
 
     Omm = np.zeros((l + 1, len(kp)))
     for i in range(0, l):
-        Pi_1 = _safe_trapezoid(
+        Pi_1 = safe_trapezoid(
             EK_ptilde / ptilde**4 * (1 - zij**2) ** 2 * Delta_mn[i, :, :, :],
             z, axis=2
         )
         kij, EK_pij = np.meshgrid(kp, EK_p, indexing="ij")
         kij, pij = np.meshgrid(kp, p, indexing="ij")
-        Omm[i, :] = _safe_trapezoid(Pi_1 * pij**2 * EK_pij, p, axis=1)
+        Omm[i, :] = safe_trapezoid(Pi_1 * pij**2 * EK_pij, p, axis=1)
 
     return kp, Omm
 
 
-def compute_Delta_mn(t, k, p, ptilde, cs2=hydro_bubbles.cs2_ref,
+def compute_Delta_mn(t, k, p, ptilde, cs2=cs2_ref,
                      m=1, n=1, tini=1.0, expansion=True):
 
     r"""
@@ -980,13 +968,3 @@ def K2int(dtfin, K0=1.0, dt0=dt0_ref, b=0.0, expansion=False, beta=beta_ref):
             K2int *= (1 + dtfin / dt0) ** (1.0 - 2 * b) * A - B
 
     return K2int
-
-
-def _safe_trapezoid(y, x, axis=-1):
-    """
-    Safely compute the trapezoidal integral of y with respect to x.
-    """
-    try:
-        return np.trapezoid(y, x, axis=axis)
-    except AttributeError:
-        return np.trapz(y, x, axis=axis)

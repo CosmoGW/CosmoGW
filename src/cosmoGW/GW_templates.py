@@ -131,34 +131,15 @@ import numpy as np
 import pandas as pd
 import astropy.units as u
 
-from cosmoGW import GW_back, cosmology, GW_analytical, GW_models, hydro_bubbles
+from cosmoGW import GW_back, GW_analytical, GW_models, hydro_bubbles
 from cosmoGW import COSMOGW_HOME
-from cosmoGW.GW_models import _safe_trapezoid
-
-a_turb = GW_analytical.a_ref    # Batchelor spectrum k^5
-b_turb = GW_analytical.b_ref    # Kolmogorov spectrum k^(-2/3)
-alp_turb = 6 / 17               # von Karman smoothness parameter,
-
-bPi_vort = 3         # spectral slope found in the anisotropic stresses
-alpPi = 2.15         # smoothness parameter for the fit of the anisotropic
-fPi = 2.2            # break frequency of the anisotropic stresses
-tdecay_ref = 'eddy'  # decaying time used in the constant-in-time model
-
-# Reference values for sound waves templates
-OmGW_sw_ref = 1e-2   # normalized amplitude, based on Hindmarsh:2017gnf
-a_sw_ref = 3         # low frequency slope f^3
-b_sw_ref = 1         # intermediate frequency slope f
-c_sw_ref = 3         # high frequency slope f^(-3)
-
-# first and second peak smoothness parameters
-alp1_sw_ref = 1.5  # used in RoperPol:2023bqa
-alp2_sw_ref = 0.5  # used in RoperPol:2023bqa
-alp1_ssm = 4       # used in Hindmarsh:2019phv
-alp2_ssm = 2.      # used in Hindmarsh:2019phv
-alp1_HL = 3.6      # found in Caprini:2024gyk
-alp2_HL = 2.4      # found in Caprini:2024gyk
-alp1_LISA = 2.     # used in Caprini:2024hue
-alp2_LISA = 4.     # used in Caprini:2024hue
+from cosmoGW.utils import (
+    OmGW_sw_ref, Oms_ref, lf_ref, beta_ref, cs2_ref, gref, Tref, Neff_ref,
+    a_sw_ref, b_sw_ref, c_sw_ref, alp1_ssm, alp2_ssm, alp1_sw_ref, alp2_sw_ref,
+    alp1_LISA, alp2_LISA, alp1_HL, alp2_HL, a_ref, b_ref, alp_turb,
+    alpPi, fPi, bPi_vort, N_turb, tdecay_ref, dt0_ref,
+    safe_trapezoid, reshape_output, reshape_output_3d
+)
 
 
 # SOUND WAVES
@@ -314,10 +295,13 @@ def interpolate_HL_vals(df, vws, alphas, value='Omega_tilde_int_extrap',
     Omegas = _fill_grid(df2, val_vws, val_alphas, value)
     # interpolate for all values of vws for the 3 values of alpha
     Omss, Omegas = _interpolate_vws(Omegas, vws, val_vws)
-    Omsss = _interpolate_alphas(Omss, alphas, val_alphas, vws, value)
     if value == 'curly_K_0_512':
         _, alpsij = np.meshgrid(val_vws, val_alphas, indexing='ij')
         Omegas *= alpsij / (1 + alpsij)
+    Omsss = _interpolate_alphas(Omss, alphas, val_alphas, vws, value)
+    mult_alpha = isinstance(alphas, (list, tuple, np.ndarray))
+    mult_vws = isinstance(vws, (list, tuple, np.ndarray))
+    Omsss = reshape_output(Omsss, mult_alpha, mult_vws)
 
     if not quiet:
         _data_warning(boxsize=boxsize)
@@ -332,6 +316,29 @@ def interpolate_HL_vals(df, vws, alphas, value='Omega_tilde_int_extrap',
         return Omsss, Omegas, val_alphas, val_vws
     else:
         return Omsss
+
+
+def _get_higgsless(vws, alphas, numerical, bs_HL, quiet):
+    '''
+    Get Higgsless model parameters for given wall velocities
+    and alpha values, used in :func:`ampl_GWB_sw`.
+    '''
+    val_str = 'Omega_tilde_int_extrap'
+    if len(vws) == 0 or len(alphas) == 0:
+        print('Provide values of vws and alphas to use Higgsless model',
+              'in ampl_GWB_sw')
+        return 0, None, None, None
+    dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
+    df = pd.read_csv(dirr)
+    if numerical:
+        return interpolate_HL_vals(
+            df, vws, alphas, value=val_str, boxsize=bs_HL,
+            numerical=numerical, quiet=quiet
+        )
+    else:
+        return interpolate_HL_vals(
+            df, vws, alphas, value=val_str, boxsize=bs_HL, quiet=quiet
+        ), None, None, None
 
 
 # TEMPLATE FOR SOUND WAVES
@@ -405,36 +412,19 @@ def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=None,
 
     if model == 'fixed_value':
         Omegas = np.full((len(vws), len(alphas)), OmGW_sw)
+        Omnum = val_alphas = val_vws = None
     elif model == 'higgsless':
-        val_str = 'Omega_tilde_int_extrap'
-        if len(vws) == 0 or len(alphas) == 0:
-            print(
-                'Provide values of vws and alphas to use Higgsless model',
-                'in ampl_GWB_sw'
-            )
-            return 0
-        dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
-        df = pd.read_csv(dirr)
+        result = _get_higgsless(vws, alphas, numerical, bs_HL, quiet)
         if numerical:
-            Omegas, Omnum, val_alphas, val_vws = interpolate_HL_vals(
-                df, vws, alphas, value=val_str, boxsize=bs_HL,
-                numerical=numerical, quiet=quiet
-            )
+            Omegas, Omnum, val_alphas, val_vws = result
         else:
-            Omegas = interpolate_HL_vals(
-                df, vws, alphas, value=val_str, boxsize=bs_HL, quiet=quiet
-            )
+            Omegas, Omnum, val_alphas, val_vws = result[0], None, None, None
     else:
         print('Choose an available model for ampl_GWB_sw for sound waves')
         print('Available models are fixed_value and higgsless')
         return 0
 
-    if not mult_alp and not mult_vw:
-        Omegas = Omegas[0, 0]
-    elif not mult_alp:
-        Omegas = Omegas[:, 0]
-    elif not mult_vw:
-        Omegas = Omegas[0, :]
+    Omegas = reshape_output(Omegas, mult_alp, mult_vw)
 
     if numerical and model == 'higgsless':
         return Omegas, Omnum, val_alphas, val_vws
@@ -442,9 +432,8 @@ def ampl_GWB_sw(model='fixed_value', OmGW_sw=OmGW_sw_ref, vws=None,
         return Omegas
 
 
-def pref_GWB_sw(Oms=GW_models.Oms_ref, lf=GW_models.lf_ref, alpha=0,
-                model='sound_waves', Nshock=1., b=0., expansion=True,
-                beta=GW_models.beta_ref, cs2=hydro_bubbles.cs2_ref):
+def pref_GWB_sw(Oms=Oms_ref, lf=lf_ref, alpha=0, model='sound_waves',
+                Nshock=1., b=0., expansion=True, beta=beta_ref, cs2=cs2_ref):
 
     r"""
     Compute the prefactor for the GW spectrum from sound waves.
@@ -584,7 +573,7 @@ def pref_GWB_sw(Oms=GW_models.Oms_ref, lf=GW_models.lf_ref, alpha=0,
 
     elif model == 'decay':
         K2int = GW_models.K2int(
-            tdur, K0=K, b=b, dt0=GW_models.dt0_ref,
+            tdur, K0=K, b=b, dt0=dt0_ref,
             expansion=expansion, beta=beta
         )
         pref = K2int * lf
@@ -596,8 +585,7 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref,
                 c_sw=c_sw_ref, alp1_sw=0, alp2_sw=0, strength='weak',
                 interpolate_HL=False, bs_k1HL=40, bs_k2HL=20,
                 vws=None, alphas=None, quiet=False,
-                interpolate_HL_n3=False, corrRs=True,
-                cs2=hydro_bubbles.cs2_ref):
+                interpolate_HL_n3=False, corrRs=True, cs2=cs2_ref):
 
     r"""
     Compute the GW spectral shape generated by sound waves based on
@@ -858,14 +846,14 @@ def Sf_shape_sw(s, model='sw_LISA', Dw=1., a_sw=a_sw_ref, b_sw=b_sw_ref,
 
 
 def OmGW_spec_sw(
-    s, alphas, betas, vws=1., cs2=hydro_bubbles.cs2_ref, quiet=True,
+    s, alphas, betas, vws=1., cs2=cs2_ref, quiet=True,
     a_sw=a_sw_ref, b_sw=b_sw_ref, c_sw=c_sw_ref, alp1_sw=0, alp2_sw=0,
     corrRs=True, expansion=True, Nsh=1., model_efficiency='fixed_value',
     OmGW_tilde=OmGW_sw_ref, bs_HL_eff=20, model_K0='Espinosa', bs_k1HL=40,
     model_decay='sound_waves', interpolate_HL_decay=True, b=0,
     model_shape='sw_LISA', strength='weak', interpolate_HL_shape=False,
-    interpolate_HL_n3=False, redshift=False, gstar=cosmology.gref, gS=0,
-    T=cosmology.Tref, h0=1., Neff=cosmology.Neff_ref
+    interpolate_HL_n3=False, redshift=False, gstar=gref, gS=0,
+    T=Tref, h0=1., Neff=Neff_ref
 ):
 
     r"""
@@ -1067,7 +1055,7 @@ def OmGW_spec_sw(
     if model_shape == ['sw_LISAold']:
 
         S = Sf_shape_sw(s, model=model_shape)
-        mu = _safe_trapezoid(S, np.log(s))
+        mu = safe_trapezoid(S, np.log(s))
         S = S / mu
         S, _, _ = np.meshgrid(S, vws, alphas, indexing='ij')
 
@@ -1078,7 +1066,7 @@ def OmGW_spec_sw(
             s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
             alp1_sw=alp1_sw, alp2_sw=alp2_sw
         )
-        mu = _safe_trapezoid(S, np.log(s), axis=0)
+        mu = safe_trapezoid(S, np.log(s), axis=0)
         S = S / mu
         S0 = np.zeros((len(s), len(vws), len(alphas)))
         for i in range(len(alphas)):
@@ -1117,7 +1105,7 @@ def OmGW_spec_sw(
             quiet=quiet, interpolate_HL_n3=interpolate_HL_n3,
             corrRs=corrRs, cs2=cs2
         )
-        mu = _safe_trapezoid(S, np.log(s), axis=0)
+        mu = safe_trapezoid(S, np.log(s), axis=0)
         S = S / mu
 
         if not interpolate_HL_shape:
@@ -1173,7 +1161,7 @@ def OmGW_spec_sw(
 
 # TURBULENCE
 # fit for the anisotropic stresses
-def pPi_fit(s, b=b_turb, alpPi=alpPi, fPi=fPi, bPi=bPi_vort):
+def pPi_fit(s, b=b_ref, alpPi=alpPi, fPi=fPi, bPi=bPi_vort):
 
     r"""
     Fit the spectrum of the anisotropic stresses for turbulence.
@@ -1230,7 +1218,7 @@ def pPi_fit(s, b=b_turb, alpPi=alpPi, fPi=fPi, bPi=bPi_vort):
     return Pi, fGW, pimax
 
 
-def ampl_GWB_turb(a_turb=a_turb, b_turb=b_turb, alp=alp_turb):
+def ampl_GWB_turb(a_turb=a_ref, b_turb=b_ref, alp=alp_turb):
 
     """
     Compute the GW efficiency parameter for turbulence.
@@ -1268,7 +1256,7 @@ def ampl_GWB_turb(a_turb=a_turb, b_turb=b_turb, alp=alp_turb):
     return ampl
 
 
-def pref_GWB_turb(Oms=GW_models.Oms_ref, lf=GW_models.lf_ref):
+def pref_GWB_turb(Oms=Oms_ref, lf=lf_ref):
 
     """
     Compute the prefactor for the GW spectrum from turbulence.
@@ -1297,22 +1285,17 @@ def pref_GWB_turb(Oms=GW_models.Oms_ref, lf=GW_models.lf_ref):
     """
 
     mult_Oms = isinstance(Oms, (list, tuple, np.ndarray))
-    mult_lf = isinstance(lf, (list, tuple, np.ndarray))
+    mult_lfs = isinstance(lf, (list, tuple, np.ndarray))
     Oms, lf = np.meshgrid(Oms, lf, indexing='ij')
     pref = (Oms * lf) ** 2
-    if not mult_Oms and not mult_lf:
-        pref = pref[0, 0]
-    elif not mult_Oms:
-        pref = pref[0, :]
-    elif not mult_lf:
-        pref = pref[:, 0]
+    pref = reshape_output(pref, mult_Oms, mult_lfs)
     return pref
 
 
-def Sf_shape_turb(s, Oms=GW_models.Oms_ref, lf=GW_models.lf_ref,
-                  N=GW_models.N_turb, cs2=hydro_bubbles.cs2_ref,
+def Sf_shape_turb(s, Oms=Oms_ref, lf=lf_ref,
+                  N=N_turb, cs2=cs2_ref,
                   expansion=True, tdecay=tdecay_ref, tp='magnetic',
-                  b_turb=b_turb, alpPi=alpPi, fPi=fPi, bPi=bPi_vort):
+                  b_turb=b_ref, alpPi=alpPi, fPi=fPi, bPi=bPi_vort):
 
     r"""
     Compute the spectral shape for GWs generated by MHD turbulence.
@@ -1372,22 +1355,17 @@ def Sf_shape_turb(s, Oms=GW_models.Oms_ref, lf=GW_models.lf_ref,
     s3Pi = s ** 3 * Pi
     s3Pi, Oms, lf = np.meshgrid(s3Pi, Oms, lf, indexing='ij')
     S = s3Pi / lf ** 2 * TGW
-    if not mult_Oms and not mult_lf:
-        S = S[:, 0, 0]
-    elif not mult_Oms:
-        S = S[:, 0, :]
-    elif not mult_lf:
-        S = S[:, :, 0]
+    S = reshape_output(S, mult_Oms, mult_lf)
 
     return S
 
 
-def OmGW_spec_turb(s, Oms, lfs, N=GW_models.N_turb, cs2=hydro_bubbles.cs2_ref,
-                   a_turb=a_turb, b_turb=b_turb, alp=alp_turb,
+def OmGW_spec_turb(s, Oms, lfs, N=N_turb, cs2=cs2_ref,
+                   a_turb=a_ref, b_turb=b_ref, alp=alp_turb,
                    expansion=True, tdecay=tdecay_ref, tp='magnetic',
                    alpPi=alpPi, fPi=fPi, bPi=bPi_vort,
-                   redshift=False, gstar=cosmology.gref,
-                   gS=0, T=cosmology.Tref, h0=1., Neff=cosmology.Neff_ref):
+                   redshift=False, gstar=gref,
+                   gS=0, T=Tref, h0=1., Neff=Neff_ref):
 
     r'''
     Compute the GW spectrum for turbulence, normalized to radiation
@@ -1498,27 +1476,20 @@ def OmGW_spec_turb(s, Oms, lfs, N=GW_models.N_turb, cs2=hydro_bubbles.cs2_ref,
         freqs, OmGW = GW_back.shift_OmGW_today(
             freqs, OmGW, g=gstar, gS=gS, T=T, h0=h0, kk=False, Neff=Neff
         )
-
+    OmGW = reshape_output(OmGW, mult_Oms, mult_lfs)
     if not mult_lfs:
         freqs = freqs[:, 0]
-        if not mult_Oms:
-            OmGW = OmGW[:, 0, 0]
-        else:
-            OmGW = OmGW[:, :, 0]
-    else:
-        if not mult_Oms:
-            OmGW = OmGW[:, 0, :]
 
     return freqs, OmGW
 
 
 def OmGW_spec_turb_alphabeta(
     s, alphas, betas, vws=1., eps_turb=1., model_K0='Espinosa',
-    bs_HL_eff=20, N=GW_models.N_turb, cs2=hydro_bubbles.cs2_ref,
-    corrRs=True, quiet=True, a_turb=a_turb, b_turb=b_turb, alp=alp_turb,
+    bs_HL_eff=20, N=N_turb, cs2=cs2_ref,
+    corrRs=True, quiet=True, a_turb=a_ref, b_turb=b_ref, alp=alp_turb,
     expansion=True, tdecay=tdecay_ref, tp='both', alpPi=alpPi,
-    fPi=fPi, bPi=bPi_vort, redshift=False, gstar=cosmology.gref, gS=0,
-    T=cosmology.Tref, h0=1., Neff=cosmology.Neff_ref
+    fPi=fPi, bPi=bPi_vort, redshift=False, gstar=gref, gS=0,
+    T=Tref, h0=1., Neff=Neff_ref
 ):
 
     r"""
@@ -1666,29 +1637,9 @@ def OmGW_spec_turb_alphabeta(
                     gstar=gstar, gS=gS, T=T, h0=h0, Neff=Neff
                 )
 
-    if not mult_vws:
-        if not mult_beta:
-            freqs = freqs[:, 0, 0]
-            if not mult_alpha:
-                OmGW = OmGW[:, 0, 0, 0]
-            else:
-                OmGW = OmGW[:, 0, :, 0]
-        else:
-            freqs = freqs[:, 0, :]
-            if not mult_alpha:
-                OmGW = OmGW[:, 0, 0, :]
-            else:
-                OmGW = OmGW[:, 0, :, :]
-    else:
-        if not mult_beta:
-            freqs = freqs[:, :, 0]
-            if not mult_alpha:
-                OmGW = OmGW[:, :, 0, 0]
-            else:
-                OmGW = OmGW[:, :, :, 0]
-        else:
-            if not mult_alpha:
-                OmGW = OmGW[:, :, 0, :]
+    # reshaping output
+    freqs = reshape_output(freqs, mult_vws, mult_beta)
+    OmGW = reshape_output_3d(OmGW, mult_vws, mult_beta, mult_alpha)
 
     # multiply by 4 to take into account contribution from both velocity and
     # magnetic fields in the amplitude OmGW ~ Oms^2 = (2 * OmB)^2

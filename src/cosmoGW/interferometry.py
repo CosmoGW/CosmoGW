@@ -70,29 +70,19 @@ import astropy.constants as const
 import astropy.units as u
 import numpy as np
 import pandas as pd
-from cosmoGW import cosmology, COSMOGW_HOME
-
-dir0 = 'resources/detectors_sensitivity/'
-
-# Reference values for LISA and Taiji interferometers
-L_LISA = 2.5e6 * u.km
-P_LISA = 15
-A_LISA = 3
-L_Taiji = 3e6 * u.km
-P_Taiji = 8
-A_Taiji = 3
-SNR_PLS = 10
-T_PLS = 4
-v_dipole = 1.23e-3
-
-# Reference frequency and beta arrays
-f_ref = np.logspace(-4, 0, 5000) * u.Hz
-beta_ref = np.linspace(-20, 20, 3000)
+from cosmoGW import COSMOGW_HOME
+# import reference values and utils functions
+from cosmoGW.utils import (
+    dir_sens, SNR_PLS, T_PLS, f_ref, P_LISA, L_LISA, A_LISA, P_Taiji,
+    L_Taiji, A_Taiji, H0_ref, beta_ref, v_dipole,
+    Kron_delta, safe_trapezoid, read_csv
+)
 
 
 # SENSITIVITIES AND NOISE POWER SPECTRAL DENSITY
 # READING FUNCTIONS FROM FILES ON SENSITIVITY
-def read_response_LISA_Taiji(dir0=dir0, dir_HOME=None, TDI=True, interf='LISA'):
+def read_response_LISA_Taiji(dir0=dir_sens, dir_HOME=None,
+                             TDI=True, interf='LISA'):
 
     """
     Read response functions for LISA or Taiji interferometers.
@@ -102,7 +92,7 @@ def read_response_LISA_Taiji(dir0=dir0, dir_HOME=None, TDI=True, interf='LISA'):
     ----------
     dir0 : str, optional
         Directory containing sensitivity files
-        (default: 'resources/detector_sensitivity').
+        (default: dir_sens).
     TDI : bool, optional
         If True, read response functions for TDI channels; otherwise XYZ.
     interf : str, optional
@@ -142,7 +132,7 @@ def read_response_LISA_Taiji(dir0=dir0, dir_HOME=None, TDI=True, interf='LISA'):
     return fs, MAs, MTs
 
 
-def read_sens(dir0=dir0, SNR=SNR_PLS, T=T_PLS, interf='LISA', Xi=False,
+def read_sens(dir0=dir_sens, SNR=SNR_PLS, T=T_PLS, interf='LISA', Xi=False,
               TDI=True, chan='A'):
 
     """
@@ -187,73 +177,38 @@ def read_sens(dir0=dir0, SNR=SNR_PLS, T=T_PLS, interf='LISA', Xi=False,
     fact = SNR / np.sqrt(T)
 
     if interf == 'LISA':
-        fs, LISA_Om = _read_csv('LISA_Omega', dir0=dir0)
-        fs, LISA_OmPLS = _read_csv('LISA_OmegaPLS', dir0=dir0)
+        fs, LISA_Om = read_csv('LISA_Omega', dir0=dir0)
+        fs, LISA_OmPLS = read_csv('LISA_OmegaPLS', dir0=dir0)
         LISA_OmPLS *= fact
         if Xi:
-            fs, LISA_Xi = _read_csv('LISA_Xi', dir0=dir0, b='Xi')
-            fs, LISA_XiPLS = _read_csv('LISA_XiPLS', dir0=dir0, b='Xi')
+            fs, LISA_Xi = read_csv('LISA_Xi', dir0=dir0, b='Xi')
+            fs, LISA_XiPLS = read_csv('LISA_XiPLS', dir0=dir0, b='Xi')
             LISA_XiPLS *= fact
             return fs, LISA_Om, LISA_OmPLS, LISA_Xi, LISA_XiPLS
         return fs, LISA_Om, LISA_OmPLS
 
     if interf == 'Taiji':
-        fs, Taiji_Om = _read_csv('Taiji_Omega', dir0=dir0)
-        fs, Taiji_OmPLS = _read_csv('Taiji_OmegaPLS', dir0=dir0)
+        fs, Taiji_Om = read_csv('Taiji_Omega', dir0=dir0)
+        fs, Taiji_OmPLS = read_csv('Taiji_OmegaPLS', dir0=dir0)
         Taiji_OmPLS *= fact
         if Xi:
-            fs, Taiji_Xi = _read_csv('Taiji_Xi', dir0=dir0, b='Xi')
-            fs, Taiji_XiPLS = _read_csv('Taiji_XiPLS', dir0=dir0, b='Xi')
+            fs, Taiji_Xi = read_csv('Taiji_Xi', dir0=dir0, b='Xi')
+            fs, Taiji_XiPLS = read_csv('Taiji_XiPLS', dir0=dir0, b='Xi')
             Taiji_XiPLS *= fact
             return fs, Taiji_Om, Taiji_OmPLS, Taiji_Xi, Taiji_XiPLS
         return fs, Taiji_Om, Taiji_OmPLS
 
     if interf == 'comb':
-        fs, LISA_Taiji_Xi = _read_csv('LISA_Taiji_Xi', dir0=dir0, b='Xi')
-        fs, LISA_Taiji_XiPLS = _read_csv('LISA_Taiji_XiPLS', dir0=dir0, b='Xi')
+        fs, LISA_Taiji_Xi = read_csv('LISA_Taiji_Xi', dir0=dir0, b='Xi')
+        fs, LISA_Taiji_XiPLS = read_csv('LISA_Taiji_XiPLS', dir0=dir0, b='Xi')
         LISA_Taiji_XiPLS *= fact
         return fs, LISA_Taiji_Xi, LISA_Taiji_XiPLS
 
     if interf == 'muAres':
-        fs, muAres_Om = _read_csv('muAres_Omega', dir0=dir0)
-        fs, muAres_OmPLS = _read_csv('muAres_OmegaPLS', dir0=dir0)
+        fs, muAres_Om = read_csv('muAres_Omega', dir0=dir0)
+        fs, muAres_OmPLS = read_csv('muAres_OmegaPLS', dir0=dir0)
         muAres_OmPLS *= fact
         return fs, muAres_Om, muAres_OmPLS
-
-
-def _read_csv(file, dir0=dir0, dir_HOME=None, a='f', b='Omega'):
-
-    """
-    Read a CSV file with two arrays and return them.
-
-    Parameters
-    ----------
-    file : str
-        Name of the CSV file (without extension).
-    dir0 : str, optional
-        Directory containing the file
-        (default: 'resources/detector_sensitivity').
-    a : str, optional
-        Identifier in pandas dataframe for the first array (default: 'f').
-    b : str, optional
-        Identifier in pandas dataframe for the second array (default: 'Omega').
-
-    Returns
-    -------
-    x : np.ndarray
-        First array from the file (column `a`).
-    y : np.ndarray
-        Second array from the file (column `b`).
-    """
-
-    if dir_HOME is None:
-        dir_HOME = COSMOGW_HOME
-
-    dirr = dir_HOME + dir0 + file + '.csv'
-    df = pd.read_csv(dirr)
-    x = np.array(df[a])
-    y = np.array(df[b])
-    return x, y
 
 
 def read_detector_PLIS_Schmitz(
@@ -267,7 +222,7 @@ def read_detector_PLIS_Schmitz(
 
     Parameters
     ----------
-    dir0 : str, optional
+    dirr0 : str, optional
         Directory where the PLS are stored
         (default: 'detector_sensitivity/power-law-integrated_sensitivities').
     det : str, optional
@@ -288,7 +243,7 @@ def read_detector_PLIS_Schmitz(
 
     frac = SNR / np.sqrt(T)
     if dir_HOME is None:
-        dir_HOME = COSMOGW_HOME + dir0
+        dir_HOME = COSMOGW_HOME + dir_sens
     dirr = dir_HOME + dirr0 + 'plis_' + det + '.dat'
     df = pd.read_csv(
         dirr, header=14, delimiter='\t',
@@ -312,7 +267,7 @@ def read_MAC(dirr0='/LISA_Taiji/', dir_HOME=None, M='MAC', V='V'):
 
     Parameters
     ----------
-    dir0 : str, optional
+    dirr0 : str, optional
         Directory where to save the results
         (default: 'detector_sensitivity/LISA_Taiji/').
     M : str, optional
@@ -331,7 +286,7 @@ def read_MAC(dirr0='/LISA_Taiji/', dir_HOME=None, M='MAC', V='V'):
     """
 
     if dir_HOME is None:
-        dir_HOME = COSMOGW_HOME + dir0
+        dir_HOME = COSMOGW_HOME + dir_sens
     dirr = dir_HOME + dirr0 + M + '_' + V + '.csv'
     df = pd.read_csv(dirr)
     f = np.array(df['f'])
@@ -775,7 +730,7 @@ def compute_interferometry(f=f_ref, L=L_LISA, TDI=True, order=1, comp_all=False,
         ki = [k1, k2, k3][i]
         for j in range(3):
             kj = [k1, k2, k3][j]
-            e1ab[i, j, :, :, :] = _delta(i, j) - ki * kj
+            e1ab[i, j, :, :, :] = Kron_delta(i, j) - ki * kj
             if i == 0:
                 if j == 1:
                     e1ab[i, j, :, :, :] += -1j * k3
@@ -886,94 +841,94 @@ def compute_interferometry(f=f_ref, L=L_LISA, TDI=True, order=1, comp_all=False,
     # for TDI channels
     if TDI or comp_all:
         if order == 1 or comp_all:
-            MAA1 = _safe_trapezoid(FAA * np.sin(th), th, axis=1)
-            MAA = _safe_trapezoid(MAA1, phi, axis=1) / np.pi
-            MTT1 = _safe_trapezoid(FTT * np.sin(th), th, axis=1)
-            MTT = _safe_trapezoid(MTT1, phi, axis=1) / np.pi
+            MAA1 = safe_trapezoid(FAA * np.sin(th), th, axis=1)
+            MAA = safe_trapezoid(MAA1, phi, axis=1) / np.pi
+            MTT1 = safe_trapezoid(FTT * np.sin(th), th, axis=1)
+            MTT = safe_trapezoid(MTT1, phi, axis=1) / np.pi
             if not comp_all_rel:
-                MEE1 = _safe_trapezoid(FEE * np.sin(th), th, axis=1)
-                MEE = _safe_trapezoid(MEE1, phi, axis=1) / np.pi
-                MAE1 = _safe_trapezoid(FAE * np.sin(th), th, axis=1)
-                MAE = _safe_trapezoid(MAE1, phi, axis=1) / np.pi
-                MAT1 = _safe_trapezoid(FAT * np.sin(th), th, axis=1)
-                MAT = _safe_trapezoid(MAT1, phi, axis=1) / np.pi
-                MET1 = _safe_trapezoid(FET * np.sin(th), th, axis=1)
-                MET = _safe_trapezoid(MET1, phi, axis=1) / np.pi
+                MEE1 = safe_trapezoid(FEE * np.sin(th), th, axis=1)
+                MEE = safe_trapezoid(MEE1, phi, axis=1) / np.pi
+                MAE1 = safe_trapezoid(FAE * np.sin(th), th, axis=1)
+                MAE = safe_trapezoid(MAE1, phi, axis=1) / np.pi
+                MAT1 = safe_trapezoid(FAT * np.sin(th), th, axis=1)
+                MAT = safe_trapezoid(MAT1, phi, axis=1) / np.pi
+                MET1 = safe_trapezoid(FET * np.sin(th), th, axis=1)
+                MET = safe_trapezoid(MET1, phi, axis=1) / np.pi
             if not comp_all:
                 return MAA, MEE, MTT, MAE, MAT, MET
 
         if order == 2 or comp_all:
-            DAE1 = 1j * _safe_trapezoid(
+            DAE1 = 1j * safe_trapezoid(
                 FAE * np.sin(th) ** 2 * np.sin(ph), th, axis=1
             )
-            DAE = _safe_trapezoid(DAE1, phi, axis=1) / np.pi
+            DAE = safe_trapezoid(DAE1, phi, axis=1) / np.pi
             if not comp_all_rel:
-                DAA1 = 1j * _safe_trapezoid(
+                DAA1 = 1j * safe_trapezoid(
                     FAA * np.sin(th) ** 2 * np.sin(ph), th, axis=1
                 )
-                DAA = _safe_trapezoid(DAA1, phi, axis=1) / np.pi
-                DEE1 = 1j * _safe_trapezoid(
+                DAA = safe_trapezoid(DAA1, phi, axis=1) / np.pi
+                DEE1 = 1j * safe_trapezoid(
                     FEE * np.sin(th) ** 2 * np.sin(ph), th, axis=1)
-                DEE = _safe_trapezoid(DEE1, phi, axis=1) / np.pi
-                DTT1 = 1j * _safe_trapezoid(
+                DEE = safe_trapezoid(DEE1, phi, axis=1) / np.pi
+                DTT1 = 1j * safe_trapezoid(
                     FTT * np.sin(th) ** 2 * np.sin(ph), th, axis=1
                 )
-                DTT = _safe_trapezoid(DTT1, phi, axis=1) / np.pi
-                DAT1 = 1j * _safe_trapezoid(
+                DTT = safe_trapezoid(DTT1, phi, axis=1) / np.pi
+                DAT1 = 1j * safe_trapezoid(
                     FAT * np.sin(th) ** 2 * np.sin(ph), th, axis=1
                 )
-                DAT = _safe_trapezoid(DAT1, phi, axis=1) / np.pi
-                DET1 = 1j * _safe_trapezoid(
+                DAT = safe_trapezoid(DAT1, phi, axis=1) / np.pi
+                DET1 = 1j * safe_trapezoid(
                     FET * np.sin(th) ** 2 * np.sin(ph), th, axis=1
                 )
-                DET = _safe_trapezoid(DET1, phi, axis=1) / np.pi
+                DET = safe_trapezoid(DET1, phi, axis=1) / np.pi
             if not comp_all:
                 return DAA, DEE, DTT, DAE, DAT, DET
 
     if not TDI or comp_all:
         if order == 1 or comp_all:
-            MXX1 = _safe_trapezoid(FXX * np.sin(th), th, axis=1)
-            MXX = _safe_trapezoid(MXX1, phi, axis=1) / np.pi
-            MXY1 = _safe_trapezoid(FXY * np.sin(th), th, axis=1)
-            MXY = _safe_trapezoid(MXY1, phi, axis=1) / np.pi
+            MXX1 = safe_trapezoid(FXX * np.sin(th), th, axis=1)
+            MXX = safe_trapezoid(MXX1, phi, axis=1) / np.pi
+            MXY1 = safe_trapezoid(FXY * np.sin(th), th, axis=1)
+            MXY = safe_trapezoid(MXY1, phi, axis=1) / np.pi
             if not comp_all_rel:
-                MYY1 = _safe_trapezoid(FYY * np.sin(th), th, axis=1)
-                MYY = _safe_trapezoid(MYY1, phi, axis=1) / np.pi
-                MZZ1 = _safe_trapezoid(FZZ * np.sin(th), th, axis=1)
-                MZZ = _safe_trapezoid(MZZ1, phi, axis=1) / np.pi
-                MXZ1 = _safe_trapezoid(FXZ * np.sin(th), th, axis=1)
-                MXZ = _safe_trapezoid(MXZ1, phi, axis=1) / np.pi
-                MYZ1 = _safe_trapezoid(FYZ * np.sin(th), th, axis=1)
-                MYZ = _safe_trapezoid(MYZ1, phi, axis=1) / np.pi
+                MYY1 = safe_trapezoid(FYY * np.sin(th), th, axis=1)
+                MYY = safe_trapezoid(MYY1, phi, axis=1) / np.pi
+                MZZ1 = safe_trapezoid(FZZ * np.sin(th), th, axis=1)
+                MZZ = safe_trapezoid(MZZ1, phi, axis=1) / np.pi
+                MXZ1 = safe_trapezoid(FXZ * np.sin(th), th, axis=1)
+                MXZ = safe_trapezoid(MXZ1, phi, axis=1) / np.pi
+                MYZ1 = safe_trapezoid(FYZ * np.sin(th), th, axis=1)
+                MYZ = safe_trapezoid(MYZ1, phi, axis=1) / np.pi
             if not comp_all:
                 return MXX, MYY, MZZ, MXY, MXZ, MYZ
 
         if order == 2 or comp_all:
-            DXY1 = 1j * _safe_trapezoid(
+            DXY1 = 1j * safe_trapezoid(
                 FXY * np.sin(th) ** 2 * np.sin(ph), th, axis=1
             )
-            DXY = _safe_trapezoid(DXY1, phi, axis=1) / np.pi
+            DXY = safe_trapezoid(DXY1, phi, axis=1) / np.pi
             if not comp_all_rel:
-                DXX1 = 1j * _safe_trapezoid(
+                DXX1 = 1j * safe_trapezoid(
                     FXX * np.sin(th) ** 2 * np.sin(ph), th, axis=1
                 )
-                DXX = _safe_trapezoid(DXX1, phi, axis=1) / np.pi
-                DYY1 = 1j * _safe_trapezoid(
+                DXX = safe_trapezoid(DXX1, phi, axis=1) / np.pi
+                DYY1 = 1j * safe_trapezoid(
                     FYY * np.sin(th) ** 2 * np.sin(ph), th, axis=1
                 )
-                DYY = _safe_trapezoid(DYY1, phi, axis=1) / np.pi
-                DZZ1 = 1j * _safe_trapezoid(
+                DYY = safe_trapezoid(DYY1, phi, axis=1) / np.pi
+                DZZ1 = 1j * safe_trapezoid(
                     FZZ * np.sin(th) ** 2 * np.sin(ph), th, axis=1
                 )
-                DZZ = _safe_trapezoid(DZZ1, phi, axis=1) / np.pi
-                DXZ1 = 1j * _safe_trapezoid(
+                DZZ = safe_trapezoid(DZZ1, phi, axis=1) / np.pi
+                DXZ1 = 1j * safe_trapezoid(
                     FXZ * np.sin(th) ** 2 * np.sin(ph), th, axis=1
                 )
-                DXZ = _safe_trapezoid(DXZ1, phi, axis=1) / np.pi
-                DYZ1 = 1j * _safe_trapezoid(
+                DXZ = safe_trapezoid(DXZ1, phi, axis=1) / np.pi
+                DYZ1 = 1j * safe_trapezoid(
                     FYZ * np.sin(th) ** 2 * np.sin(ph), th, axis=1
                 )
-                DYZ = _safe_trapezoid(DYZ1, phi, axis=1) / np.pi
+                DYZ = safe_trapezoid(DYZ1, phi, axis=1) / np.pi
             if not comp_all:
                 return DXX, DYY, DZZ, DXY, DXZ, DYZ
 
@@ -1021,7 +976,7 @@ def refine_M(f, M, A=.3, exp=0):
     return fs, Ms
 
 
-def compute_response_LISA_Taiji(f=f_ref, dir0=dir0, dir_HOME=None,
+def compute_response_LISA_Taiji(f=f_ref, dir0=dir_sens, dir_HOME=None,
                                 save=True, ret=False):
 
     """
@@ -1035,7 +990,7 @@ def compute_response_LISA_Taiji(f=f_ref, dir0=dir0, dir_HOME=None,
     f : np.ndarray or astropy.units.Quantity, optional
         Frequency array (default: f_ref).
     dir0 : str, optional
-        Directory to save results (default: dir0).
+        Directory to save results (default: dir_sens).
     save : bool, optional
         If True, saves results as output files (default: True).
     ret : bool, optional
@@ -1255,7 +1210,7 @@ def Oms(f, S, h0=1.0, comb=False, S2=None, S3=None, S4=None, Xi=False):
     if S4 is None:
         S4 = []
 
-    H0 = cosmology.H0_ref * h0
+    H0 = H0_ref * h0
     A = 4 * np.pi ** 2 / 3 / H0 ** 2
     if Xi:
         A /= 2
@@ -1343,7 +1298,7 @@ def OmPLS(Oms, f=f_ref, beta=beta_ref, SNR=1, T=1, Xi=0):
         aux = f.value ** (2 * beta[i])
         aa = abs(1 - Xi * beta[i])
         Cbeta[i] = SNR / aa / np.sqrt(
-            _safe_trapezoid(aux / Oms ** 2, f.value) * T_sec.value
+            safe_trapezoid(aux / Oms ** 2, f.value) * T_sec.value
         )
 
     funcs = np.zeros((len(f), len(beta)))
@@ -1393,39 +1348,6 @@ def SNR(f, OmGW, fs, Oms, T=1.):
     OmGW_interp = np.interp(fs, f_hz, OmGW)
     OmGW_interp[np.where(fs < f_hz[0])] = 0
     OmGW_interp[np.where(fs > f_hz[-1])] = 0
-    integ = _safe_trapezoid((OmGW_interp / Oms) ** 2, fs)
+    integ = safe_trapezoid((OmGW_interp / Oms) ** 2, fs)
     SNR = np.sqrt(T_sec * integ)
     return SNR
-
-
-def _safe_trapezoid(y, x, axis=-1):
-    """
-    Safely compute the trapezoidal integral of y with respect to x.
-    Uses numpy.trapezoid (Numpy>=1.20.0) or trapz function (older versions).
-    """
-    try:
-        return np.trapezoid(y, x, axis=axis)
-    except AttributeError:
-        return np.trapz(y, x, axis=axis)
-
-
-def _delta(a, b):
-    """
-    Kronecker delta function.
-
-    Parameters
-    ----------
-    a : int or float
-        First value.
-    b : int or float
-        Second value.
-
-    Returns
-    -------
-    int
-        1 if a == b, 0 otherwise.
-    """
-    if a == b:
-        return 1
-    else:
-        return 0

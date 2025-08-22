@@ -65,40 +65,11 @@ and RoperPol:2025a (appendix A).
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
-# Reference values
-cs2_ref = 1 / 3.   # speed of sound squared
-Nxi_ref = 10000.   # reference discretization in xi
-Nxi2_ref = 10.     # reference discretization in xi out of the profiles
-Nvws_ref = 20.     # reference discretization in vwall
-tol_ref = 1e-5     # reference tolerance on shooting algorithm
-it_ref = 30.       # reference number of iterations
-
-# Reference values
-cs2_ref = 1 / 3        # Speed of sound squared
-Nxi_ref = 10000        # Reference discretization in xi
-Nxi2_ref = 10          # Reference discretization in xi out of the profiles
-Nvws_ref = 20          # Reference discretization in vwall
-tol_ref = 1e-5         # Reference tolerance on shooting algorithm
-it_ref = 30            # Reference number of iterations
-
-# Reference values for a deflagration
-vw_def = 0.5
-alpha_def = 0.263
-
-# Reference values for a hybrid
-vw_hyb = 0.7
-alpha_hyb = 0.052
-
-# Reference values for a detonation
-vw_det = 0.77
-alpha_det = 0.091
-
-# Reference set of colors
-cols_ref = [
-    'black', 'darkblue', 'blue', 'darkgreen', 'green',
-    'purple', 'darkred', 'red', 'darkorange', 'orange', 'violet'
-]
+from cosmoGW.utils import (
+    cs2_ref, Nxi_ref, vw_def, alpha_def, vw_hyb, alpha_hyb, vw_det, alpha_det,
+    tol_ref, it_ref, Nvws_ref, Nxi2_ref, cols_ref,
+    safe_trapezoid
+)
 
 
 def Chapman_Jouget(alp):
@@ -1116,7 +1087,7 @@ def compute_profiles_vws(
         vws = np.linspace(0.1, 0.99, Nvws)
     vCJ = Chapman_Jouget(alp=alpha)
     cs = np.sqrt(cs2)
-    xis = np.linspace(0, 1, Nxi + Nxi2)
+    xis = np.linspace(0, 1, int(Nxi + Nxi2))
     vvs = np.zeros((len(vws), len(xis)))
     wws = np.ones((len(vws), len(xis)))
     alphas_n = np.zeros(len(vws))
@@ -1333,8 +1304,8 @@ def kappas_from_prof(vw, alpha, xis, ws, vs):
 
     integrand_kappa = xis ** 2 * ws / (1 - vs ** 2) * vs ** 2
     integrand_omega = xis ** 2 * (ws - 1)
-    kappa = 4. / vw ** 3. / alpha * _safe_trapezoid(integrand_kappa, xis)
-    omega = 3. / vw ** 3. / alpha * _safe_trapezoid(integrand_omega, xis)
+    kappa = 4. / vw ** 3. / alpha * safe_trapezoid(integrand_kappa, xis)
+    omega = 3. / vw ** 3. / alpha * safe_trapezoid(integrand_omega, xis)
 
     return kappa, omega
 
@@ -1519,13 +1490,13 @@ def fp_z(xi, vs, z, lz=False, ls=None, multi=True, quiet=False):
         for i in range(Nvws):
             v_ij, z_ij = np.meshgrid(vs[i, 1:], z, indexing='ij')
             integrand_fp = j1_z * xi_ij ** 2 * v_ij
-            fpzs[i, :] = -4 * np.pi * _safe_trapezoid(
+            fpzs[i, :] = -4 * np.pi * safe_trapezoid(
                 integrand_fp, xi[1:], axis=0
             )
             if lz:
                 l_ij, z_ij = np.meshgrid(ls[i, 1:], z, indexing='ij')
                 integrand_l = j0_z * xi_ij ** 2 * l_ij
-                lzs[i, :] = 4 * np.pi * _safe_trapezoid(
+                lzs[i, :] = 4 * np.pi * safe_trapezoid(
                     integrand_l, xi[1:], axis=0
                 )
             if not quiet:
@@ -1534,13 +1505,13 @@ def fp_z(xi, vs, z, lz=False, ls=None, multi=True, quiet=False):
     else:
         v_ij, z_ij = np.meshgrid(vs[1:], z, indexing='ij')
         integrand_fp = j1_z * xi_ij ** 2 * v_ij
-        fpzs = -4 * np.pi * _safe_trapezoid(
+        fpzs = -4 * np.pi * safe_trapezoid(
             integrand_fp, xi[1:], axis=0
         )
         if lz:
             l_ij, z_ij = np.meshgrid(ls[1:], z, indexing='ij')
             integrand_l = j0_z * xi_ij ** 2 * l_ij
-            lzs = 4 * np.pi * _safe_trapezoid(
+            lzs = 4 * np.pi * safe_trapezoid(
                 integrand_l, xi[1:], axis=0
             )
     if lz:
@@ -1584,14 +1555,3 @@ def Rstar_beta(vws=1., cs2=cs2_ref, corr=True):
         Rbeta = Rbeta * np.maximum(1.0, cs / vws)
 
     return Rbeta
-
-
-def _safe_trapezoid(y, x, axis=-1):
-    """
-    Safely compute the trapezoidal integral of y with respect to x.
-    Uses numpy.trapezoid (Numpy>=1.20.0) or trapz function (older versions).
-    """
-    try:
-        return np.trapezoid(y, x, axis=axis)
-    except AttributeError:
-        return np.trapz(y, x, axis=axis)

@@ -8,7 +8,7 @@ import unittest
 
 from cosmoGW import GW_models, GW_templates, hydro_bubbles
 from cosmoGW import COSMOGW_HOME
-from cosmoGW.GW_models import _safe_trapezoid
+from cosmoGW.utils import safe_trapezoid, cs2_ref, dt0_ref
 
 import os
 test_dir = os.path.dirname(__file__)
@@ -89,7 +89,7 @@ class TestUnits(unittest.TestCase):
 
     def test_compute_read_K0s(self):
 
-        cs2 = hydro_bubbles.cs2_ref
+        cs2 = cs2_ref
         vws = np.linspace(0.1, 0.99, 1000)
         val_alphas = np.array([0.0046, 0.05, 0.5])
         alphas = np.logspace(-3, 0, 30)
@@ -114,7 +114,7 @@ class TestUnits(unittest.TestCase):
 
     def test_tdurs_Esp(self):
 
-        cs2 = hydro_bubbles.cs2_ref
+        cs2 = cs2_ref
         _, _, val_alphas, val_vws = GW_templates.ampl_GWB_sw(
             model='higgsless', vws=[0.1], alphas=[0.1],
             numerical=True, quiet=True
@@ -139,7 +139,7 @@ class TestUnits(unittest.TestCase):
     def test_K2ints_flat(self):
 
         dtfins = np.logspace(-6, 6, 100)
-        cs2 = hydro_bubbles.cs2_ref
+        cs2 = cs2_ref
 
         dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df = pd.read_csv(dirr)
@@ -176,7 +176,7 @@ class TestUnits(unittest.TestCase):
 
         dtfins = np.logspace(-6, 6, 100)
         betas = np.logspace(1, 3, 3)
-        cs2 = hydro_bubbles.cs2_ref
+        cs2 = cs2_ref
 
         dirr = COSMOGW_HOME + 'resources/higgsless/parameters_fit_sims.csv'
         df = pd.read_csv(dirr)
@@ -199,11 +199,11 @@ class TestUnits(unittest.TestCase):
         for i in range(len(val_vws)):
             for j in range(len(val_alphas)):
                 K2int_exp[:, i, j] = GW_models.K2int(
-                    dtfins, K0=1., dt0=GW_models.dt0_ref,
+                    dtfins, K0=1., dt0=dt0_ref,
                     b=bnum[i, j], expansion=True, beta=betas[l]
                 )
                 K2int_exp_tdur[i, j] = GW_models.K2int(
-                    dtdur[i, j] / betas[l], dt0=GW_models.dt0_ref,
+                    dtdur[i, j] / betas[l], dt0=dt0_ref,
                     K0=1., b=bnum[i, j], expansion=True, beta=betas[l]
                 )
 
@@ -216,7 +216,7 @@ class TestUnits(unittest.TestCase):
 
         # compute the GW prefactor as a function of an array of vws,
         # alphas, betas
-        cs2 = hydro_bubbles.cs2_ref
+        cs2 = cs2_ref
         alphas = np.logspace(np.log10(4.6e-3), np.log10(0.5), 5)
         vws = np.array([0.36, 0.6, 0.76])
         Oms_xi = hydro_bubbles.kappas_Esp(vws, alphas) * alphas / (1 + cs2)
@@ -265,18 +265,18 @@ class TestUnits(unittest.TestCase):
 
         # sw_LISAold model
         S = GW_templates.Sf_shape_sw(s, model='sw_LISAold')
-        S0 = 1. / _safe_trapezoid(S, np.log(s))
+        S0 = 1. / safe_trapezoid(S, np.log(s))
         S_swLISAold = S * S0
 
         # sw_SSM model
         Dw = np.linspace(0.1, 0.5, 5)
         S = GW_templates.Sf_shape_sw(s, Dw=Dw, model='sw_SSM')
-        S0 = 1. / _safe_trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_swSSM = S * S0
 
         # sw_HL model
         S = GW_templates.Sf_shape_sw(s, Dw=Dw, model='sw_HL')
-        S0 = 1. / _safe_trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_swHL = S * S0
 
         data = np.load(file_path + '/shapes_sw_HL.npz')
@@ -292,12 +292,12 @@ class TestUnits(unittest.TestCase):
 
         # spectral shape using model sw_LISA
         S = GW_templates.Sf_shape_sw(s, Dw=Dw, model='sw_LISA')
-        S0 = 1. / _safe_trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_sw_LISA = S * S0
 
         # spectral shape using model sw_HLnew
         S = GW_templates.Sf_shape_sw(s, Dw=Dw, model='sw_HLnew')
-        S0 = 1. / _safe_trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_sw_HL = S * S0
 
         data = np.load(file_path + '/shapes2_sw_HL.npz')
@@ -311,11 +311,11 @@ class TestUnits(unittest.TestCase):
 
         # spectral shape using model sw_HLnew
         S = GW_templates.Sf_shape_sw(s, model='sw_HLnew', strength='strong')
-        S0 = 1. / _safe_trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_sw_HLstr = S * S0
 
         S = GW_templates.Sf_shape_sw(s, model='sw_HLnew', strength='interm')
-        S0 = 1. / _safe_trapezoid(S, np.log(s), axis=0)
+        S0 = 1. / safe_trapezoid(S, np.log(s), axis=0)
         S_sw_HLint = S * S0
 
         data = np.load(file_path + '/shapes3_sw_HL.npz')
@@ -325,7 +325,7 @@ class TestUnits(unittest.TestCase):
 
     def test_shell_thickness_HL(self):
 
-        cs = np.sqrt(hydro_bubbles.cs2_ref)
+        cs = np.sqrt(cs2_ref)
         vwss = np.linspace(0.1, 0.99, 5)
         val_alphas = np.array([0.0046, 0.05, 0.5])
         _, _, _, _, _, _, xi_shocks, _ = \

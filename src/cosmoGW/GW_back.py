@@ -55,6 +55,7 @@ Pulsar Timing Array frequency band,*" Phys. Rev. D **105**, 123502 (2022),
 import astropy.units as u
 import numpy as np
 from cosmoGW import cosmology
+from cosmoGW.utils import H0_ref, gref, Neff_ref, Tref, check_temperature_MeV
 
 
 def fac_hc_OmGW(d=1, h0=1.):
@@ -84,7 +85,7 @@ def fac_hc_OmGW(d=1, h0=1.):
     """
 
     # compute values at present day
-    fac = cosmology.H0_ref*h0*np.sqrt(3/2)/np.pi
+    fac = H0_ref*h0*np.sqrt(3/2)/np.pi
     if d == -1:
         fac = 1/fac**2
 
@@ -306,8 +307,8 @@ def Omega_A(A=1., fref=0, beta=0, h0=1.):
     return Omref
 
 
-def shift_onlyOmGW_today(OmGW, g=cosmology.gref, gS=0., d=1, h0=1.,
-                         Neff=cosmology.Neff_ref):
+def shift_onlyOmGW_today(OmGW, g=gref, gS=0., d=1, h0=1.,
+                         Neff=Neff_ref):
 
     """
     Shifts the GW energy density spectrum from the time of generation to the
@@ -345,7 +346,7 @@ def shift_onlyOmGW_today(OmGW, g=cosmology.gref, gS=0., d=1, h0=1.,
     if gS == 0:
         gS = g
     OmGW_f = (
-        Hs_f ** 2 / cosmology.H0_ref ** 2 / h0 ** 2 * as_f ** 4 *
+        Hs_f ** 2 / H0_ref ** 2 / h0 ** 2 * as_f ** 4 *
         g / gS ** (4. / 3.)
     )
     if d == 1:
@@ -355,8 +356,8 @@ def shift_onlyOmGW_today(OmGW, g=cosmology.gref, gS=0., d=1, h0=1.,
     return OmGW0
 
 
-def shift_frequency_today(k, g=cosmology.gref, gS=0., T=cosmology.Tref, d=1,
-                          kk=True, Neff=cosmology.Neff_ref):
+def shift_frequency_today(k, g=gref, gS=0., T=Tref, d=1,
+                          kk=True, Neff=Neff_ref):
     r"""
     Transforms the normalized wave number at the time of generation by the
     Hubble rate :math:`H_\ast` to the present time frequency.
@@ -406,8 +407,8 @@ def shift_frequency_today(k, g=cosmology.gref, gS=0., T=cosmology.Tref, d=1,
     return f
 
 
-def shift_OmGW_today(k, OmGW, g=cosmology.gref, gS=0., T=cosmology.Tref, d=1,
-                     h0=1., kk=True, Neff=cosmology.Neff_ref):
+def shift_OmGW_today(k, OmGW, g=gref, gS=0., T=Tref, d=1,
+                     h0=1., kk=True, Neff=Neff_ref):
 
     r"""
     Shifts the GW energy density spectrum from the time of generation to the
@@ -460,8 +461,8 @@ def shift_OmGW_today(k, OmGW, g=cosmology.gref, gS=0., T=cosmology.Tref, d=1,
     return f, OmGW0
 
 
-def shift_hc_today(k, hc, g=cosmology.gref, gS=0., T=cosmology.Tref,
-                   d=1, kk=True, Neff=cosmology.Neff_ref):
+def shift_hc_today(k, hc, g=gref, gS=0., T=Tref,
+                   d=1, kk=True, Neff=Neff_ref):
 
     r"""
     Shifts the characteristic amplitude spectrum from the time of generation to
@@ -505,7 +506,7 @@ def shift_hc_today(k, hc, g=cosmology.gref, gS=0., T=cosmology.Tref,
     """
 
     as_f = cosmology.as_fact(Neff=Neff)
-    T = cosmology.check_temperature_MeV(T, func='GW_back.shift_hc_today')
+    T = check_temperature_MeV(T, func='GW_back.shift_hc_today')
     hc0 = hc * as_f * g ** (-1 / 3) / T
     if d == -1:
         hc0 = hc / as_f / g ** (-1 / 3) * T

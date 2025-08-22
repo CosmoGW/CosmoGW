@@ -64,19 +64,10 @@ import astropy.units as u
 import pandas as pd
 import numpy as np
 from cosmoGW import COSMOGW_HOME
-
-# reference values and constants
-Tref = 100 * u.GeV  # EWPT
-gref = 100          # EWPT
-Neff_ref = 3        # reference Neff = 3
-
-# values at present time from Planck:2018vyg
-T0K = 2.72548 * u.K
-H0_ref = 100 * u.km / u.s / u.Mpc
-H0_ref = H0_ref.to(u.Hz)
-OmL0_ref = 0.6841
-OmM0_ref = 1. - OmL0_ref
-h0_ref = 0.6732
+from cosmoGW.utils import (
+    T0K, H0_ref, Neff_ref, gref, Tref, OmL0_ref, OmM0_ref, h0_ref,
+    check_temperature_MeV, check_Hubble_Hz
+)
 
 
 def values_0(h0=1., neut=False, Neff=Neff_ref, ret_rad=False):
@@ -156,36 +147,6 @@ def Hs_fact():
     )
     fact = fact.to(u.Hz / u.MeV ** 2)
     return fact
-
-
-def check_temperature_MeV(T, func=''):
-
-    """
-    Ensure temperature is in MeV units.
-
-    Parameters
-    ----------
-    T : astropy.units.Quantity
-        Input temperature.
-    func : str, optional
-        Calling function name for error messages.
-
-    Returns
-    -------
-    T : astropy.units.Quantity
-        Temperature in MeV.
-    """
-
-    try:
-        T = T.to(u.MeV)
-    except Exception:
-        print(
-            'The input temperature in ', func,
-            ' needs to be given in energy units using astropy.units \n'
-            ' setting T to default value T =', Tref
-        )
-        T = Tref.to(u.MeV)
-    return T
 
 
 def Hs_val(g=gref, T=Tref):
@@ -298,34 +259,6 @@ def rho_radiation(g=gref, T=Tref):
     return rho_rad
 
 
-def _check_Hubble_Hz(H, func=''):
-    """
-    Ensure Hubble rate is in Hz units.
-
-    Parameters
-    ----------
-    H : astropy.units.Quantity
-        Input Hubble rate.
-    func : str, optional
-        Calling function name for error messages.
-
-    Returns
-    -------
-    H : astropy.units.Quantity
-        Hubble rate in Hz.
-    """
-    try:
-        H = H.to(u.Hz)
-    except Exception:
-        print(
-            'The input Hubble rate in ', func,
-            ' needs to be given in frequency units using astropy.units \n'
-            ' setting H to default value H =', H0_ref
-        )
-        H = H0_ref
-    return H
-
-
 def rho_critical(H=H0_ref):
     """
     Compute critical energy density at a given epoch.
@@ -344,7 +277,7 @@ def rho_critical(H=H0_ref):
     ---------
     RoperPol:2019wvy, eq. 3
     """
-    H = _check_Hubble_Hz(H, func='rho_critical')
+    H = check_Hubble_Hz(H, func='rho_critical')
     rho_c = 3 * H ** 2 * const.c ** 2 / 8 / np.pi / const.G
     rho_c = rho_c.to(u.GeV / u.m ** 3)
     return rho_c
