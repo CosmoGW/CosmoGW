@@ -1,4 +1,5 @@
-![License Logo](https://img.shields.io/badge/license-MIT-blue.svg)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![PyPI version](https://img.shields.io/pypi/v/cosmogw.svg)](https://pypi.org/project/cosmogw/)
 
 # CosmoGW v1.0
 
@@ -52,7 +53,6 @@ To use the plotting routines available in the tutorials and in
 sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
 ```
 
-
 ---
 
 <img src="https://img.icons8.com/ios-filled/50/000000/code-file.png" width="24" /> **File Structure**
@@ -104,7 +104,8 @@ For the installation, uncomment and execute the first cell of the tutorials:
 
 ```bash
 pip install cosmoGW
-sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
+sudo apt-get update
+sudo apt-get install -y cm-super dvipng texlive-latex-extra texlive-latex-recommended
 ```
 
 ---
@@ -119,7 +120,14 @@ To run all tests (from cosmoGW directory):
 pytest
 ```
 
-Make sure all required test data files are present in the `tests` directory.
+Make sure pytest is installed and that all required test data files are present in the `tests` directory.
+
+Further test is available using the tutorial notebooks (see [`python-package_nbs.yml`]).
+To test the output plots and results from the notebooks run:
+
+```sh
+pytest --nbval 
+```
 
 ---
 
@@ -138,7 +146,7 @@ They are stored in `src/cosmoGW/resources`:
 
 📄 **License**
 
-This project is licensed under the MIT License.
+This project is licensed under the GNU General Public License v3 (GPLv3).
 
 ---
 
