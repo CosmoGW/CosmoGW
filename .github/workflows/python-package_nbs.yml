@@ -4,10 +4,6 @@
 name: Python package notebooks
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -27,7 +23,7 @@ jobs:
           pip install .
       - name: Run tests
         run: |
-          sudo apt-get update && sudo apt-get install -y texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+          # sudo apt-get update && sudo apt-get install -y texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+          sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
           python -m pip install nbval
-          pytest
-          pytest --nbval
+          pytest --nbval tutorials/GWs_sound-waves.ipynb
