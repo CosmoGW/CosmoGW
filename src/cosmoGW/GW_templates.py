@@ -1033,15 +1033,14 @@ def OmGW_spec_sw(
     # Kinetic energy density K = rho_kin/rho_total = kappa alpha/(1 + alpha),
     # where kappa is the efficiency in converting vacuum to kinetic energy.
     # Oms_sw = v_f^2 = kappa alpha/(1 + cs2)
-    K, Oms_sw = _compute_kinetic_energy(
+    Oms_sw = _compute_kinetic_energy(
         model_K0, vws, alphas, cs2, bs_HL_eff, quiet
     )
 
     # Decay rate
     interpol_b = False
     if interpolate_HL_decay and model_decay == 'decay':
-        b = _compute_decay_b(vws, alphas, bs_HL_eff, quiet)
-        interpol_b = True
+        b, interpol_b = _compute_decay_b(vws, alphas, bs_HL_eff, quiet)
 
     # prefactor GWB of sound waves
     pref = _compute_prefactor(
@@ -1115,7 +1114,7 @@ def _compute_kinetic_energy(model_K0, vws, alphas, cs2, bs_HL_eff, quiet):
         print('Choose an available model for K0 in OmGW_spec_sw')
         print('Available models are Espinosa and higgsless')
         return 0, 0
-    return K, Oms_sw
+    return Oms_sw
 
 
 def _compute_decay_b(vws, alphas, bs_HL_eff, quiet):
@@ -1127,7 +1126,7 @@ def _compute_decay_b(vws, alphas, bs_HL_eff, quiet):
     df = pd.read_csv(dirr)
     return interpolate_HL_vals(
         df, vws, alphas, quiet=quiet, value='b', boxsize=bs_HL_eff
-    )
+    ), True
 
 
 def _compute_prefactor(vws, alphas, betas, Oms_sw, model_decay, Nsh,
@@ -1170,7 +1169,8 @@ def _compute_spectral_shape(
 
     if model_shape in ['sw_HL', 'sw_SSM']:
         return _spectral_shape_HL_SSM(
-            s, vws, alphas, cs, a_sw, b_sw, c_sw, alp1_sw, alp2_sw
+            s, vws, alphas, cs, a_sw, b_sw, c_sw, alp1_sw, alp2_sw,
+            model_shape
         )
 
     if model_shape in ['sw_LISA', 'sw_HLnew']:
@@ -1193,10 +1193,10 @@ def _spectral_shape_LISAold(s, vws, alphas):
 
 
 def _spectral_shape_HL_SSM(s, vws, alphas, cs, a_sw, b_sw, c_sw,
-                           alp1_sw, alp2_sw):
+                           alp1_sw, alp2_sw, model_shape):
     Dw = abs(vws - cs) / vws
     S = Sf_shape_sw(
-        s, model=['sw_HL'], Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
+        s, model=model_shape, Dw=Dw, a_sw=a_sw, b_sw=b_sw, c_sw=c_sw,
         alp1_sw=alp1_sw, alp2_sw=alp2_sw
     )
     mu = safe_trapezoid(S, np.log(s), axis=0)
