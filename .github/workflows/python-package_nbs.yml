@@ -24,6 +24,7 @@ jobs:
       - name: Run tests
         run: |
           # sudo apt-get update && sudo apt-get install -y texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
-          sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra cm-super dvipng texlive-latex-extra texlive-latex-recommended
           python -m pip install nbval
           pytest --nbval tutorials/GWs_sound-waves.ipynb

@@ -108,8 +108,10 @@ def image_difference(img1_path, img2_path, tolerance=0.01):
     diff = ImageChops.difference(img1, img2)
     np_diff = np.array(diff)
     mean_diff = np.mean(np_diff)
-    print(f"Mean pixel difference: {mean_diff}")
+    # print(f"Mean pixel difference: {mean_diff}")
     within_tolerance = mean_diff < tolerance
     if not within_tolerance:
         print(f"Images differ more than allowed tolerance ({tolerance})")
+    else:
+        print(f"Images are within the allowed tolerance ({tolerance})")
     return not within_tolerance
