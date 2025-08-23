@@ -150,41 +150,6 @@ They are stored in `src/cosmoGW/resources`:
 
 ---
 
-## Examples of Use
-
-### Importing the Package
-```python
-import cosmoGW
-```
-
-### Compute a Cosmology Quantity
-```python
-from cosmoGW import cosmology
-
-# Example: Calculate Hubble parameter at z=1
-H_z1 = cosmology.Hubble_parameter(1)
-print(f"Hubble parameter at z=1: {H_z1}")
-```
-
-### Plotting with cosmoGW
-```python
-import matplotlib.pyplot as plt
-from cosmoGW import plot_sets
-
-plt.plot([0, 1], [0, 1])
-plot_sets.save_fig(name='example_plot')
-```
-
-### Using Gravitational Wave Models
-```python
-from cosmoGW import GW_models
-
-# Example: Generate a GW spectrum
-spectrum = GW_models.generate_spectrum(params)
-```
-
----
-
 📄 **License**
 
 This project is licensed under the GNU General Public License v3 (GPLv3).
