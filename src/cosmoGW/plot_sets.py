@@ -23,7 +23,10 @@ Dates
   (release **cosmoGW 1.0**: https://pypi.org/project/cosmoGW)
 """
 
+import os
 import matplotlib.pyplot as plt
+from PIL import Image, ImageChops
+import numpy as np
 
 # Some common settings for the general plots
 
@@ -54,7 +57,17 @@ def axes_lines(ax=[], both=True):
         ax.xaxis.set_ticks_position('both')
 
 
-def save_fig(dirr='', name='fig', form='pdf', axes=True):
+def ensure_dir(path, quiet=True):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print(f"Directory created: {path}")
+    else:
+        if not quiet:
+            print(f"Directory already exists: {path}")
+    os.makedirs(path, exist_ok=True)
+
+
+def save_fig(dirr='', name='fig', form='png', axes=True, test=True):
 
     """
     Function that saves the current plot as a PDF using the generic
@@ -68,19 +81,35 @@ def save_fig(dirr='', name='fig', form='pdf', axes=True):
                 (default is True)
     """
 
-    import os
-
     if axes:
         axes_lines()
-    plts = dirr + 'plots/'
 
-    if not os.path.isdir(plts):
-        try:
-            os.mkdir(plts)
-        except Exception:
-            print('Not possible to create directory', plts)
-            plts = plts
+    plts = os.path.join(dirr, 'plots')
+    ensure_dir(plts)
 
-    figg = name + '.' + form
-    print('Saving figure in %s%s' % (plts, figg))
-    plt.savefig(plts + figg, bbox_inches='tight')
+    figg = f"{name}.{form}"
+    figg_path = os.path.join(plts, figg)
+    save_needed = True
+    if os.path.exists(figg_path) and test:
+        print(f"Figure already exists: {figg}")
+        print("Comparing output to existing figure")
+        figg_tmp = figg_path.replace('.png', '_tmp.png')
+        plt.savefig(figg_tmp, bbox_inches='tight')
+        save_needed = image_difference(figg_tmp, figg_path)
+        os.remove(figg_tmp)
+    if save_needed:
+        print(f"Saving figure in {figg_path}")
+        plt.savefig(figg_path, bbox_inches='tight')
+
+
+def image_difference(img1_path, img2_path, tolerance=0.01):
+    img1 = Image.open(img1_path).convert("RGB")
+    img2 = Image.open(img2_path).convert("RGB")
+    diff = ImageChops.difference(img1, img2)
+    np_diff = np.array(diff)
+    mean_diff = np.mean(np_diff)
+    print(f"Mean pixel difference: {mean_diff}")
+    within_tolerance = mean_diff < tolerance
+    if not within_tolerance:
+        print(f"Images differ more than allowed tolerance ({tolerance})")
+    return not within_tolerance
