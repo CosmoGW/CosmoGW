@@ -614,8 +614,8 @@ def compute_interferometry(f=f_ref, L=L_LISA, TDI=True, order=1, comp_all=False,
         comp_all = True
 
     # Integration over sky directions (theta, phi)
-    theta = np.linspace(0, np.pi, 10)
-    phi = np.linspace(0, 2 * np.pi, 5)
+    theta = np.linspace(0, np.pi, 50)
+    phi = np.linspace(0, 2 * np.pi, 50)
 
     # Array of wave numbers
     k = 2 * np.pi * f / const.c
