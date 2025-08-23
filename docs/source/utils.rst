@@ -19,21 +19,6 @@ Example usage::
 
     from cosmoGW.utils import reshape_output
 
-Author
-------
-- **Alberto Roper Pol**
-  (`alberto.roperpol@unige.ch <mailto:alberto.roperpol@unige.ch>`_)
-
-Dates
------
-- Created: **21/08/2025**
-  (release **cosmoGW 1.0**: https://pypi.org/project/cosmoGW)
-
-References
-----------
-Used in cosmoGW scientific routines for output reshaping
-and general utilities.
-
 .. _utils_reference_values:
 
 Reference Values in ``cosmoGW.utils``
@@ -202,7 +187,6 @@ phase transitions, cosmology, turbulence, and source modeling.
 .. note::
    These values are available in ``cosmoGW.utils`` and can be
    imported for use in your own calculations and models.
-
 
 .. automodule:: cosmoGW.utils
    :members:

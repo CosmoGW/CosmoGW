@@ -1,3 +1,20 @@
+'''
+Author
+------
+- **Alberto Roper Pol**
+  (`alberto.roperpol@unige.ch <mailto:alberto.roperpol@unige.ch>`_)
+
+Dates
+-----
+- Created: **21/08/2025**
+  (release **cosmoGW 1.0**: https://pypi.org/project/cosmoGW)
+
+References
+----------
+Used in cosmoGW scientific routines for output reshaping
+and general utilities.
+'''
+
 import numpy as np
 import astropy.units as u
 import pandas as pd
