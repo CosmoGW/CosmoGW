@@ -613,26 +613,50 @@ def compute_interferometry(f=f_ref, L=L_LISA, TDI=True, order=1, comp_all=False,
     if comp_all_rel:
         comp_all = True
 
-    c = const.c
-
     # Integration over sky directions (theta, phi)
-    theta = np.linspace(0, np.pi, 50)
-    phi = np.linspace(0, 2 * np.pi, 50)
+    theta = np.linspace(0, np.pi, 10)
+    phi = np.linspace(0, 2 * np.pi, 5)
 
     # Array of wave numbers
-    k = 2 * np.pi * f / c
+    k = 2 * np.pi * f / const.c
     kL = L * k
     kL = kL.to(1)
 
     kLij, th, ph = np.meshgrid(kL, theta, phi, indexing='ij')
-
     kx1 = 0
     kx2 = np.cos(th)
     kx3 = 0.5 * (np.sqrt(3) * np.cos(ph) * np.sin(th) + np.cos(th))
-
     kU1 = kx2 - kx1
     kU2 = kx3 - kx2
     kU3 = kx1 - kx3
+
+    TkU1, TkU2, TkU3, TkmU1, TkmU2, TkmU3 = \
+        _compute_transfer_funcs(kLij, kU1, kU2, kU3)
+
+    shape = (3, 3, len(kL), len(theta), len(phi))
+    QA, QE, QT, QX, QY, QZ = _compute_response_functions_Q(
+        TDI, comp_all, comp_all_rel, shape, kLij, kx1, kx2, kx3,
+        TkU1, TkU2, TkU3, TkmU1, TkmU2, TkmU3)
+
+    k1 = np.cos(ph) * np.sin(th)
+    k2 = np.sin(ph) * np.sin(th)
+    k3 = np.cos(th)
+    e1ab = _compute_polarization_tensor(shape, k1, k2, k3)
+    shape2 = (len(kL), len(theta), len(phi))
+    FAA, FAE, FEE, FAT, FET, FTT, FXX, FXY, FYY, FZZ, FXZ, FYZ = \
+        _compute_response_functions_F(TDI, comp_all, order, comp_all_rel,
+                                      shape2, e1ab, QA, QE, QT, QX, QY, QZ)
+
+    return _compute_response_return(FAA, FAE, FEE, FAT, FET, FTT, FXX, FXY,
+                                    FYY, FZZ, FXZ, FYZ, TDI, comp_all, order,
+                                    comp_all_rel, th, ph, phi)
+
+
+def _compute_transfer_funcs(kLij, kU1, kU2, kU3):
+    '''
+    Compute the detector transfer functions for the given wave numbers,
+    called from `compute_interferometry`.
+    '''
 
     # Detector transfer functions (eq. B.3)
     TkU1 = (
@@ -648,7 +672,7 @@ def compute_interferometry(f=f_ref, L=L_LISA, TDI=True, order=1, comp_all=False,
         * np.sinc(kLij.value * (1 - kU2) / 2 / np.pi)
         + np.exp(1j * kLij * (1 - kU2) / 2)
         * np.sinc(kLij.value * (1 + kU2) / 2 / np.pi)
-    )
+        )
     TkU3 = (
         np.exp(-1j * kLij * (1 + kU3) / 2)
         * np.sinc(kLij.value * (1 - kU3) / 2 / np.pi)
@@ -674,275 +698,247 @@ def compute_interferometry(f=f_ref, L=L_LISA, TDI=True, order=1, comp_all=False,
         * np.sinc(kLij.value * (1 - kU3) / 2 / np.pi)
     )
 
+    return TkU1, TkU2, TkU3, TkmU1, TkmU2, TkmU3
+
+
+def _compute_response_functions_Q(TDI, comp_all, comp_all_rel, shape, kLij,
+                                  kx1, kx2, kx3, TkU1, TkU2, TkU3,
+                                  TkmU1, TkmU2, TkmU3):
+
+    '''
+    Compute the detector response functions Q for the given wave numbers,
+    called from `compute_interferometry`.
+    '''
+
+    def calc_Q(kLij, kx, TkU, U, TkmU_other, U_other, i, j):
+        return (
+            0.25 * np.exp(-1j * kLij * kx)
+            * (TkU * U[i] * U[j] - TkmU_other * U_other[i] * U_other[j])
+        )
+
+    # Initialize response function arrays
+    QA = np.zeros(shape, dtype=complex)
+    QE = np.zeros(shape, dtype=complex)
+    QT = np.zeros(shape, dtype=complex)
+    QX = np.zeros(shape, dtype=complex)
+    QY = np.zeros(shape, dtype=complex)
+    QZ = np.zeros(shape, dtype=complex)
+
+    cmat = np.matrix([[2, -1, -1], [0, -np.sqrt(3), np.sqrt(3)], [1, 1, 1]]) / 3
     U1 = np.array([0, 0, 1])
     U2 = 0.5 * np.array([np.sqrt(3), 0, -1])
     U3 = -0.5 * np.array([np.sqrt(3), 0, 1])
 
-    cmat = np.matrix([[2, -1, -1], [0, -np.sqrt(3), np.sqrt(3)], [1, 1, 1]]) / 3
-
-    # Initialize response function arrays
-    if TDI or comp_all:
-        QA = np.zeros((3, 3, len(kL), len(theta), len(phi)), dtype=complex)
-        QE = np.zeros((3, 3, len(kL), len(theta), len(phi)), dtype=complex)
-        QT = np.zeros((3, 3, len(kL), len(theta), len(phi)), dtype=complex)
-    if not TDI or comp_all:
-        QX = np.zeros((3, 3, len(kL), len(theta), len(phi)), dtype=complex)
-        QY = np.zeros((3, 3, len(kL), len(theta), len(phi)), dtype=complex)
-        if not comp_all_rel:
-            QZ = np.zeros((3, 3, len(kL), len(theta), len(phi)), dtype=complex)
-
     for i in range(3):
         for j in range(3):
-            Q1 = (
-                0.25 * np.exp(-1j * kLij * kx1)
-                * (TkU1 * U1[i] * U1[j] - TkmU3 * U3[i] * U3[j])
-            )
-            Q2 = (
-                0.25 * np.exp(-1j * kLij * kx2)
-                * (TkU2 * U2[i] * U2[j] - TkmU1 * U1[i] * U1[j])
-            )
-            Q3 = (
-                0.25 * np.exp(-1j * kLij * kx3)
-                * (TkU3 * U3[i] * U3[j] - TkmU2 * U2[i] * U2[j])
-            )
+            Q1 = calc_Q(kLij, kx1, TkU1, U1, TkmU3, U3, i, j)
+            Q2 = calc_Q(kLij, kx2, TkU2, U2, TkmU1, U1, i, j)
+            Q3 = calc_Q(kLij, kx3, TkU3, U3, TkmU2, U2, i, j)
             if TDI or comp_all:
-                QA[i, j, :, :, :] = (
-                    Q1 * cmat[0, 0] + Q2 * cmat[0, 1] + Q3 * cmat[0, 2]
-                )
-                QE[i, j, :, :, :] = (
-                    Q1 * cmat[1, 0] + Q2 * cmat[1, 1] + Q3 * cmat[1, 2]
-                )
-                QT[i, j, :, :, :] = (
-                    Q1 * cmat[2, 0] + Q2 * cmat[2, 1] + Q3 * cmat[2, 2]
-                )
+                QA[i, j] = Q1 * cmat[0, 0] + Q2 * cmat[0, 1] + Q3 * cmat[0, 2]
+                QE[i, j] = Q1 * cmat[1, 0] + Q2 * cmat[1, 1] + Q3 * cmat[1, 2]
+                QT[i, j] = Q1 * cmat[2, 0] + Q2 * cmat[2, 1] + Q3 * cmat[2, 2]
             if not TDI or comp_all:
                 QX[i, j, :, :, :] = Q1
                 QY[i, j, :, :, :] = Q2
                 if not comp_all_rel:
                     QZ[i, j, :, :, :] = Q3
 
-    k1 = np.cos(ph) * np.sin(th)
-    k2 = np.sin(ph) * np.sin(th)
-    k3 = np.cos(th)
+    return QA, QE, QT, QX, QY, QZ
 
-    # polarization tensors (eq. B.14)
-    e1ab = np.zeros((3, 3, len(kL), len(theta), len(phi)), dtype=complex)
+
+def _compute_polarization_tensor(shape, k1, k2, k3):
+    '''
+    Compute the polarization tensor for the given wave numbers,
+    called from `compute_interferometry`.
+    '''
+    def imag_component(i, j, k1, k2, k3):
+        # Returns the imaginary component to add for indices (i, j)
+        if i == 0 and j == 1:
+            return -1j * k3
+        if i == 0 and j == 2:
+            return 1j * k2
+        if i == 1 and j == 0:
+            return 1j * k3
+        if i == 1 and j == 2:
+            return -1j * k1
+        if i == 2 and j == 0:
+            return -1j * k2
+        if i == 2 and j == 1:
+            return 1j * k1
+        return 0
+    e1ab = np.zeros(shape, dtype=complex)
+    kvec = [k1, k2, k3]
     for i in range(3):
-        ki = [k1, k2, k3][i]
+        ki = kvec[i]
         for j in range(3):
-            kj = [k1, k2, k3][j]
+            kj = kvec[j]
             e1ab[i, j, :, :, :] = Kron_delta(i, j) - ki * kj
-            if i == 0:
-                if j == 1:
-                    e1ab[i, j, :, :, :] += -1j * k3
-                elif j == 2:
-                    e1ab[i, j, :, :, :] += 1j * k2
-            elif i == 1:
-                if j == 0:
-                    e1ab[i, j, :, :, :] += 1j * k3
-                elif j == 2:
-                    e1ab[i, j, :, :, :] += -1j * k1
-            else:
-                if j == 0:
-                    e1ab[i, j, :, :, :] += -1j * k2
-                elif j == 1:
-                    e1ab[i, j, :, :, :] += 1j * k1
+            e1ab[i, j, :, :, :] += imag_component(i, j, k1, k2, k3)
 
+    return e1ab
+
+
+def _einsum_response(eabcd, Q1, Q2):
+    '''
+    Compute the response using Einstein summation convention,
+    called from _compute_response_functions_F.
+    '''
+    return np.einsum(
+        'abcd... , ab... , cd... -> ...', eabcd, Q1, np.conjugate(Q2)
+    )
+
+
+def _print_response_type(TDI, comp_all, order):
+    '''
+    Print the type of response being computed,
+    called from _compute_response_functions_F.
+    '''
     if TDI or comp_all:
         if order == 1 and not comp_all:
             print('Computing TDI monopole response functions')
-        if order == 2 and not comp_all:
+        elif order == 2 and not comp_all:
             print('Computing TDI dipole response functions')
-        if comp_all:
+        elif comp_all:
             print('Computing TDI monopole and dipole response functions')
-        FAA = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
-        FAE = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
-        FTT = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
-        if not comp_all_rel:
-            FEE = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
-            FAT = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
-            FET = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
     if not TDI or comp_all:
         if order == 1 and not comp_all:
             print('Computing interferometer monopole response functions')
-        if order == 2 and not comp_all:
+        elif order == 2 and not comp_all:
             print('Computing interferometer dipole response functions')
-        if comp_all:
-            print(
-                ('Computing interferometer monopole and dipole response '
-                 'functions')
-            )
-        FXX = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
-        FXY = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
+        elif comp_all:
+            print('Computing interferometer monopole and dipole',
+                  ' response functions')
+
+
+def _compute_response_functions_F(TDI, comp_all, order, comp_all_rel, shape2,
+                                  e1ab, QA, QE, QT, QX, QY, QZ):
+    '''
+    Compute the response functions for the given wave numbers,
+    called from `compute_interferometry`.
+    '''
+    FAA = np.zeros(shape2, dtype=complex)
+    FAE = np.zeros(shape2, dtype=complex)
+    FEE = np.zeros(shape2, dtype=complex)
+    FAT = np.zeros(shape2, dtype=complex)
+    FET = np.zeros(shape2, dtype=complex)
+    FTT = np.zeros(shape2, dtype=complex)
+    FXX = np.zeros(shape2, dtype=complex)
+    FXY = np.zeros(shape2, dtype=complex)
+    FYY = np.zeros(shape2, dtype=complex)
+    FZZ = np.zeros(shape2, dtype=complex)
+    FXZ = np.zeros(shape2, dtype=complex)
+    FYZ = np.zeros(shape2, dtype=complex)
+
+    eabcd = 0.25 * np.einsum('ac... , bd... -> abcd...', e1ab, e1ab)
+    _print_response_type(TDI, comp_all, order)
+
+    if TDI or comp_all:
+        FAA = _einsum_response(eabcd, QA, QA)
+        FAE = _einsum_response(eabcd, QA, QE)
+        FTT = _einsum_response(eabcd, QT, QT)
         if not comp_all_rel:
-            FYY = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
-            FZZ = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
-            FXZ = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
-            FYZ = np.zeros((len(kL), len(theta), len(phi)), dtype=complex)
+            FEE = _einsum_response(eabcd, QE, QE)
+            FAT = _einsum_response(eabcd, QA, QT)
+            FET = _einsum_response(eabcd, QE, QT)
 
-    for a in range(0, 3):
-        for b in range(0, 3):
-            for c in range(0, 3):
-                for d in range(0, 3):
-                    eabcd = 0.25 * e1ab[a, c, :, :, :] * e1ab[b, d, :, :, :]
-                    if TDI or comp_all:
-                        FAA += (
-                            eabcd * QA[a, b, :, :, :]
-                            * np.conjugate(QA[c, d, :, :, :])
-                        )
-                        FAE += (
-                            eabcd * QA[a, b, :, :, :]
-                            * np.conjugate(QE[c, d, :, :, :])
-                        )
-                        FTT += (
-                            eabcd * QT[a, b, :, :, :]
-                            * np.conjugate(QT[c, d, :, :, :])
-                        )
-                        if not comp_all_rel:
-                            FEE += (
-                                eabcd * QE[a, b, :, :, :]
-                                * np.conjugate(QE[c, d, :, :, :])
-                            )
-                            FAT += (
-                                eabcd * QA[a, b, :, :, :]
-                                * np.conjugate(QT[c, d, :, :, :])
-                            )
-                            FET += (
-                                eabcd * QE[a, b, :, :, :]
-                                * np.conjugate(QT[c, d, :, :, :])
-                            )
-                    if not TDI or comp_all:
-                        FXX += (
-                            eabcd * QX[a, b, :, :, :]
-                            * np.conjugate(QX[c, d, :, :, :])
-                        )
-                        FXY += (
-                            eabcd * QX[a, b, :, :, :]
-                            * np.conjugate(QY[c, d, :, :, :])
-                        )
-                        if not comp_all_rel:
-                            FYY += (
-                                eabcd * QY[a, b, :, :, :]
-                                * np.conjugate(QY[c, d, :, :, :])
-                            )
-                            FZZ += (
-                                eabcd * QZ[a, b, :, :, :]
-                                * np.conjugate(QZ[c, d, :, :, :])
-                            )
-                            FXZ += (
-                                eabcd * QX[a, b, :, :, :]
-                                * np.conjugate(QZ[c, d, :, :, :])
-                            )
-                            FYZ += (
-                                eabcd * QY[a, b, :, :, :]
-                                * np.conjugate(QZ[c, d, :, :, :])
-                            )
+    if not TDI or comp_all:
+        FXX = _einsum_response(eabcd, QX, QX)
+        FXY = _einsum_response(eabcd, QX, QY)
+        if not comp_all_rel:
+            FYY = _einsum_response(eabcd, QY, QY)
+            FZZ = _einsum_response(eabcd, QZ, QZ)
+            FXZ = _einsum_response(eabcd, QX, QZ)
+            FYZ = _einsum_response(eabcd, QY, QZ)
 
-    # Monopole (eq. B.13) and dipole (eq. B.16) response functions of LISA
-    # for TDI channels
+    return FAA, FAE, FEE, FAT, FET, FTT, FXX, FXY, FYY, FZZ, FXZ, FYZ
+
+
+def _compute_response_return(FAA, FAE, FEE, FAT, FET, FTT, FXX, FXY, FYY,
+                             FZZ, FXZ, FYZ, TDI, comp_all, order, comp_all_rel,
+                             th, ph, phi):
+    '''
+    Return the integrated response functions, called
+    from `compute_interferometry`.
+    '''
+    def integrate(arr, weight=np.sin(th), axis=1):
+        return safe_trapezoid(arr * weight, th, axis=axis)
+
+    def integrate_phi(arr):
+        return safe_trapezoid(arr, phi, axis=1) / np.pi
+
+    def tdi_monopole():
+        MAA = integrate_phi(integrate(FAA))
+        MTT = integrate_phi(integrate(FTT))
+        if not comp_all_rel:
+            MEE = integrate_phi(integrate(FEE))
+            MAE = integrate_phi(integrate(FAE))
+            MAT = integrate_phi(integrate(FAT))
+            MET = integrate_phi(integrate(FET))
+            return (MAA, MEE, MTT, MAE, MAT, MET)
+        return (MAA, MTT)
+
+    def tdi_dipole():
+        DAE = integrate_phi(1j * integrate(FAE, np.sin(th)**2 * np.sin(ph)))
+        if not comp_all_rel:
+            weight = np.sin(th)**2 * np.sin(ph)
+            DAA = integrate_phi(1j * integrate(FAA, weight))
+            DEE = integrate_phi(1j * integrate(FEE, weight))
+            DTT = integrate_phi(1j * integrate(FTT, weight))
+            DAT = integrate_phi(1j * integrate(FAT, weight))
+            DET = integrate_phi(1j * integrate(FET, weight))
+            return (DAA, DEE, DTT, DAE, DAT, DET)
+        return (DAE,)
+
+    def xyz_monopole():
+        MXX = integrate_phi(integrate(FXX))
+        MXY = integrate_phi(integrate(FXY))
+        if not comp_all_rel:
+            MYY = integrate_phi(integrate(FYY))
+            MZZ = integrate_phi(integrate(FZZ))
+            MXZ = integrate_phi(integrate(FXZ))
+            MYZ = integrate_phi(integrate(FYZ))
+            return (MXX, MYY, MZZ, MXY, MXZ, MYZ)
+        return (MXX, MXY)
+
+    def xyz_dipole():
+        DXY = integrate_phi(1j * integrate(FXY, np.sin(th)**2 * np.sin(ph)))
+        if not comp_all_rel:
+            weight = np.sin(th)**2 * np.sin(ph)
+            DXX = integrate_phi(1j * integrate(FXX, weight))
+            DYY = integrate_phi(1j * integrate(FYY, weight))
+            DZZ = integrate_phi(1j * integrate(FZZ, weight))
+            DXZ = integrate_phi(1j * integrate(FXZ, weight))
+            DYZ = integrate_phi(1j * integrate(FYZ, weight))
+            return (DXX, DYY, DZZ, DXY, DXZ, DYZ)
+        return (DXY,)
+
     if TDI or comp_all:
         if order == 1 or comp_all:
-            MAA1 = safe_trapezoid(FAA * np.sin(th), th, axis=1)
-            MAA = safe_trapezoid(MAA1, phi, axis=1) / np.pi
-            MTT1 = safe_trapezoid(FTT * np.sin(th), th, axis=1)
-            MTT = safe_trapezoid(MTT1, phi, axis=1) / np.pi
-            if not comp_all_rel:
-                MEE1 = safe_trapezoid(FEE * np.sin(th), th, axis=1)
-                MEE = safe_trapezoid(MEE1, phi, axis=1) / np.pi
-                MAE1 = safe_trapezoid(FAE * np.sin(th), th, axis=1)
-                MAE = safe_trapezoid(MAE1, phi, axis=1) / np.pi
-                MAT1 = safe_trapezoid(FAT * np.sin(th), th, axis=1)
-                MAT = safe_trapezoid(MAT1, phi, axis=1) / np.pi
-                MET1 = safe_trapezoid(FET * np.sin(th), th, axis=1)
-                MET = safe_trapezoid(MET1, phi, axis=1) / np.pi
+            result = tdi_monopole()
             if not comp_all:
-                return MAA, MEE, MTT, MAE, MAT, MET
-
+                return result
         if order == 2 or comp_all:
-            DAE1 = 1j * safe_trapezoid(
-                FAE * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-            )
-            DAE = safe_trapezoid(DAE1, phi, axis=1) / np.pi
-            if not comp_all_rel:
-                DAA1 = 1j * safe_trapezoid(
-                    FAA * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-                )
-                DAA = safe_trapezoid(DAA1, phi, axis=1) / np.pi
-                DEE1 = 1j * safe_trapezoid(
-                    FEE * np.sin(th) ** 2 * np.sin(ph), th, axis=1)
-                DEE = safe_trapezoid(DEE1, phi, axis=1) / np.pi
-                DTT1 = 1j * safe_trapezoid(
-                    FTT * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-                )
-                DTT = safe_trapezoid(DTT1, phi, axis=1) / np.pi
-                DAT1 = 1j * safe_trapezoid(
-                    FAT * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-                )
-                DAT = safe_trapezoid(DAT1, phi, axis=1) / np.pi
-                DET1 = 1j * safe_trapezoid(
-                    FET * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-                )
-                DET = safe_trapezoid(DET1, phi, axis=1) / np.pi
+            result = tdi_dipole()
             if not comp_all:
-                return DAA, DEE, DTT, DAE, DAT, DET
+                return result
 
     if not TDI or comp_all:
         if order == 1 or comp_all:
-            MXX1 = safe_trapezoid(FXX * np.sin(th), th, axis=1)
-            MXX = safe_trapezoid(MXX1, phi, axis=1) / np.pi
-            MXY1 = safe_trapezoid(FXY * np.sin(th), th, axis=1)
-            MXY = safe_trapezoid(MXY1, phi, axis=1) / np.pi
-            if not comp_all_rel:
-                MYY1 = safe_trapezoid(FYY * np.sin(th), th, axis=1)
-                MYY = safe_trapezoid(MYY1, phi, axis=1) / np.pi
-                MZZ1 = safe_trapezoid(FZZ * np.sin(th), th, axis=1)
-                MZZ = safe_trapezoid(MZZ1, phi, axis=1) / np.pi
-                MXZ1 = safe_trapezoid(FXZ * np.sin(th), th, axis=1)
-                MXZ = safe_trapezoid(MXZ1, phi, axis=1) / np.pi
-                MYZ1 = safe_trapezoid(FYZ * np.sin(th), th, axis=1)
-                MYZ = safe_trapezoid(MYZ1, phi, axis=1) / np.pi
+            result = xyz_monopole()
             if not comp_all:
-                return MXX, MYY, MZZ, MXY, MXZ, MYZ
-
+                return result
         if order == 2 or comp_all:
-            DXY1 = 1j * safe_trapezoid(
-                FXY * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-            )
-            DXY = safe_trapezoid(DXY1, phi, axis=1) / np.pi
-            if not comp_all_rel:
-                DXX1 = 1j * safe_trapezoid(
-                    FXX * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-                )
-                DXX = safe_trapezoid(DXX1, phi, axis=1) / np.pi
-                DYY1 = 1j * safe_trapezoid(
-                    FYY * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-                )
-                DYY = safe_trapezoid(DYY1, phi, axis=1) / np.pi
-                DZZ1 = 1j * safe_trapezoid(
-                    FZZ * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-                )
-                DZZ = safe_trapezoid(DZZ1, phi, axis=1) / np.pi
-                DXZ1 = 1j * safe_trapezoid(
-                    FXZ * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-                )
-                DXZ = safe_trapezoid(DXZ1, phi, axis=1) / np.pi
-                DYZ1 = 1j * safe_trapezoid(
-                    FYZ * np.sin(th) ** 2 * np.sin(ph), th, axis=1
-                )
-                DYZ = safe_trapezoid(DYZ1, phi, axis=1) / np.pi
+            result = xyz_dipole()
             if not comp_all:
-                return DXX, DYY, DZZ, DXY, DXZ, DYZ
+                return result
 
     if comp_all:
         if comp_all_rel:
-            return MAA, MTT, DAE, MXX, MXY, DXY
+            return (tdi_monopole()[0], tdi_monopole()[1], tdi_dipole()[0],
+                    xyz_monopole()[0], xyz_monopole()[1], xyz_dipole()[0])
         else:
-            return (
-                MAA, MEE, MTT, MAE, MAT, MET,
-                DAA, DEE, DTT, DAE, DAT, DET,
-                MXX, MYY, MZZ, MXY, MXZ, MYZ,
-                DXX, DYY, DZZ, DXY, DXZ, DYZ
-            )
+            return tdi_monopole() + tdi_dipole() + xyz_monopole() + xyz_dipole()
 
 
 def refine_M(f, M, A=.3, exp=0):
@@ -1081,6 +1077,33 @@ def compute_response_LISA_Taiji(f=f_ref, dir0=dir_sens, dir_HOME=None,
         )
 
 
+def _get_MAs(fs, interf, TDI, M, Xi):
+    if interf != 'comb':
+        fs, MAs, MTs, DAEs = read_response_LISA_Taiji(TDI=TDI, interf=interf)
+        return fs, MAs, MTs, DAEs
+    if not Xi:
+        f_ED_I, M_ED_I = read_MAC(M=M, V='I')
+        if M == 'MED':
+            f_ED_I, M_ED_I = refine_M(f_ED_I, M_ED_I, A=0.028277196782809974)
+        M_ED_I *= 2
+        fs = (
+            np.logspace(
+                np.log10(f_ED_I[0].value),
+                np.log10(f_ED_I[-1].value),
+                1000
+            ) * u.Hz
+        )
+        MAs = np.interp(fs, f_ED_I, M_ED_I)
+        MTs = MAs ** 0
+        return fs, MAs, MTs, None
+    fs, M_AC, M_AD, M_EC, M_ED = read_all_MAC(V='V')
+    M_map = {'MAC': abs(M_AC), 'MAD': abs(M_AD),
+             'MEC': abs(M_EC), 'MED': abs(M_ED)}
+    MAs = M_map.get(M, abs(M_ED))
+    MTs = MAs ** 0
+    return fs, MAs, MTs, None
+
+
 # SENSITIVITIES AND SNR
 def Sn_f(fs=f_ref, v=v_dipole, interf='LISA', TDI=True, M='MED', Xi=False):
 
@@ -1111,39 +1134,17 @@ def Sn_f(fs=f_ref, v=v_dipole, interf='LISA', TDI=True, M='MED', Xi=False):
     """
 
     # read LISA and Taiji TDI response functions
-    if interf != 'comb':
-        fs, MAs, MTs, DAEs = read_response_LISA_Taiji(TDI=TDI, interf=interf)
-    else:
-        if not Xi:
-            f_ED_I, M_ED_I = read_MAC(M=M, V='I')
-            if M == 'MED':
-                f_ED_I, M_ED_I = refine_M(
-                    f_ED_I, M_ED_I, A=0.028277196782809974
-                )
-            M_ED_I *= 2
-            fs = np.logspace(
-                np.log10(f_ED_I[0].value), np.log10(f_ED_I[-1].value), 1000
-            ) * u.Hz
-            MAs = np.interp(fs, f_ED_I, M_ED_I)
-        else:
-            fs, M_AC, M_AD, M_EC, M_ED = read_all_MAC(V='V')
-            if M == 'MAC':
-                MAs = abs(M_AC)
-            if M == 'MAD':
-                MAs = abs(M_AD)
-            if M == 'MEC':
-                MAs = abs(M_EC)
-            if M == 'MED':
-                MAs = abs(M_ED)
-        MTs = MAs ** 0
+    fs, MAs, MTs, DAEs = _get_MAs(fs, interf, TDI, M, Xi)
 
-    # power spectral density of the noise
-    if interf == 'LISA':
-        PnA, PnT = Pn_f(f=fs, TDI=TDI, P=P_LISA, A=A_LISA, L=L_LISA)
-    if interf == 'Taiji':
-        PnA, PnT = Pn_f(f=fs, TDI=TDI, P=P_Taiji, A=A_Taiji, L=L_Taiji)
+    # Power spectral density of the noise
+    noise_map = {
+        'LISA': (P_LISA, A_LISA, L_LISA),
+        'Taiji': (P_Taiji, A_Taiji, L_Taiji),
+        'comb': (P_LISA, A_LISA, L_LISA)
+    }
+    P, A, L = noise_map.get(interf, (P_LISA, A_LISA, L_LISA))
+    PnA, PnT = Pn_f(f=fs, TDI=TDI, P=P, A=A, L=L)
     if interf == 'comb':
-        PnA, PnT = Pn_f(f=fs, TDI=TDI, P=P_LISA, A=A_LISA, L=L_LISA)
         PnC, PnS = Pn_f(f=fs, TDI=TDI, P=P_Taiji, A=A_Taiji, L=L_Taiji)
         PnA = np.sqrt(PnA * PnC)
         PnT = np.sqrt(PnT * PnS)
