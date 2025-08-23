@@ -50,7 +50,8 @@ To use the plotting routines available in the tutorials and in
 [plot_sets](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/plot_sets.py), make sure to install latex for Python:
 
 ```bash
-sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
+sudo apt-get update
+sudo apt-get install -y cm-super dvipng texlive-latex-extra texlive-latex-recommended
 ```
 
 ---
@@ -132,7 +133,8 @@ pytest --nbval tutorials/GWs_sound-waves.ipynb
 Make sure to have installed pytest, nbval and latex:
 ```sh
 pip install pytest nbval
-sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
+sudo apt-get update
+sudo apt-get install -y cm-super dvipng texlive-latex-extra texlive-latex-recommended
 ```
 
 ---
