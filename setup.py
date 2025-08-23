@@ -1,5 +1,5 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
-    package_data={'cosmoGW' :['resources/*/*','resources/*/*/*','*']},
+    package_data={'cosmoGW': ['resources/*/*', 'resources/*/*/*', '*']},
 )
