@@ -123,10 +123,16 @@ pytest
 Make sure pytest is installed and that all required test data files are present in the `tests` directory.
 
 Further test is available using the tutorial notebooks (see [`python-package_nbs.yml`]).
-To test the output plots and results from the notebooks run:
+To test the output plots and results from the notebooks run (e.g. from GWs_sound-waves tutorial):
 
 ```sh
-pytest --nbval 
+pytest --nbval tutorials/GWs_sound-waves.ipynb
+```
+
+Make sure to have installed pytest, nbval and latex:
+```sh
+pip install pytest nbval
+sudo apt install cm-super dvipng texlive-latex-extra texlive-latex-recommended
 ```
 
 ---
@@ -141,6 +147,41 @@ They are stored in `src/cosmoGW/resources`:
 - [`interferometry`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/interferometry): Space-based GW interferometry calculations and tutorials.
 - [`detector_sensitivity`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/detector_sensitivity): Sensitivity of various detectors; see the [README](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/detector_sensitivity/README.md).
 - [`higgsless`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/resources/higgsless): Data sets from Higgsless simulations of phase transitions.
+
+---
+
+## Examples of Use
+
+### Importing the Package
+```python
+import cosmoGW
+```
+
+### Compute a Cosmology Quantity
+```python
+from cosmoGW import cosmology
+
+# Example: Calculate Hubble parameter at z=1
+H_z1 = cosmology.Hubble_parameter(1)
+print(f"Hubble parameter at z=1: {H_z1}")
+```
+
+### Plotting with cosmoGW
+```python
+import matplotlib.pyplot as plt
+from cosmoGW import plot_sets
+
+plt.plot([0, 1], [0, 1])
+plot_sets.save_fig(name='example_plot')
+```
+
+### Using Gravitational Wave Models
+```python
+from cosmoGW import GW_models
+
+# Example: Generate a GW spectrum
+spectrum = GW_models.generate_spectrum(params)
+```
 
 ---
 
