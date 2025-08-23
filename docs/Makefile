@@ -8,5 +8,8 @@ BUILDDIR      = build
 html:
 	$(SPHINXBUILD) -b html $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS)
 
+latex:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/latex
+
 clean:
 	rm -rf $(BUILDDIR)
