@@ -47,11 +47,17 @@ pip install git+https://github.com/cosmoGW/cosmoGW.git
 Python >= 3.8, numpy, scipy, matplotlib, astropy, pandas
 
 To use the plotting routines available in the tutorials and in
-[plot_sets](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/plot_sets.py), make sure to install latex for Python:
+[plot_sets](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/plot_sets.py), make sure to install LaTeX for Python:
 
+**On Ubuntu/Debian:**
 ```bash
 sudo apt-get update
 sudo apt-get install -y cm-super dvipng texlive-latex-extra texlive-latex-recommended
+```
+
+**On macOS (using Homebrew):**
+```bash
+brew install --cask mactex
 ```
 
 ---
@@ -130,11 +136,19 @@ To test the output plots and results from the notebooks run (e.g. from GWs_sound
 pytest --nbval tutorials/GWs_sound-waves.ipynb
 ```
 
-Make sure to have installed pytest, nbval and latex:
-```sh
+Make sure to have installed pytest, nbval and LaTeX:
+
+**On Ubuntu/Debian:**
+```bash
 pip install pytest nbval
 sudo apt-get update
 sudo apt-get install -y cm-super dvipng texlive-latex-extra texlive-latex-recommended
+```
+
+**On macOS (using Homebrew):**
+```bash
+pip install pytest nbval
+brew install --cask mactex
 ```
 
 ---
