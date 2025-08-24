@@ -118,7 +118,7 @@ def smoothed_bPL(k, A=1., a=a_ref, b=b_ref, kpeak=1., alp=alp_ref, norm=True,
         \zeta(K) = A \cdot (b + \left| a \right|)^{1/\alpha}
         \frac{K^a}{\left[ b + c \cdot K^{\alpha(a + b)} \right]^{1/\alpha}}
 
-    where :math:`K = k/k_\ast', :math:`c = 1` if :math:`a = 0` or
+    where :math:`K = k/k_\ast`, :math:`c = 1` if :math:`a = 0` or
     :math:`c = \text{abs}(a)` otherwise.
 
     If norm is False:
