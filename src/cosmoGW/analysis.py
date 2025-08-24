@@ -157,7 +157,7 @@ def analysis_LISA_alphabeta(
     alpPi_turb, fPi_turb, bPi_turb : float, optional
         Parameters for the anisotropic stress fit for turbulence.
     h0 : float, optional
-        Hubble rate at present time (default 1), such that 
+        Hubble rate at present time (default 1), such that
         :math:`H_0 = 100` km/s/Mpc.
     Neff : int, optional
         Effective number of neutrino species (default: 3).
@@ -180,35 +180,16 @@ def analysis_LISA_alphabeta(
     RoperPol:2022iel, RoperPol:2023bqa
     """
 
-    mult_alpha = isinstance(alphas, (list, tuple, np.ndarray))
-    mult_beta = isinstance(betas, (list, tuple, np.ndarray))
-    mult_vws = isinstance(vws, (list, tuple, np.ndarray))
-
-    if isinstance(TTs, u.Quantity):
-        TTs = check_temperature_MeV(
-            TTs, func='analysis.analysis_LISA_alphabeta'
-        )
-        TTs = TTs.value
-    mult_TTs = isinstance(TTs, (list, tuple, np.ndarray))
-
-    if not mult_alpha:
-        alphas = np.array([alphas])
-    if not mult_vws:
-        vws = np.array([vws])
-    if not mult_beta:
-        betas = np.array([betas])
-    if not mult_TTs:
-        TTs = np.array([TTs])
+    if not turb:
+        eps_turb = [0]
+    (
+        alphas, betas, vws, TTs, eps_turb,
+        mult_alpha, mult_beta, mult_vws, mult_TTs, mult_epss
+    ) = _prepare_inputs(alphas, betas, vws, TTs, eps_turb)
 
     g = cosmology.thermal_g(T=TTs*u.MeV, s=0, file=True, Neff=Neff)
     gS = cosmology.thermal_g(T=TTs*u.MeV, s=1, file=True, Neff=Neff)
 
-    if not turb:
-        eps_turb = [0]
-
-    mult_epss = isinstance(eps_turb, (list, tuple, np.ndarray))
-    if not mult_epss:
-        eps_turb = np.array([eps_turb])
     shape = (len(eps_turb), len(TTs), len(vws), len(alphas), len(betas))
     SNR = np.zeros(shape)
 
@@ -223,6 +204,58 @@ def analysis_LISA_alphabeta(
         strength=strength, interpolate_HL_shape=interpolate_HL_shape,
         interpolate_HL_n3=interpolate_HL_n3, redshift=False
     )
+
+    OmGWs_turb = _compute_OmGWs_turb(
+        s, alphas, vws, betas, eps_turb, model_K0, bs_HL_eff,
+        N_turb, cs2, corrRs, quiet, a_turb, b_turb, alp_turb,
+        expansion, tdecay, tp, alpPi_turb, fPi_turb, bPi_turb)
+
+    SNR = _redshift_and_compute_snr(SNR, freqs, OmGWs_sw, OmGWs_turb, g, gS,
+                                    TTs, eps_turb, vws, alphas, betas, f_LISA,
+                                    OmLISA, h0, Neff, Tobs, quiet)
+
+    SNR = reshape_output(SNR, mult_a=mult_epss, mult_b=mult_TTs,
+                         mult_c=mult_vws, mult_d=mult_alpha, mult_e=mult_beta)
+
+    return SNR
+
+
+def _prepare_inputs(alphas, betas, vws, TTs, eps_turb):
+    '''
+    Prepare the inputs for the GW calculation called
+    from :func:`OmGW_spec_sw` and :func:`OmGW_spec_turb_alphabeta`.
+    '''
+    mult_alpha = isinstance(alphas, (list, tuple, np.ndarray))
+    mult_beta = isinstance(betas, (list, tuple, np.ndarray))
+    mult_vws = isinstance(vws, (list, tuple, np.ndarray))
+    mult_TTs = isinstance(TTs, (list, tuple, np.ndarray))
+    mult_epss = isinstance(eps_turb, (list, tuple, np.ndarray))
+    if not mult_alpha:
+        alphas = np.array([alphas])
+    if not mult_vws:
+        vws = np.array([vws])
+    if not mult_beta:
+        betas = np.array([betas])
+    if isinstance(TTs, u.Quantity):
+        TTs = check_temperature_MeV(
+            TTs, func='analysis.analysis_LISA_alphabeta'
+        )
+        TTs = TTs.value
+    if not mult_TTs:
+        TTs = np.array([TTs])
+    if not mult_epss:
+        eps_turb = np.array([eps_turb])
+
+    return (
+        alphas, betas, vws, TTs, eps_turb,
+        mult_alpha, mult_beta, mult_vws, mult_TTs, mult_epss
+    )
+
+
+def _compute_OmGWs_turb(s, alphas, vws, betas, eps_turb, model_K0, bs_HL_eff,
+                        N_turb, cs2, corrRs, quiet, a_turb, b_turb, alp_turb,
+                        expansion, tdecay, tp, alpPi_turb, fPi_turb, bPi_turb):
+
     OmGWs_turb = np.zeros(
         (len(eps_turb), len(s), len(vws), len(alphas), len(betas))
     )
@@ -245,35 +278,35 @@ def analysis_LISA_alphabeta(
                     redshift=False
                 )
 
-    for i in range(0, len(TTs)):
+    return OmGWs_turb
 
-        print('Redshifting spectra for T = %.e MeV' % TTs[i])
-        freqs_red, OmGWs_sw_red = \
-            GW_back.shift_OmGW_today(
-                freqs, OmGWs_sw, g=g[i], gS=gS[i], T=TTs[i]*u.MeV,
-                kk=False, h0=h0, Neff=Neff
-            )
 
-        for p in range(0, len(eps_turb)):
-            print(
-                'Redshifting spectra for eps_turb = %.1f and computing SNR'
-                % eps_turb[p]
-            )
-            _, OmGWs_turb_red = \
-                GW_back.shift_OmGW_today(
-                    freqs, OmGWs_turb[p], g=g[i], gS=gS[i],
-                    kk=False, T=TTs[i]*u.MeV, h0=h0, Neff=Neff
+def _redshift_and_compute_snr(SNR, freqs, OmGWs_sw, OmGWs_turb, g, gS,
+                              TTs, eps_turb, vws, alphas, betas, f_LISA,
+                              OmLISA, h0, Neff, Tobs, quiet):
+    for i in range(len(TTs)):
+        if not quiet:
+            print('Redshifting spectra for T = %.e MeV' % TTs[i])
+        freqs_red, OmGWs_sw_red = GW_back.shift_OmGW_today(
+            freqs, OmGWs_sw, g=g[i], gS=gS[i], T=TTs[i]*u.MeV,
+            kk=False, h0=h0, Neff=Neff
+        )
+        for p in range(len(eps_turb)):
+            if not quiet:
+                print(
+                    'Redshifting spectra for eps_turb = %.1f and computing SNR'
+                    % eps_turb[p]
                 )
+            _, OmGWs_turb_red = GW_back.shift_OmGW_today(
+                freqs, OmGWs_turb[p], g=g[i], gS=gS[i],
+                kk=False, T=TTs[i]*u.MeV, h0=h0, Neff=Neff
+            )
             OmGWs_sum = OmGWs_sw_red + OmGWs_turb_red
-            for m in range(0, len(vws)):
-                for l in range(0, len(betas)):
-                    for j in range(0, len(alphas)):
+            for m in range(len(vws)):
+                for l in range(len(betas)):
+                    for j in range(len(alphas)):
                         SNR[p, i, m, j, l] = interferometry.SNR(
                             freqs_red[:, m, l], OmGWs_sum[:, m, j, l],
                             f_LISA, OmLISA, T=Tobs
                         )
-
-    SNR = reshape_output(SNR, mult_a=mult_epss, mult_b=mult_TTs,
-                         mult_c=mult_vws, mult_d=mult_alpha, mult_e=mult_beta)
-
     return SNR
