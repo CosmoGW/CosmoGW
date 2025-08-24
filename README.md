@@ -49,13 +49,13 @@ Python >= 3.8, numpy, scipy, matplotlib, astropy, pandas
 To use the plotting routines available in the tutorials and in
 [plot_sets](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/plot_sets.py), make sure to install LaTeX for Python:
 
-**On Ubuntu/Debian:**
+*LaTeX on Ubuntu/Debian:*
 ```bash
 sudo apt-get update
 sudo apt-get install -y cm-super dvipng texlive-latex-extra texlive-latex-recommended
 ```
 
-**On macOS (using Homebrew):**
+*LaTeX on macOS (using Homebrew):*
 ```bash
 brew install --cask mactex
 ```
@@ -66,6 +66,7 @@ brew install --cask mactex
 
 The main routines of cosmoGW are stored under `src/cosmoGW`:
 
+- [`analysis.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/analysis.py): Analysis of GWs detectability with LISA.
 - [`cosmology.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/cosmology.py): Cosmological calculations.
 - [`GW_analytical.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_analytical.py): Analytical calculations and mathematical functions.
 - [`GW_back.py`](https://github.com/cosmoGW/cosmoGW/blob/main/src/cosmoGW/GW_back.py): Functions for cosmological GW backgrounds.
@@ -101,7 +102,8 @@ make html
 
 Tutorials and example notebooks are available in the [`tutorials/`](https://github.com/cosmoGW/cosmoGW/blob/main/tutorials/) directory:
 
-- [**GWs_sound-waves**](https://github.com/cosmoGW/cosmoGW/blob/main/tutorials/GWs_sound-waves.ipynb)
+- [**GWs_sound-waves**](https://github.com/cosmoGW/cosmoGW/blob/main/tutorials/GWs_sound-waves.ipynb): Tutorial showing different templates of GWs from sound waves and non-linear compressional fluid perturbations from first-order phase transitions.
+- [**GWs_MF_from_FOPT**](https://github.com/cosmoGW/cosmoGW/blob/main/tutorials/GWs_MF_from_FOPT.ipynb): Tutorial showing the analysis of GWs from sound waves and turbulence from first-order phase transitions with LISA in connection to primordial magnetic fields.
 
 These tutorials can be run from [*Google Colab*](https://colab.research.google.com/)
 by loading the notebooks from GitHub.
@@ -138,14 +140,14 @@ pytest --nbval tutorials/GWs_sound-waves.ipynb
 
 Make sure to have installed pytest, nbval and LaTeX:
 
-**On Ubuntu/Debian:**
+*LaTeX on Ubuntu/Debian:*
 ```bash
 pip install pytest nbval
 sudo apt-get update
 sudo apt-get install -y cm-super dvipng texlive-latex-extra texlive-latex-recommended
 ```
 
-**On macOS (using Homebrew):**
+*LaTeX on macOS (using Homebrew):*
 ```bash
 pip install pytest nbval
 brew install --cask mactex
