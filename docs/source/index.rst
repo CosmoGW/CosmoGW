@@ -48,3 +48,4 @@ Below is the table of contents for the documentation
    hydro_bubbles
    interferometry
    utils
+   analysis

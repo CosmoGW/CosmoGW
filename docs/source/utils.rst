@@ -114,6 +114,30 @@ phase transitions, cosmology, turbulence, and source modeling.
    * - alp2_HL
      - 2.4
      - Found in Caprini:2024gyk
+   * - bs_HL_eff
+     - 20
+     - Box-size L/vw for UV cutoff (Caprini:2024yk)
+   * - bs_k1HL
+     - 40
+     - Box-size L/vw for IR cutoff (Caprini:2024gyk)
+   * - peak1_HL
+     - 0.4
+     - First peak location in HL template (Caprini:2024gyk)
+   * - peak2_HL_weak
+     - 0.5
+     - Second peak (weak regime, HL template)
+   * - peak2_HL_interm
+     - 1.0
+     - Second peak (intermediate regime, HL template)
+   * - peak2_HL_str
+     - 0.5
+     - Second peak (strong regime, HL template)
+   * - peak1_LISA
+     - 0.2
+     - First peak location in LISA template (Caprini:2024hue)
+   * - peak2_LISA
+     - 0.5
+     - Second peak location in LISA template (Caprini:2024hue)
    * - alp1_LISA
      - 2.0
      - Used in Caprini:2024hue
@@ -183,6 +207,33 @@ phase transitions, cosmology, turbulence, and source modeling.
    * - alpha_hyb
      - 0.052
      - Hybrid alpha parameter
+   * - L_LISA
+     - 2.5e6 km
+     - LISA arm length
+   * - P_LISA
+     - 15
+     - LISA parameter P
+   * - A_LISA
+     - 3
+     - LISA parameter A
+   * - L_Taiji
+     - 3e6 km
+     - Taiji arm length
+   * - P_Taiji
+     - 8
+     - Taiji parameter P
+   * - A_Taiji
+     - 3
+     - Taiji parameter A
+   * - SNR_PLS
+     - 10
+     - LISA SNR threshold
+   * - T_PLS
+     - 4
+     - LISA observation time (years)
+   * - v_dipole
+     - 1.23e-3
+     - Solar dipole velocity
 
 .. note::
    These values are available in ``cosmoGW.utils`` and can be
