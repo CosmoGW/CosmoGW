@@ -346,7 +346,7 @@ def Delta_cit(t, k, tini=tini_ref, tfin=tfin_ref, expansion=True):
     aux1 = cost * (ci_t - ci_tini)
     aux2 = sint * (si_t - si_tini)
     D = aux1 + aux2
-    D = reshape_output(D, mult_t, mult_k)
+    D = reshape_output(D, mult_a=mult_t, mult_b=mult_k)
 
     return D
 
@@ -503,7 +503,7 @@ def TGW_func(s, Oms=Oms_ref, lf=lf_ref, N=N_turb,
         inds = np.where(s >= 1 / dtfin)
         TGW[inds] = (lf / 2 / np.pi / s)[inds] ** 2
 
-    TGW = reshape_output(TGW, mult_Oms, mult_lf)
+    TGW = reshape_output(TGW, mult_a=mult_Oms, mult_b=mult_lf)
 
     return TGW
 
