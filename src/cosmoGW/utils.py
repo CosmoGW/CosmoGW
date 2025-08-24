@@ -49,15 +49,22 @@ a_sw_ref = 3         # low frequency slope f^3
 b_sw_ref = 1         # intermediate frequency slope f
 c_sw_ref = 3         # high frequency slope f^(-3)
 
-# first and second peak smoothness parameters (GW_templates)
-alp1_sw_ref = 1.5  # used in RoperPol:2023bqa
-alp2_sw_ref = 0.5  # used in RoperPol:2023bqa
-alp1_ssm = 4.0     # used in Hindmarsh:2019phv
-alp2_ssm = 2.0     # used in Hindmarsh:2019phv
-alp1_HL = 3.6      # found in Caprini:2024gyk
-alp2_HL = 2.4      # found in Caprini:2024gyk
-alp1_LISA = 2.0    # used in Caprini:2024hue
-alp2_LISA = 4.0     # used in Caprini:2024hue
+# first and second peak, and smoothness parameters (GW_templates)
+zpeak1_LISA_old = 10.
+alp1_sw_ref = 1.5     # used in RoperPol:2023bqa
+alp2_sw_ref = 0.5     # used in RoperPol:2023bqa
+alp1_ssm = 4.0        # used in Hindmarsh:2019phv
+alp2_ssm = 2.0        # used in Hindmarsh:2019phv
+alp1_HL = 3.6         # found in Caprini:2024gyk
+alp2_HL = 2.4         # found in Caprini:2024gyk
+peak1_HL = 0.4        # found in Caprini:2024gyk
+peak2_HL_weak = 0.5   # found in Caprini:2024gyk
+peak2_HL_interm = 1.  # found in Caprini:2024gyk
+peak2_HL_str = 0.5    # found in Caprini:2024gyk
+alp1_LISA = 2.0       # used in Caprini:2024hue
+alp2_LISA = 4.0       # used in Caprini:2024hue
+peak1_LISA = 0.2      # used in Caprini:2024hue
+peak2_LISA = 0.5      # used in Caprini:2024hue
 
 # Reference values for models (GW_models)
 Oms_ref = 0.1         # Source amplitude (fraction to radiation energy)
@@ -69,6 +76,8 @@ Nkconv_ref = 1000     # Wave number discretization for convolution
 Np_ref = 3000         # Wave number discretization for convolution
 NTT_ref = 5000        # Lifetimes discretization
 dt0_ref = 11          # Numerical parameter for fit (Caprini:2024gyk)
+bs_HL_eff = 20        # box-size L/vw used for UV in Caprini:2024yk
+bs_k1HL = 40          # box-size L/vw used for IR in Caprini:2024gyk
 tini_ref = 1.0        # Initial time of GW production (normalized)
 tfin_ref = 1e4        # Final time of GW production in cit model
 
@@ -140,7 +149,8 @@ def safe_trapezoid(y, x, axis=-1):
         return np.trapz(y, x, axis=axis)
 
 
-def reshape_output(Omegas, mult_alp, mult_vw):
+def reshape_output(arr, mult_a=True, mult_b=True, mult_c=True, mult_d=True,
+                   mult_e=True, skip=0):
     """
     Reshape a 2D output array to 1D or scalar depending on input flags.
 
@@ -158,50 +168,19 @@ def reshape_output(Omegas, mult_alp, mult_vw):
     ndarray or scalar
         The reshaped output array or scalar.
     """
-    if not mult_alp and not mult_vw:
-        return Omegas[0, 0]
-    elif not mult_alp:
-        return Omegas[0, :]
-    elif not mult_vw:
-        return Omegas[:, 0]
-    return Omegas
-
-
-def reshape_output_3d(output, mult_a, mult_b, mult_c):
-    """
-    Reshape a 3D output array to 2D, 1D, or scalar depending on input flags.
-
-    Parameters
-    ----------
-    output : ndarray
-        The array to reshape (3D).
-    mult_a : bool
-        True if the first dimension is multi-valued (array), False if scalar.
-    mult_b : bool
-        True if the second dimension is multi-valued (array), False if scalar.
-    mult_c : bool
-        True if the third dimension is multi-valued (array), False if scalar.
-
-    Returns
-    -------
-    ndarray or scalar
-        The reshaped output array or scalar.
-    """
-    if not mult_a and not mult_b and not mult_c:
-        return output[0, 0, 0]
-    elif not mult_a and not mult_b:
-        return output[0, 0, :]
-    elif not mult_a and not mult_c:
-        return output[0, :, 0]
-    elif not mult_b and not mult_c:
-        return output[:, 0, 0]
-    elif not mult_a:
-        return output[0, :, :]
-    elif not mult_b:
-        return output[:, 0, :]
-    elif not mult_c:
-        return output[:, :, 0]
-    return output
+    axes = []
+    # axis 1: vws, axis 2: alphas, axis 3: betas
+    if arr.ndim - skip > 0 and not mult_a:
+        axes.append(skip+0)
+    if arr.ndim - skip > 1 and not mult_b:
+        axes.append(skip+1)
+    if arr.ndim - skip > 2 and not mult_c:
+        axes.append(skip+2)
+    if arr.ndim - skip > 3 and not mult_d:
+        axes.append(skip+3)
+    if arr.ndim - skip > 4 and not mult_e:
+        axes.append(skip+4)
+    return np.squeeze(arr, axis=tuple(axes))
 
 
 def read_csv(file, dir0=dir_sens, dir_HOME=None, a='f', b='Omega'):
