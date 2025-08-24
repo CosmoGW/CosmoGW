@@ -147,7 +147,7 @@ def type_nucleation(vw, alp, cs2=cs2_ref):
     ty[vw < cs] = 'def'
     ty[vw > v_cj] = 'det'
 
-    ty = reshape_output(ty, mult_vw, mult_alp)
+    ty = reshape_output(ty, mult_a=mult_vw, mult_b=mult_alp)
 
     return ty
 
@@ -1393,7 +1393,7 @@ def kappas_Esp(vw, alp, cs2=cs2_ref):
     )
     kappa[ty == 'hyb'] = kappa_hyb[ty == 'hyb']
 
-    kappa = reshape_output(kappa, mult_vw, mult_alp)
+    kappa = reshape_output(kappa, mult_a=mult_vw, mult_b=mult_alp)
 
     return kappa
 
