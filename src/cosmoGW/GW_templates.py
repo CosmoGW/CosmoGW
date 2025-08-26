@@ -1011,7 +1011,7 @@ def OmGW_spec_sw(
     RoperPol:2023bqa, Caprini:2024gyk, Hindmarsh:2019phv
     """
 
-    cs = 3.
+    cs = np.sqrt(cs2)
     alphas, betas, vws, mult_alpha, mult_beta, mult_vws = \
         _prepare_inputs(alphas, betas, vws)
 
