@@ -1182,19 +1182,21 @@ def _assign_results(
     if ty == 'def':
         inds = np.where((xis >= vw) & (xis <= xi_sh))[0]
         inds2 = np.where(xis < vw)[0]
+        wws[i, inds2] = w_m
     elif ty == 'hyb':
         inds = np.where((xis >= cs) & (xis <= xi_sh))[0]
         if xi_sh == vw:
             inds = np.append(inds, np.where((xis <= xi_sh))[-1] + 1)
         inds2 = np.where(xis < cs)[0]
+        wws[i, inds2] = wws0[0]
     else:
         inds = np.where((xis >= cs) & (xis <= vw))[0]
         inds2 = np.where(xis < cs)[0]
+        wws[i, inds2] = wws0[0]
 
     # Interpolate and assign velocity and enthalpy profiles
     vvs[i, inds] = np.interp(xis[inds], xis0, vvs0)
     wws[i, inds] = np.interp(xis[inds], xis0, wws0)
-    wws[i, inds2] = w_m
 
     # Assign shock and wall values
     xi_shocks[i] = xi_sh
