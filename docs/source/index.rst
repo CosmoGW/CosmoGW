@@ -49,3 +49,6 @@ Below is the table of contents for the documentation
    interferometry
    utils
    analysis
+   gws_mf_from_fopt
+   tutorials/GWs_MF_from_FOPT.ipynb
+   tutorials/GWs_sound-waves.ipynb
